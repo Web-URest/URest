@@ -1,0 +1,322 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button " U·Rest" [ref=e6] [cursor=pointer]:
+        - generic [ref=e7]:
+          - generic [ref=e9]: 
+          - generic [ref=e10]: U·Rest
+      - button "เข้าสู่ระบบ " [ref=e1947] [cursor=pointer]:
+        - generic [ref=e1948]: เข้าสู่ระบบ
+        - generic [ref=e1950]: 
+  - main [ref=e15]:
+    - generic [ref=e1951]:
+      - generic [ref=e1954]:
+        - generic [ref=e1955]:
+          - generic [ref=e1956]: 
+          - generic [ref=e1957]: พักให้เต็มที่ จองให้มั่นใจ
+        - heading "พูลวิลล่าที่ใช่ จองแล้วเงินไม่หาย" [level=1] [ref=e1958]
+        - paragraph [ref=e1959]: พักให้เต็มที่ จองให้มั่นใจ — ทุกหลังยืนยันตัวตน เงินอยู่กับ U-Rest จนกว่าจะเช็คอิน คุยจบในแอป
+        - generic [ref=e1960]:
+          - generic [ref=e1961]:
+            - generic [ref=e1962]: จุดหมาย
+            - textbox "ค้นหา เช่น หัวหิน, ภูเก็ต" [ref=e1963]
+          - generic [ref=e1964]:
+            - generic [ref=e1965]: เช็คอิน–เช็คเอาท์
+            - generic [ref=e1966]: 12–14 มิ.ย. 2569
+          - generic [ref=e1967]:
+            - generic [ref=e1968]: ผู้เข้าพัก
+            - generic [ref=e1969]: 2 ท่าน
+          - button " ค้นหา" [ref=e1970] [cursor=pointer]:
+            - generic [ref=e1971]: 
+            - text: ค้นหา
+      - generic [ref=e1972]:
+        - generic [ref=e1973]:
+          - generic [ref=e1975]:  
+          - generic [ref=e1976]:
+            - generic [ref=e1977]: ทุกที่พักผ่านการตรวจสอบ
+            - generic [ref=e1978]: ยืนยันบัตรประชาชน + เอกสารสิทธิ์ของโฮสต์ทุกหลัง ก่อนขึ้นประกาศ
+        - generic [ref=e1979]:
+          - generic [ref=e1981]:  
+          - generic [ref=e1982]:
+            - generic [ref=e1983]: เงินถึงโฮสต์หลังเช็คอิน
+            - generic [ref=e1984]: U-Rest ถือเงินไว้ (เอสโครว์) จนคุณเข้าพักผ่านไป 24 ชม.
+        - generic [ref=e1985]:
+          - generic [ref=e1987]:  
+          - generic [ref=e1988]:
+            - generic [ref=e1989]: มีปัญหา คืนเงินเต็มจำนวน
+            - generic [ref=e1990]: ไม่ตรงตามประกาศ แจ้งใน 24 ชม. ทีมงานไกล่เกลี่ยให้
+      - generic [ref=e1991]:
+        - generic [ref=e1993]:  
+        - generic [ref=e1994]:
+          - heading "ให้ \"น้องเรสต์\" หาที่พักให้คุณ" [level=2] [ref=e1995]
+          - paragraph [ref=e1996]: บอกความต้องการเป็นภาษาไทย เช่น "วิลล่าหัวหิน 6 คน มีสระ งบ 7,000" น้องเรสต์จะค้นหาจากที่พักจริงและเตรียมคำขอจองให้ — ส่งคำขอและชำระเงินโดยคุณเสมอ
+        - button " เริ่มแชท" [ref=e1997] [cursor=pointer]:
+          - generic [ref=e1998]: 
+          - text: เริ่มแชท
+      - generic [ref=e1999]:
+        - generic [ref=e2000]:
+          - heading "พูลวิลล่ายอดนิยม" [level=2] [ref=e2001]
+          - button "ดูทั้งหมด →" [ref=e2002] [cursor=pointer]
+        - generic [ref=e2003]:
+          - generic [ref=e2004] [cursor=pointer]:
+            - generic [ref=e2005]:
+              - img "พีพี พูลวิลล่า สไลเดอร์ — หัวหิน" [ref=e2006]
+              - generic [ref=e2008]: ยอดนิยม
+              - button "" [ref=e2009]:
+                - generic [ref=e2010]: 
+              - generic [ref=e2011]:
+                - button [ref=e2012]
+                - button [ref=e2013]
+                - button [ref=e2014]
+                - button [ref=e2015]
+                - button [ref=e2016]
+            - generic [ref=e2017]:
+              - generic [ref=e2018]:
+                - heading "พีพี พูลวิลล่า สไลเดอร์" [level=2] [ref=e2019]
+                - generic [ref=e2020]:
+                  - generic [ref=e2021]: 
+                  - text: "4.96"
+              - generic [ref=e2022]: หัวหิน, ประจวบคีรีขันธ์
+              - generic [ref=e2023]: 8 ท่าน · 3 ห้องนอน
+              - generic [ref=e2024]: ฿ 6,500 / คืน
+          - generic [ref=e2025] [cursor=pointer]:
+            - generic [ref=e2026]:
+              - img "ภูวิว วิลล่า อินฟินิตี้พูล — เขาใหญ่" [ref=e2027]
+              - generic [ref=e2029]: วิวภูเขา
+              - generic [ref=e2031]:
+                - generic [ref=e2032]: 
+                - text: จองทันที
+              - button "" [ref=e2033]:
+                - generic [ref=e2034]: 
+              - generic [ref=e2035]:
+                - button [ref=e2036]
+                - button [ref=e2037]
+                - button [ref=e2038]
+            - generic [ref=e2039]:
+              - generic [ref=e2040]:
+                - heading "ภูวิว วิลล่า อินฟินิตี้พูล" [level=2] [ref=e2041]
+                - generic [ref=e2042]:
+                  - generic [ref=e2043]: 
+                  - text: "4.89"
+              - generic [ref=e2044]: เขาใหญ่, นครราชสีมา
+              - generic [ref=e2045]: 10 ท่าน · 4 ห้องนอน
+              - generic [ref=e2046]: ฿ 8,900 / คืน
+          - generic [ref=e2047] [cursor=pointer]:
+            - generic [ref=e2048]:
+              - img "ทะเลใส บีชฟรอนต์ วิลล่า — หัวหิน" [ref=e2049]
+              - generic [ref=e2051]: ติดทะเล
+              - button "" [ref=e2052]:
+                - generic [ref=e2053]: 
+              - generic [ref=e2054]:
+                - button [ref=e2055]
+                - button [ref=e2056]
+                - button [ref=e2057]
+            - generic [ref=e2058]:
+              - generic [ref=e2059]:
+                - heading "ทะเลใส บีชฟรอนต์ วิลล่า" [level=2] [ref=e2060]
+                - generic [ref=e2061]:
+                  - generic [ref=e2062]: 
+                  - text: "4.78"
+              - generic [ref=e2063]: หัวหิน, ประจวบคีรีขันธ์
+              - generic [ref=e2064]: 6 ท่าน · 3 ห้องนอน
+              - generic [ref=e2065]: ฿ 5,200 / คืน
+          - generic [ref=e2066] [cursor=pointer]:
+            - generic [ref=e2067]:
+              - img "สวนหลวง พูลวิลล่า — เชียงใหม่" [ref=e2068]
+              - generic [ref=e2070]: ยอดนิยม
+              - generic [ref=e2072]:
+                - generic [ref=e2073]: 
+                - text: จองทันที
+              - button "" [ref=e2074]:
+                - generic [ref=e2075]: 
+              - generic [ref=e2076]:
+                - button [ref=e2077]
+                - button [ref=e2078]
+                - button [ref=e2079]
+            - generic [ref=e2080]:
+              - generic [ref=e2081]:
+                - heading "สวนหลวง พูลวิลล่า" [level=2] [ref=e2082]
+                - generic [ref=e2083]:
+                  - generic [ref=e2084]: 
+                  - text: "4.92"
+              - generic [ref=e2085]: แม่ริม, เชียงใหม่
+              - generic [ref=e2086]: 8 ท่าน · 3 ห้องนอน
+              - generic [ref=e2087]: ฿ 4,800 / คืน
+      - generic [ref=e2088]:
+        - heading "จุดหมายยอดฮิต" [level=2] [ref=e2089]
+        - generic [ref=e2090]:
+          - generic [ref=e2091] [cursor=pointer]:
+            - img "หัวหิน" [ref=e2092]
+            - generic [ref=e2094]:
+              - generic [ref=e2095]: หัวหิน
+              - generic [ref=e2096]: 24 ที่พัก
+          - generic [ref=e2097] [cursor=pointer]:
+            - img "เขาใหญ่" [ref=e2098]
+            - generic [ref=e2100]:
+              - generic [ref=e2101]: เขาใหญ่
+              - generic [ref=e2102]: 18 ที่พัก
+          - generic [ref=e2103] [cursor=pointer]:
+            - img "ภูเก็ต" [ref=e2104]
+            - generic [ref=e2106]:
+              - generic [ref=e2107]: ภูเก็ต
+              - generic [ref=e2108]: 32 ที่พัก
+  - contentinfo [ref=e175]:
+    - generic [ref=e176]:
+      - generic [ref=e178]:
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - generic [ref=e182]: 
+            - generic [ref=e183]: U·Rest
+          - paragraph [ref=e184]: จองพูลวิลล่าทั่วไทย ปลอดภัยด้วยเอสโครว์ ทุกที่พักผ่านการตรวจสอบ
+        - generic [ref=e185]:
+          - generic [ref=e186]: ค้นพบ
+          - generic [ref=e187]:
+            - link "พูลวิลล่ายอดนิยม" [ref=e188] [cursor=pointer]:
+              - /url: "#"
+            - link "จุดหมายปลายทาง" [ref=e189] [cursor=pointer]:
+              - /url: "#"
+            - link "รีวิวจากผู้เข้าพัก" [ref=e190] [cursor=pointer]:
+              - /url: "#"
+            - link "น้องเรสต์ AI" [ref=e191] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=e192]:
+          - generic [ref=e193]: โฮสต์
+          - generic [ref=e194]:
+            - link "เป็นโฮสต์กับเรา" [ref=e195] [cursor=pointer]:
+              - /url: "#"
+            - link "คู่มือโฮสต์" [ref=e196] [cursor=pointer]:
+              - /url: "#"
+            - link "การตรวจสอบ KYC" [ref=e197] [cursor=pointer]:
+              - /url: "#"
+            - link "รอบจ่ายเงิน" [ref=e198] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=e199]:
+          - generic [ref=e200]: ช่วยเหลือ
+          - generic [ref=e201]:
+            - link "ศูนย์ช่วยเหลือ" [ref=e202] [cursor=pointer]:
+              - /url: "#"
+            - link "นโยบายการยกเลิก" [ref=e203] [cursor=pointer]:
+              - /url: "#"
+            - link "การคุ้มครองผู้เข้าพัก" [ref=e204] [cursor=pointer]:
+              - /url: "#"
+            - link "ติดต่อเรา" [ref=e205] [cursor=pointer]:
+              - /url: "#"
+      - generic [ref=e206]:
+        - generic [ref=e207]: © 2569 U·Rest · สงวนลิขสิทธิ์
+        - generic [ref=e208]:
+          - generic [ref=e209]:
+            - generic [ref=e210]: 
+            - text: ตรวจสอบทุกที่พัก
+          - generic [ref=e211]:
+            - generic [ref=e212]: 
+            - text: เงินถือไว้ในเอสโครว์
+          - generic [ref=e213]:
+            - generic [ref=e214]: 
+            - text: ทีมงานไกล่เกลี่ย
+  - generic [ref=e1738]:
+    - generic [ref=e1739]:
+      - generic [ref=e1741]:  
+      - generic [ref=e1743]:
+        - generic [ref=e1744]: น้องเรสต์
+        - generic [ref=e1745]: ● หาจากที่พักจริง · คุณกดจองเองเสมอ
+      - button "" [ref=e1746] [cursor=pointer]:
+        - generic [ref=e1747]: 
+    - generic [ref=e1748]:
+      - generic [ref=e1750]: สวัสดีค่ะ! ฉันชื่อน้องเรสต์ ผู้ช่วยหาที่พักของคุณ 😊 บอกทำเล จำนวนคน งบประมาณมาได้เลย ฉันค้นหาจากที่พักจริงในระบบและเตรียมคำขอจองให้ — การส่งคำขอและจ่ายเงินคุณเป็นคนกดเองเสมอค่ะ
+      - generic [ref=e1763]: หาวิลล่าหัวหิน 6 คน มีสระ
+      - generic [ref=e1765]: เจอ 2 ที่พักที่ตรงกับที่คุณต้องการเลยค่ะ ฉันคัดจากที่พักที่ผ่านการตรวจสอบและว่างจริงช่วงวันที่คุณเลือก โดยดูจากทำเล จำนวนผู้เข้าพัก และรีวิวล่าสุด 👇
+      - generic [ref=e1768]:
+        - generic [ref=e1769]:
+          - generic [ref=e1770]:
+            - generic [ref=e1772]: ยอดนิยม
+            - generic [ref=e1774]:
+              - generic [ref=e1775]: 
+              - text: "4.96"
+          - generic [ref=e1776]:
+            - generic [ref=e1777]: พีพี พูลวิลล่า สไลเดอร์
+            - generic [ref=e1778]: หัวหิน, ประจวบคีรีขันธ์ · 8 ท่าน · 3 ห้องนอน
+            - generic [ref=e1779]:
+              - generic [ref=e1780]: ฿ 6,500 / คืน
+              - generic [ref=e1781]:
+                - button "ดู" [ref=e1782] [cursor=pointer]
+                - button "เตรียมคำขอจอง" [ref=e1783] [cursor=pointer]
+        - generic [ref=e1784]:
+          - generic [ref=e1785]:
+            - generic [ref=e1787]: ติดทะเล
+            - generic [ref=e1789]:
+              - generic [ref=e1790]: 
+              - text: "4.78"
+          - generic [ref=e1791]:
+            - generic [ref=e1792]: ทะเลใส บีชฟรอนต์ วิลล่า
+            - generic [ref=e1793]: หัวหิน, ประจวบคีรีขันธ์ · 6 ท่าน · 3 ห้องนอน
+            - generic [ref=e1794]:
+              - generic [ref=e1795]: ฿ 5,200 / คืน
+              - generic [ref=e1796]:
+                - button "ดู" [ref=e1797] [cursor=pointer]
+                - button "เตรียมคำขอจอง" [ref=e1798] [cursor=pointer]
+      - generic [ref=e1804]: แนะนำหลังแรกเป็นพิเศษค่ะ — มีสระพร้อมสไลเดอร์ เหมาะกับครอบครัว โฮสต์ตอบไว 100% ถ้าสนใจ ฉันเตรียมคำขอจองให้ได้เลยนะคะ
+      - generic [ref=e1806]: สนใจ "พีพี พูลวิลล่า สไลเดอร์"
+      - generic [ref=e1808]: เยี่ยมเลยค่ะ! เช็คปฏิทินแล้วว่างอยู่ ฉันเตรียมคำขอจองไว้ให้แล้ว ตรวจสอบแล้วกดไปส่งคำขอด้วยตัวเองได้เลยค่ะ 👇
+      - generic [ref=e1811]:
+        - generic [ref=e1813]:
+          - generic [ref=e1814]: พีพี พูลวิลล่า สไลเดอร์
+          - generic [ref=e1815]: หัวหิน, ประจวบคีรีขันธ์
+        - generic [ref=e1816]:
+          - generic [ref=e1817]:
+            - generic [ref=e1818]: เช็คอิน–เช็คเอาท์
+            - generic [ref=e1819]: 20–22 มิ.ย. · 2 คืน
+          - generic [ref=e1820]:
+            - generic [ref=e1821]: ผู้เข้าพัก
+            - generic [ref=e1822]: 4 ท่าน
+          - generic [ref=e1824]:
+            - generic [ref=e1825]: ยอดที่จะชำระเมื่อโฮสต์ตอบรับ
+            - generic [ref=e1826]: ฿ 13,000
+        - button "เปิดหน้าส่งคำขอจอง →" [ref=e1827] [cursor=pointer]
+        - generic [ref=e1828]:
+          - generic [ref=e1829]: 
+          - text: น้องเรสต์เตรียมให้ — ส่งคำขอและชำระเงินโดยคุณเสมอ
+    - generic [ref=e1756]:
+      - textbox "พิมพ์ข้อความ..." [ref=e1759]
+      - button "" [ref=e1760] [cursor=pointer]:
+        - generic [ref=e1761]: 
+  - generic [ref=e2110]:
+    - generic [ref=e2111]:
+      - generic [ref=e2112]: เข้าสู่ระบบ
+      - button "" [ref=e2113] [cursor=pointer]:
+        - generic [ref=e2114]: 
+    - generic [ref=e2115]:
+      - generic [ref=e2116]:
+        - generic [ref=e2118]: 
+        - generic [ref=e2119]: U·Rest
+      - heading "ยินดีต้อนรับกลับมา" [level=2] [ref=e2120]
+      - paragraph [ref=e2121]: จองที่พัก จัดการทริป และคุยกับ AI ได้ในที่เดียว
+      - generic [ref=e2122]:
+        - generic [ref=e2123]:
+          - generic [ref=e2124]: บทบาทบัญชี
+          - generic [ref=e2125]:
+            - button "ผู้เข้าพัก" [ref=e2126] [cursor=pointer]
+            - button "เจ้าของบ้าน" [active] [ref=e2127] [cursor=pointer]
+            - button "ผู้ดูแลระบบ" [ref=e2128] [cursor=pointer]
+        - generic [ref=e2129]:
+          - generic [ref=e2130]: อีเมล
+          - generic [ref=e2131]:
+            - generic [ref=e2132]: 
+            - textbox "you@email.com" [ref=e2133]
+        - generic [ref=e2134]:
+          - generic [ref=e2135]: รหัสผ่าน
+          - generic [ref=e2136]:
+            - generic [ref=e2137]: 
+            - textbox "••••••••" [ref=e2138]
+      - button "เข้าสู่ระบบ" [ref=e2139] [cursor=pointer]
+      - generic [ref=e2142]: หรือ
+      - generic [ref=e2144]:
+        - button " ดำเนินการต่อด้วย Google" [ref=e2145] [cursor=pointer]:
+          - generic [ref=e2146]: 
+          - text: ดำเนินการต่อด้วย Google
+        - button " ดำเนินการต่อด้วย Apple" [ref=e2147] [cursor=pointer]:
+          - generic [ref=e2148]: 
+          - text: ดำเนินการต่อด้วย Apple
+        - button "ดำเนินการต่อด้วย LINE" [ref=e2149] [cursor=pointer]: ดำเนินการต่อด้วย LINE
+      - generic [ref=e2150]:
+        - text: ยังไม่มีบัญชี?
+        - button "สมัครสมาชิก" [ref=e2151] [cursor=pointer]

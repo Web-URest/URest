@@ -1,0 +1,161 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button " U·Rest" [ref=e6] [cursor=pointer]:
+        - generic [ref=e7]:
+          - generic [ref=e9]: 
+          - generic [ref=e10]: U·Rest
+      - button "ที่ไหนก็ได้ 12–14 มิ.ย. 2 ท่าน " [ref=e1020] [cursor=pointer]:
+        - generic [ref=e1021]: ที่ไหนก็ได้
+        - generic [ref=e1023]: 12–14 มิ.ย.
+        - generic [ref=e1025]: 2 ท่าน
+        - generic [ref=e1027]: 
+      - generic [ref=e260]:
+        - button " บันทึกไว้" [ref=e261] [cursor=pointer]:
+          - generic [ref=e262]: 
+          - text: บันทึกไว้
+        - button "ทริปของฉัน" [ref=e263] [cursor=pointer]
+        - button "ข้อความ" [ref=e264] [cursor=pointer]
+      - generic [ref=e265]:
+        - button "โปรไฟล์" [ref=e266] [cursor=pointer]
+        - button "ออกจากระบบ" [ref=e267] [cursor=pointer]
+        - button "ส" [ref=e268] [cursor=pointer]:
+          - generic [ref=e269]: ส
+  - main [ref=e15]:
+    - generic [ref=e1503]:
+      - button " กลับไปหน้าที่พัก" [ref=e1504] [cursor=pointer]:
+        - generic [ref=e1505]: 
+        - text: กลับไปหน้าที่พัก
+      - generic [ref=e1506]:
+        - heading "ยืนยันและชำระเงิน" [level=2] [ref=e1507]
+        - generic [ref=e1508]:
+          - generic [ref=e1509]: 
+          - text: จองทันที
+      - generic [ref=e1510]:
+        - generic [ref=e1511]:
+          - generic [ref=e1512]: "1"
+          - generic [ref=e1513]: ยืนยันและชำระเงิน
+        - generic [ref=e1515]:
+          - generic [ref=e1516]: "2"
+          - generic [ref=e1517]: จองสำเร็จ
+      - generic [ref=e1518]:
+        - generic [ref=e1519]: 
+        - generic [ref=e1520]:
+          - generic [ref=e1521]: จองทันที — ชำระภายใน 1 ชม. 0 นาที เพื่อล็อกวันที่
+          - generic [ref=e1522]: ไม่ต้องรอโฮสต์ยืนยัน — จ่ายแล้วยืนยันการจองทันที
+      - generic [ref=e1523]:
+        - generic [ref=e1524]:
+          - generic [ref=e1526] [cursor=pointer]:
+            - 'checkbox "ฉันอ่านและยอมรับกฎที่พักแล้ว: ห้ามจัดปาร์ตี้ · ผู้เข้าพักไม่เกิน 10 ท่าน · เงินประกัน ฿ 4,000 ชำระเงินสดที่เช็คอิน" [ref=e1527]'
+            - generic [ref=e1528]: "ฉันอ่านและยอมรับกฎที่พักแล้ว: ห้ามจัดปาร์ตี้ · ผู้เข้าพักไม่เกิน 10 ท่าน · เงินประกัน ฿ 4,000 ชำระเงินสดที่เช็คอิน"
+          - generic [ref=e1529]:
+            - generic [ref=e1530]:
+              - button " พร้อมเพย์ QR" [ref=e1531] [cursor=pointer]:
+                - generic [ref=e1532]: 
+                - generic [ref=e1533]: พร้อมเพย์ QR
+              - button " บัตรเครดิต/เดบิต" [ref=e1534] [cursor=pointer]:
+                - generic [ref=e1535]: 
+                - generic [ref=e1536]: บัตรเครดิต/เดบิต
+            - generic [ref=e1537]:
+              - generic [ref=e1538]: 
+              - generic [ref=e1539]: ติ๊กยอมรับกฎที่พักก่อนจึงชำระเงินได้
+        - generic [ref=e1540]:
+          - generic [ref=e1542]:
+            - generic [ref=e1543]:
+              - generic [ref=e1544]: 
+              - text: ผ่านการตรวจสอบ
+            - generic [ref=e1545]: ภูวิว วิลล่า อินฟินิตี้พูล
+            - generic [ref=e1546]:
+              - generic [ref=e1547]: 
+              - text: "4.89"
+              - generic [ref=e1548]: (124)
+          - generic [ref=e1549]:
+            - generic [ref=e1550]:
+              - generic [ref=e1551]: วันที่
+              - generic [ref=e1552]: 9 มิ.ย. 2569 – 11 มิ.ย. 2569
+            - generic [ref=e1553]:
+              - generic [ref=e1554]: ผู้เข้าพัก
+              - generic [ref=e1555]: 4 ท่าน
+            - generic [ref=e1557]:
+              - generic [ref=e1558]:
+                - generic [ref=e1559]:
+                  - text: อ. 9 มิ.ย.
+                  - generic [ref=e1560]: · ธรรมดา
+                - generic [ref=e1561]: ฿ 8,900
+              - generic [ref=e1562]:
+                - generic [ref=e1563]:
+                  - text: พ. 10 มิ.ย.
+                  - generic [ref=e1564]: · ธรรมดา
+                - generic [ref=e1565]: ฿ 8,900
+            - generic [ref=e1567]:
+              - generic [ref=e1568]: ยอดชำระวันนี้
+              - generic [ref=e1569]: ฿ 17,800
+          - generic [ref=e1571]:
+            - generic [ref=e1572]:
+              - generic [ref=e1574]: 
+              - generic [ref=e1575]: คุณชำระเงิน
+            - generic [ref=e1577]:
+              - generic [ref=e1579]: 
+              - generic [ref=e1580]: U-Rest ถือเงินไว้จนเช็คอิน
+            - generic [ref=e1582]:
+              - generic [ref=e1584]: 
+              - generic [ref=e1585]: โอนให้โฮสต์ (เช็คอิน +24 ชม.)
+          - paragraph [ref=e1586]:
+            - generic [ref=e1587]: 
+            - text: ไม่ตรงตามประกาศ? แจ้งภายใน 24 ชม. หลังเช็คอิน คืนเงินเต็มจำนวน
+  - contentinfo [ref=e175]:
+    - generic [ref=e176]:
+      - generic [ref=e178]:
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - generic [ref=e182]: 
+            - generic [ref=e183]: U·Rest
+          - paragraph [ref=e184]: จองพูลวิลล่าทั่วไทย ปลอดภัยด้วยเอสโครว์ ทุกที่พักผ่านการตรวจสอบ
+        - generic [ref=e185]:
+          - generic [ref=e186]: ค้นพบ
+          - generic [ref=e187]:
+            - link "พูลวิลล่ายอดนิยม" [ref=e188] [cursor=pointer]:
+              - /url: "#"
+            - link "จุดหมายปลายทาง" [ref=e189] [cursor=pointer]:
+              - /url: "#"
+            - link "รีวิวจากผู้เข้าพัก" [ref=e190] [cursor=pointer]:
+              - /url: "#"
+            - link "น้องเรสต์ AI" [ref=e191] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=e192]:
+          - generic [ref=e193]: โฮสต์
+          - generic [ref=e194]:
+            - link "เป็นโฮสต์กับเรา" [ref=e195] [cursor=pointer]:
+              - /url: "#"
+            - link "คู่มือโฮสต์" [ref=e196] [cursor=pointer]:
+              - /url: "#"
+            - link "การตรวจสอบ KYC" [ref=e197] [cursor=pointer]:
+              - /url: "#"
+            - link "รอบจ่ายเงิน" [ref=e198] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=e199]:
+          - generic [ref=e200]: ช่วยเหลือ
+          - generic [ref=e201]:
+            - link "ศูนย์ช่วยเหลือ" [ref=e202] [cursor=pointer]:
+              - /url: "#"
+            - link "นโยบายการยกเลิก" [ref=e203] [cursor=pointer]:
+              - /url: "#"
+            - link "การคุ้มครองผู้เข้าพัก" [ref=e204] [cursor=pointer]:
+              - /url: "#"
+            - link "ติดต่อเรา" [ref=e205] [cursor=pointer]:
+              - /url: "#"
+      - generic [ref=e206]:
+        - generic [ref=e207]: © 2569 U·Rest · สงวนลิขสิทธิ์
+        - generic [ref=e208]:
+          - generic [ref=e209]:
+            - generic [ref=e210]: 
+            - text: ตรวจสอบทุกที่พัก
+          - generic [ref=e211]:
+            - generic [ref=e212]: 
+            - text: เงินถือไว้ในเอสโครว์
+          - generic [ref=e213]:
+            - generic [ref=e214]: 
+            - text: ทีมงานไกล่เกลี่ย
+  - button "  คุยกับ น้องเรสต์" [ref=e215] [cursor=pointer]:
+    - generic [ref=e216]:  
+    - text: คุยกับ น้องเรสต์

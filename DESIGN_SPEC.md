@@ -1,6 +1,8 @@
 # U-Rest — UX/UI Design Specification (v1)
 
-Companion artifacts: static mockups in `design/mockups/` (open `design/mockups/index.html` in a browser).
+> **2026-06-12 — primary reference changed:** `design/standalone/urest-standalone.html` (interactive, all pages/roles) is now THE design reference, adopted after a full audit against PRODUCT_FLOWS (§9 below = audit verdict + build-time gap list). The static mockups in `design/mockups/` remain as the original token/theme reference. §3 tokens are pending re-derivation from the standalone's palette in a follow-up session — until then, new components follow the standalone's look.
+
+Companion artifacts: interactive standalone in `design/standalone/` + static mockups in `design/mockups/`.
 This document is the contract for all UI implementation in Phases 1–5. If code and spec disagree, fix one of them.
 
 ---
@@ -187,3 +189,25 @@ Design-system sampler (palette, type, buttons, pills, escrow strip) + linked car
 ## 8. Out of scope for v1 mockups
 
 Dark mode · native-app patterns · email/LINE message templates (Phase 3) · marketing/landing pages beyond home · English locale mockups (structure supports it; copy TH only).
+
+## 9. Standalone-design audit (2026-06-12) — verdict + build checklist
+
+`design/standalone/urest-standalone.html` was audited page-by-page, all three roles, against PRODUCT_FLOWS/PRD. **Verdict: ~90% aligned, frequently word-for-word** (timers, escrow strips, NEEDS_INFO checklist, payout reconciliation, dispute mechanics, reports queue, all 10 booking states). Adopted as the primary reference. The gaps below are **requirements for the build** — implement them in the app; the artifact itself stays as-is.
+
+**A. In the design but contradicts locked decisions — do NOT copy:**
+1. Login = email/password + Google/Apple/LINE. Build: **LINE Login only** (ADR-007), no password form, no Google/Apple.
+2. Admin as a role on the consumer login modal. Build: separate `/admin` surface + `AdminUser` credentials/TOTP (ADR-007/010); guest↔host = context switch in one account, never a login role.
+
+**B. Locked features absent from the design — add during build:**
+3. Per-listing FAQ section (listing page + wizard/edit; `ListingFaqEntry`).
+4. Admin §5.7 คำถามที่ตอบไม่ได้ queue (UnansweredQuestion → suggest-as-FAQ).
+5. ถูกต้องตามกฎหมาย badge tier (optional license upload in wizard ⑥ + listing badge).
+6. KYC ⑥: religion-line redaction instruction (PDPA §26) + explicit consent checkbox.
+7. Concierge: in-chat confirmation card → `submit_booking_request` → QR in thread (artifact has draft+deep-link only — ADR-006 v1 behavior).
+8. Account: notification preferences + PDPA export/delete (§3.7).
+9. Phone-OTP verification UI in the guest request flow (ladder step 2).
+10. Instant-mode strike acknowledgment in wizard ⑤.
+11. Admin audit-log viewer.
+12. Verify during build (unreached in audit): search-results map with price pins + filter chips/sort (§3.1).
+
+**C. Demo-data nits (do not replicate):** `BK-xxxx` code format in profile (must be UR-YYMM-NNNN); cross-villa copy/attraction mixups; deposit amount inconsistency; **regions must lead with Pattaya** (GTM) — the artifact features หัวหิน/เขาใหญ่/ภูเก็ต.
