@@ -7,7 +7,7 @@ Escrow-protected Thai pool-villa booking marketplace. Real startup, pilot phase,
 | Question | Document |
 |---|---|
 | What does feature X do? Exact states, timers, flows | `PRODUCT_FLOWS.md` — THE functional contract |
-| Why is the architecture like this? | `docs/adr/ADR-001…009` (payments, hosting, ledger, monolith, notifications, AI, auth, i18n, tooling) |
+| Why is the architecture like this? | `docs/adr/ADR-001…010` (payments, hosting, ledger, monolith, notifications, AI, auth, i18n, tooling, data protection) |
 | AI concierge implementation | `docs/AI_CONCIERGE_SPEC.md` |
 | Scope, metrics, launch gate | `PRD.md` |
 | Visual tokens/components | `DESIGN_SPEC.md` + `design/mockups/` (reference, not pixel-contract) |
@@ -25,6 +25,7 @@ Never contradict a locked decision silently — if a task seems to require it, s
 7. **Thai-first i18n**: user-facing strings live in `messages/th.json` (source) + `messages/en.json` — never hardcoded in components. Use `Link`/`useRouter` from `src/i18n/navigation.ts`, not `next/link`.
 8. **Design tokens only** — colors/radii/shadows come from `globals.css` `@theme` (mapped from DESIGN_SPEC §3). Inventing hex values is palette drift; don't.
 9. **KYC documents and secrets never touch the public bucket, client bundles, or logs.** Private R2 + presigned URLs only (ADR-007).
+10. **The Thai national ID number is never stored, in any form** — and only `PayoutAccount.accountNumberEnc` + `AdminUser.totpSecretEnc` hold field-encrypted data (via `src/lib/crypto.ts`). Adding sensitive columns or expanding the encrypted-fields list requires updating ADR-010 first.
 
 ## Style
 

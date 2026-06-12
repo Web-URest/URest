@@ -27,7 +27,7 @@ PR gate (CI runs the same): `pnpm typecheck && pnpm lint && pnpm test`
 | [`PRODUCT_FLOWS.md`](PRODUCT_FLOWS.md) | The functional contract — roles, state machines, flows, notifications |
 | [`PRD.md`](PRD.md) | Scope, success metrics, launch gate |
 | [`BUSINESS_PLAN.md`](BUSINESS_PLAN.md) | Market, unit economics, legal roadmap, GTM |
-| [`docs/adr/`](docs/adr/) | 9 architecture decision records |
+| [`docs/adr/`](docs/adr/) | 10 architecture decision records |
 | [`docs/AI_CONCIERGE_SPEC.md`](docs/AI_CONCIERGE_SPEC.md) | น้องเรสต์ implementation contract |
 | [`DESIGN_SPEC.md`](DESIGN_SPEC.md) + [`design/mockups/`](design/mockups/) | Design tokens + 11 HTML mockups |
 | [`CLAUDE.md`](CLAUDE.md) | Engineering conventions (enforced in review) |

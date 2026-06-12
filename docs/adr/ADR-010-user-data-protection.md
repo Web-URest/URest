@@ -21,7 +21,7 @@ The identity slice of the schema holds the most damaging data in the product: po
 
 5. **PDPA mechanics in the schema:** PII columns on `User` are nullable so anonymization can scrub them while the row survives for ledger integrity (soft delete per §3.7: `deletedAt`, `anonymizedAt`). `Consent` records type + policy version + timestamp, append-only — provable consent can't be backfilled. `AuditLog` records every admin action (who/what/when/before-after), append-only; KYC review, payout marking, holds, and suspensions write to it in the same transaction as the action itself.
 
-6. **Retention/purge windows** (enforced by the cron sweep, ADR-004 pattern):
+6. **Retention/purge windows** (enforced by the cron sweep, ADR-004 pattern) — note the last row is a KEEP obligation, not a purge:
 
    | Data | Window | Mechanism |
    |---|---|---|
@@ -29,8 +29,16 @@ The identity slice of the schema holds the most damaging data in the product: po
    | OTP rows (expired or consumed) | next sweep | `expiresAt` index |
    | Concierge transcripts | 12 months | Phase 4 (AI_CONCIERGE_SPEC §5) |
    | Sessions | Auth.js expiry | adapter-managed |
+   | **Access/traffic logs — retain ≥90 days MINIMUM** | Computer Crime Act B.E. 2560 §26 (service-provider obligation) | Railway log retention + request logging config (Phase 1 ops) |
 
 7. **Logging hygiene:** no PII, plaintext secrets, or `*Enc` values in logs — ever. Prisma query logging stays off in production; error reporting (Sentry) gets scrubbed contexts. `encryptField`/`decryptField` inputs and outputs are never logged, including in catch blocks.
+
+8. **Thai-law mapping (reviewed 2026-06-12; lawyer agenda items at incorporation):**
+   - **Religion on Thai ID cards is PDPA §26 sensitive data.** The KYC upload UI instructs hosts to cover/redact the ศาสนา line before uploading (PRODUCT_FLOWS §4.1 ⑥); KYC consent is recorded explicitly (`Consent` type `KYC_PROCESSING`). We never intentionally collect §26 categories.
+   - **Selfies remain ordinary (non-biometric) personal data only while review is HUMAN.** The v2 parking-lot item "automated ID verification (vendor OCR + face match)" would make this biometric processing under PDPA — explicit biometric consent + a new ADR are prerequisites for that upgrade.
+   - **Cross-border transfers (§28):** Railway (Singapore), Cloudflare R2, Anthropic (US), Resend, Google — personal data leaves Thailand. Privacy policy discloses all processors + transfer purposes; each processor's DPA accepted before launch (PRD §6 checklist).
+   - **Breach response:** qualifying breaches notified to the PDPC (สคส.) **within 72 hours**, affected users when high-risk. One-page runbook required before launch (PRD §6).
+   - **DPO not required at pilot scale** (no large-scale sensitive-data processing); revisit at the incorporation/scale triggers alongside a lightweight record of processing activities (RoPA).
 
 ## Consequences
 

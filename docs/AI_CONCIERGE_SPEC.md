@@ -154,6 +154,7 @@ Stored at `lib/concierge/system-prompt.ts`, frozen string (no timestamps/user na
 
 - `ConciergeSession` (user_id nullable for pre-login browsing, created_at) → `ConciergeMessage` rows (role, content, tool_calls JSON). Listing-scoped entry ("ถามน้องเรสต์เกี่ยวกับที่พักนี้") seeds the session with that listing_id as context.
 - Transcripts retained **12 months**, then purged by the nightly cron (ADR-004 sweep pattern; PDPA scope per ADR-007/PRD §5).
+- **Cross-border disclosure (PDPA §28, ADR-010 §8):** chat messages are processed by the Anthropic API (US) to generate replies — named in the privacy policy with the other processors. API data is not used for model training by default; no PII beyond what the guest types ever leaves our systems (tools return listing data, not user records).
 - `UnansweredQuestion` row written whenever the refusal path fires (listing_id, question_text, session_id, status: open|converted|dismissed) → admin view PRODUCT_FLOWS §5.7.
 - `ListingFaqEntry` (listing_id, question, answer, source: host|admin_suggested, status) — served inside `get_listing_details`.
 - `ConciergeUsage` per session: input/output/cache tokens, cost in satang (computed at logged-model rates). Feeds the kill switch (§7).
