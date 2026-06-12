@@ -71,11 +71,14 @@ Automated payouts via Opn Transfers API (first v2 item), iCal sync, co-host acco
 ## 6. Launch gate (all must be true before first real booking)
 
 **Legal/compliance** — details in BUSINESS_PLAN.md §6:
-- [ ] Privacy Policy + Business Policy pages live (Opn approval prerequisite + PDPA)
+- [ ] Privacy Policy + Business Policy pages live (Opn approval prerequisite + PDPA) — privacy policy **discloses all processors and cross-border transfers** (Railway SG, Cloudflare, Anthropic US, Resend, Google; PDPA §28)
 - [ ] Guest T&Cs + Host T&Cs published; host T&Cs include agent-of-payee clause, Hotel Act compliance warranty, strike/cancellation policy
 - [ ] ETDA Digital Platform Services notification filed (small-platform tier)
 - [ ] Opn live account approved; test charge + test refund executed end-to-end
 - [ ] Income-record spreadsheet/runbook for the account-holding founder (pass-through vs commission separation)
+- [ ] Processor DPAs accepted (Railway, Cloudflare, Anthropic, Resend, Google, Opn, LINE)
+- [ ] Breach-response runbook written: PDPC (สคส.) notification ≤72h, user notification when high-risk (ADR-010 §8)
+- [ ] Access-log retention ≥90 days configured (Computer Crime Act §26 — a KEEP obligation)
 
 **Product** — verified against `PRODUCT_FLOWS.md`:
 - [ ] Full happy path in production: signup → KYC → approval → listing live → request → accept → pay (PromptPay sandbox→live) → CONFIRMED → check-in +24h → payout run → PAID

@@ -99,7 +99,8 @@ Blended at an expected 80/20 PromptPay/card mix: **~฿1,140/booking (~7.6% of G
 
 ### 6.4 Platform & data obligations
 - **ETDA Digital Platform Services notification** (Royal Decree B.E. 2565): file the small-platform notification before launch (individual operator under ฿1.8M/year qualifies for the simplified tier). Free; a launch-gate checkbox in PRD §6.
-- **PDPA:** privacy policy, purpose-limited consent (signup, KYC upload, chat transcripts), private-bucket storage with signed URLs, 90-day deletion of rejected-listing KYC docs, export/delete runbook (ADR-007).
+- **PDPA** (full schema-level mapping in ADR-010): privacy policy with **processor + cross-border disclosure** (Railway SG, Cloudflare, Anthropic US, Resend, Google — §28), purpose-limited consent recorded in the `Consent` table (signup, KYC upload, chat transcripts), **ID-card religion-line redaction** at upload (religion = §26 sensitive data), private-bucket storage with signed URLs, 90-day deletion of rejected-listing KYC docs, export/delete runbook, **72-hour PDPC breach notification runbook**. DPO not required at pilot scale; lightweight RoPA + DPO re-check at incorporation. ⚖️
+- **Computer Crime Act §26:** retain access/traffic logs **≥90 days** (service-provider obligation — a keep-requirement that coexists with PDPA minimization).
 - **Opn prerequisites:** published Privacy Policy + Business Policy pages.
 - **Not applicable (verified reasoning, monitor):** TAT tour-operator license — U-Rest sells accommodation booking only, no tours/transport packages. If v2 adds packages, re-check. ⚖️ confirm at incorporation.
 
