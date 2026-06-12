@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/*
+ * U-Rest design tokens — single source of truth, mapped 1:1 from
+ * DESIGN_SPEC.md §3 ("Modern Thai poolside"). Tailwind v4 @theme makes
+ * these available as utilities (bg-ink-900, text-coral-500, rounded-card…)
+ * AND as plain CSS variables (var(--color-ink-900)).
+ * Do not invent colors outside this palette — palette drift is grep-able.
+ */
+@theme {
+  /* Color — ink (deep pool night) */
+  --color-ink-900: #07272b;
+  --color-ink-700: #0e3a40;
+
+  /* Color — water */
+  --color-teal-600: #0e7c82;
+  --color-aqua-500: #14a8ae;
+  --color-aqua-300: #7fd6d9;
+  --color-aqua-100: #dff4f4;
+
+  /* Color — sand (page is never pure white) */
+  --color-sand-50: #fbf7ee;
+  --color-sand-100: #f4eddd;
+  --color-sand-300: #e5d9bf;
+  --color-line: #e7e0cf;
+
+  /* Color — accents */
+  --color-coral-500: #ff6b4a; /* THE money action, urgent countdowns */
+  --color-coral-600: #e8533a;
+  --color-jade-500: #1e9e6a; /* verified / success / confirmed */
+  --color-gold-400: #e9b949; /* star ratings only */
+
+  /* Typography (fonts injected by next/font in layout.tsx) */
+  --font-sans: var(--font-anuphan), "Noto Sans Thai", sans-serif;
+  --font-display: var(--font-chonburi), serif;
+
+  /* Shape — DESIGN_SPEC §3 radii */
+  --radius-card: 16px;
+  --radius-input: 12px;
+  --radius-photo: 14px;
+
+  /* Depth — warm shadows, never gray */
+  --shadow-card: 0 1px 2px rgba(7, 39, 43, 0.05);
+  --shadow-raised: 0 14px 40px rgba(7, 39, 43, 0.1);
+}
+
+/* Thai body text needs taller line-height than Latin defaults (≥1.5, spec says 1.65) */
+body {
+  background-color: var(--color-sand-50);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  line-height: 1.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

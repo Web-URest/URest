@@ -1,0 +1,23 @@
+# Local development database — both devs run the identical environment.
+# Requires Docker Desktop. Start: pnpm db:up · Stop: pnpm db:down
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: urest-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: urest
+      POSTGRES_PASSWORD: urest
+      POSTGRES_DB: urest
+    ports:
+      - "5432:5432"
+    volumes:
+      - urest-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U urest -d urest"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  urest-pgdata:

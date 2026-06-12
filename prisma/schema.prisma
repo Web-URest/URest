@@ -1,0 +1,30 @@
+// U-Rest schema — domain models land per phase (PRODUCT_FLOWS.md is the contract).
+// Conventions (CLAUDE.md): money = Int satang · timestamps = UTC (timestamptz) ·
+// state transitions only via lib/ state-machine modules, never raw updates.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector] // pgvector — semantic search (listings, attractions)
+}
+
+// --- Phase 1 starting point (verification ladder, ADR-007) ---
+// Extended in Phase 1 auth work: LINE OAuth fields via Auth.js adapter,
+// phone OTP verification, notification preferences.
+
+model User {
+  id          String    @id @default(cuid())
+  lineUserId  String?   @unique
+  displayName String
+  email       String?   @unique
+  phone       String?
+  /// set only by the OTP flow — gates sending requests/messages (ladder step 2)
+  phoneVerifiedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
