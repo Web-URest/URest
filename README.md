@@ -29,9 +29,9 @@ PR gate (CI runs the same): `pnpm typecheck && pnpm lint && pnpm test`
 | [`BUSINESS_PLAN.md`](BUSINESS_PLAN.md) | Market, unit economics, legal roadmap, GTM |
 | [`docs/adr/`](docs/adr/) | 10 architecture decision records |
 | [`docs/AI_CONCIERGE_SPEC.md`](docs/AI_CONCIERGE_SPEC.md) | น้องเรสต์ implementation contract |
-| [`DESIGN_SPEC.md`](DESIGN_SPEC.md) + [`design/mockups/`](design/mockups/) | Design tokens + 11 HTML mockups |
+| [`DESIGN_SPEC.md`](DESIGN_SPEC.md) + [`design/standalone/`](design/standalone/) | Design tokens + the interactive design prototype (all pages/roles) |
 | [`CLAUDE.md`](CLAUDE.md) | Engineering conventions (enforced in review) |
 
 ## Build phases
 
-0. ✅ Design mockups & specs → 1. **Foundation** (current) → 2. Listings → 3. Booking & escrow → 4. AI concierge → 5. Trust & polish
+0. ✅ Design prototype & specs → 1. **Foundation** (current) → 2. Listings → 3. Booking & escrow → 4. AI concierge → 5. Trust & polish

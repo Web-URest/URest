@@ -9,8 +9,9 @@ Escrow-protected Thai pool-villa booking marketplace. Real startup, pilot phase,
 | What does feature X do? Exact states, timers, flows | `PRODUCT_FLOWS.md` — THE functional contract |
 | Why is the architecture like this? | `docs/adr/ADR-001…010` (payments, hosting, ledger, monolith, notifications, AI, auth, i18n, tooling, data protection) |
 | AI concierge implementation | `docs/AI_CONCIERGE_SPEC.md` |
+| Table shapes, enums, raw-SQL constraints | `docs/DATA_MODEL.md` — change the design there BEFORE touching schema.prisma |
 | Scope, metrics, launch gate | `PRD.md` |
-| Visual tokens/components | `DESIGN_SPEC.md` + `design/mockups/` (reference, not pixel-contract) |
+| Visual tokens/components | `DESIGN_SPEC.md` + **`design/standalone/urest-standalone.html`** (primary interactive reference, adopted 2026-06-12 — see DESIGN_SPEC §9 for its audited gap list; §9 items A1–A2 must NOT be copied) |
 
 Never contradict a locked decision silently — if a task seems to require it, stop and surface the conflict.
 

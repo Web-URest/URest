@@ -1,7 +1,7 @@
 # U-Rest — Product Requirements Document (v1)
 
 **Date:** 2026-06-12 · **Status:** Draft for team review
-**Companion documents:** `PRODUCT_FLOWS.md` (the functional contract — flows, state machines, screens), `DESIGN_SPEC.md` + `design/mockups/` (visual contract), `BUSINESS_PLAN.md` (market, money, legal), `docs/adr/` (architecture decisions)
+**Companion documents:** `PRODUCT_FLOWS.md` (the functional contract — flows, state machines, screens), `DESIGN_SPEC.md` + `design/standalone/urest-standalone.html` (visual contract; gap list in DESIGN_SPEC §9), `BUSINESS_PLAN.md` (market, money, legal), `docs/adr/` (architecture decisions)
 
 ---
 
