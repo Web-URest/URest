@@ -35,3 +35,6 @@ pnpm-debug.log*
 
 # claude code — personal settings stay local
 .claude/settings.local.json
+
+# playwright MCP session artifacts
+.playwright-mcp/
