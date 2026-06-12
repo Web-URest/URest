@@ -19,6 +19,280 @@ datasource db {
 
 // ───────────────────────── Identity (guests + hosts — one account, ADR-007) ─────
 
+// ───────────────────────── Listings domain (Phase 2 — ADR-011, DATA_MODEL.md) ──
+
+/// Lookup table, not an enum: region expansion (Pattaya → region 2) is a
+/// planned GTM event — launching เขาใหญ่ is an INSERT, not a deploy.
+model Region {
+  id        String  @id @default(cuid())
+  slug      String  @unique // "pattaya"
+  nameTh    String
+  nameEn    String
+  centerLat Float
+  centerLng Float
+  /// GTM gating (BUSINESS_PLAN §7): only Pattaya active at launch
+  isActive  Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  listings    Listing[]
+  attractions Attraction[]
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING_REVIEW
+  NEEDS_INFO
+  PUBLISHED
+  UNLISTED
+  REJECTED
+}
+
+enum Amenity {
+  PRIVATE_POOL
+  KARAOKE
+  BBQ
+  PET_FRIENDLY
+  POOL_SLIDE
+  KITCHEN
+  PARKING
+  WIFI
+  POOL_TABLE
+  NETFLIX
+  WHEELCHAIR_ACCESS
+}
+
+enum PartyPolicy {
+  ALLOWED
+  ASK_FIRST
+  FORBIDDEN
+}
+
+enum CancellationTier {
+  FLEXIBLE
+  MODERATE
+  STRICT
+}
+
+enum BookingMode {
+  REQUEST
+  INSTANT
+}
+
+/// Status transitions ONLY via lib/listing (CLAUDE.md rule 2) — mirrors
+/// PRODUCT_FLOWS §2.2 verbatim. Money fields are Int satang (rule 1).
+model Listing {
+  id       String        @id @default(cuid())
+  hostId   String
+  regionId String
+  status   ListingStatus @default(DRAFT)
+
+  // basics (wizard ①)
+  title        String
+  description  String  @default("")
+  address      String  @default("")
+  mapLat       Float?
+  mapLng       Float?
+  propertyType String  @default("pool_villa")
+
+  // details (wizard ③)
+  bedrooms    Int      @default(1)
+  beds        Int      @default(1)
+  baths       Int      @default(1)
+  maxGuests   Int      @default(2)
+  poolLengthM Decimal? @db.Decimal(4, 2)
+  poolWidthM  Decimal? @db.Decimal(4, 2)
+  poolDepthM  Decimal? @db.Decimal(4, 2)
+  amenities   Amenity[]
+
+  // house rules (wizard ④)
+  partyPolicy       PartyPolicy @default(ASK_FIRST)
+  quietHoursStart   String? // "22:00" — zone-free by design
+  quietHoursEnd     String?
+  /// Cash damage deposit at check-in — never through the platform (§2.3)
+  cashDepositSatang Int         @default(0)
+  checkInTime       String      @default("15:00")
+  checkOutTime      String      @default("11:00")
+
+  // pricing & mode (wizard ⑤) — live source for NEW quotes only;
+  // bookings snapshot everything at request time (ADR-011)
+  includedGuests      Int              @default(2)
+  extraGuestFeeSatang Int              @default(0)
+  baseWeekdaySatang   Int              @default(0)
+  baseWeekendSatang   Int              @default(0)
+  /// One rate for public holidays + eves (resolution: holiday > season > base)
+  holidaySatang       Int?
+  cancellationTier    CancellationTier @default(MODERATE)
+  bookingMode         BookingMode      @default(REQUEST)
+  /// Timestamp of the §4.1 stale-calendar strike acknowledgment (instant mode)
+  instantAckAt        DateTime?
+
+  /// ถูกต้องตามกฎหมาย badge granted (hotel license / non-hotel registration)
+  legalBadgeAt DateTime?
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  host           User            @relation(fields: [hostId], references: [id])
+  region         Region          @relation(fields: [regionId], references: [id])
+  photos         ListingPhoto[]
+  seasons        Season[]
+  calendarBlocks CalendarBlock[]
+  faqEntries     ListingFaqEntry[]
+  savedBy        SavedVilla[]
+  kycSubmissions KycSubmission[]
+
+  @@index([regionId, status])
+  @@index([hostId, status])
+}
+
+model ListingPhoto {
+  id        String  @id @default(cuid())
+  listingId String
+  /// PUBLIC bucket key (KYC docs use the private bucket — never mix)
+  r2Key     String
+  sortOrder Int     @default(0)
+  isCover   Boolean @default(false)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, sortOrder])
+}
+
+/// Host-defined named season with its own rates (§4.1 ⑤). Overlap is
+/// IMPOSSIBLE at the DB level: GiST exclusion constraint in raw migration
+/// SQL (see DATA_MODEL.md §constraints) + friendly app check in lib/listing.
+model Season {
+  id             String   @id @default(cuid())
+  listingId      String
+  nameTh         String
+  startDate      DateTime @db.Date
+  endDate        DateTime @db.Date
+  weekdaySatang  Int
+  weekendSatang  Int
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+}
+
+/// System-maintained Thai public holidays (§4.1: hosts never track Songkran).
+/// Quote engine prices a night as holiday if date ∈ table OR date+1 ∈ table (eves).
+model ThaiHoliday {
+  date   DateTime @id @db.Date
+  nameTh String
+}
+
+/// Host manual calendar blocks. Block-vs-booking conflicts are checked in
+/// lib/listing; booking-vs-booking is the Phase 3 exclusion constraint's job.
+model CalendarBlock {
+  id        String   @id @default(cuid())
+  listingId String
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  note      String?
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, startDate])
+}
+
+enum FaqSource {
+  HOST
+  ADMIN_SUGGESTED
+}
+
+enum FaqStatus {
+  DRAFT
+  PUBLISHED
+}
+
+/// Per-listing Q&A (§4.1) — served to น้องเรสต์ via get_listing_details;
+/// every entry shrinks the AI's "ไม่มีข้อมูล" rate (the §5.7 growth loop).
+model ListingFaqEntry {
+  id        String    @id @default(cuid())
+  listingId String
+  question  String
+  answer    String
+  source    FaqSource @default(HOST)
+  status    FaqStatus @default(PUBLISHED)
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, status])
+}
+
+/// ♡ saved villas (§3.1, grill #4): flat list, login-gated.
+model SavedVilla {
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@id([userId, listingId])
+  @@index([userId, createdAt])
+}
+
+enum AttractionCategory {
+  FOOD
+  BEACH
+  ACTIVITY
+  SHOPPING
+}
+
+/// Curated POIs (§3.1 ที่เที่ยวใกล้ๆ + Phase 4 get_nearby_attractions).
+/// Distance computed at query time from lat/lng. Embedding column lands in
+/// Phase 4 with the embedding-model choice.
+model Attraction {
+  id       String             @id @default(cuid())
+  regionId String
+  nameTh   String
+  category AttractionCategory
+  lat      Float
+  lng      Float
+  descTh   String             @default("")
+  isActive Boolean            @default(true)
+
+  region Region @relation(fields: [regionId], references: [id])
+
+  @@index([regionId, category])
+}
+
+enum NotificationChannel {
+  LINE
+  EMAIL
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+/// Channel-of-record log (ADR-005): every send recorded; FAILED rows retried
+/// by the cron sweep; doubles as the LINE quota monitor.
+model NotificationLog {
+  id          String              @id @default(cuid())
+  userId      String?
+  channel     NotificationChannel
+  templateKey String
+  payload     Json
+  status      NotificationStatus  @default(QUEUED)
+  attempts    Int                 @default(0)
+  lastError   String?
+  createdAt   DateTime            @default(now())
+  sentAt      DateTime?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([status, createdAt])
+}
+
+// ───────────────────────── Identity (guests + hosts — one account, ADR-007) ─────
+
 model User {
   id              String    @id @default(cuid())
   lineUserId      String?   @unique
@@ -40,12 +314,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts       Account[]
-  sessions       Session[]
-  phoneOtps      PhoneOtp[]
-  kycSubmissions KycSubmission[]
-  payoutAccounts PayoutAccount[]
-  consents       Consent[]
+  accounts         Account[]
+  sessions         Session[]
+  phoneOtps        PhoneOtp[]
+  kycSubmissions   KycSubmission[]
+  payoutAccounts   PayoutAccount[]
+  consents         Consent[]
+  listings         Listing[]
+  savedVillas      SavedVilla[]
+  notificationLogs NotificationLog[]
 }
 
 // Auth.js (Prisma adapter) — database sessions: revocable, so suspend/ban
@@ -149,7 +426,6 @@ enum KycDocumentType {
 model KycSubmission {
   id     String    @id @default(cuid())
   userId String
-  /// Plain string until Listing lands (Phase 2) — FK added in that migration.
   listingId String?
   status    KycStatus @default(PENDING_REVIEW)
   /// Itemized NEEDS_INFO checklist (§5.1) — array of {item, note?, satisfied}
@@ -159,6 +435,7 @@ model KycSubmission {
   reviewedAt        DateTime?
 
   user       User           @relation(fields: [userId], references: [id])
+  listing    Listing?       @relation(fields: [listingId], references: [id])
   reviewedBy AdminUser?     @relation(fields: [reviewedByAdminId], references: [id])
   documents  KycDocument[]
 
