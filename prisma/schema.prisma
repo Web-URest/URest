@@ -1,6 +1,10 @@
-// U-Rest schema — domain models land per phase (PRODUCT_FLOWS.md is the contract).
-// Conventions (CLAUDE.md): money = Int satang · timestamps = UTC (timestamptz) ·
-// state transitions only via lib/ state-machine modules, never raw updates.
+// U-Rest schema — identity/KYC/payout slice (Phase 1; ADR-007, ADR-010).
+// Listings/bookings/ledger arrive in Phases 2–3 (PRODUCT_FLOWS.md is the contract).
+//
+// Conventions (CLAUDE.md): money = Int satang · DateTime = UTC timestamptz ·
+// state transitions only via lib/ modules · NEVER store the Thai national ID
+// number in any form (ADR-010) · sensitive fields end in `Enc` and hold
+// AES-256-GCM ciphertext from src/lib/crypto.ts — never plaintext.
 
 generator client {
   provider        = "prisma-client-js"
@@ -10,21 +14,232 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [vector] // pgvector — semantic search (listings, attractions)
+  extensions = [vector] // pgvector — semantic search (listings, attractions; Phase 2+)
 }
 
-// --- Phase 1 starting point (verification ladder, ADR-007) ---
-// Extended in Phase 1 auth work: LINE OAuth fields via Auth.js adapter,
-// phone OTP verification, notification preferences.
+// ───────────────────────── Identity (guests + hosts — one account, ADR-007) ─────
 
 model User {
-  id          String    @id @default(cuid())
-  lineUserId  String?   @unique
-  displayName String
-  email       String?   @unique
-  phone       String?
-  /// set only by the OTP flow — gates sending requests/messages (ladder step 2)
+  id              String    @id @default(cuid())
+  lineUserId      String?   @unique
+  displayName     String
+  /// PII columns are nullable so PDPA anonymization can scrub them (§3.7:
+  /// delete is soft + anonymized when bookings exist — ledger integrity).
+  email           String?   @unique
+  phone           String?
+  /// Set only by the OTP flow — gates sending requests/messages (ladder step 2).
   phoneVerifiedAt DateTime?
+  image           String?
+  /// LINE/email per event group (§3.7) — shape owned by lib/notifications.
+  notificationPrefs Json?
+
+  suspendedAt  DateTime? // §5.4: can't transact; existing bookings honored
+  deletedAt    DateTime? // soft delete
+  anonymizedAt DateTime? // PII scrubbed; row retained for ledger references
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  phoneOtps      PhoneOtp[]
+  kycSubmissions KycSubmission[]
+  payoutAccounts PayoutAccount[]
+  consents       Consent[]
+}
+
+// Auth.js (Prisma adapter) — database sessions: revocable, so suspend/ban
+// takes effect immediately (ADR-010).
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+/// Phone OTP (verification ladder step 2). Codes stored as sha256 hashes only;
+/// expired/consumed rows removed by the cron sweep (ADR-004 pattern).
+model PhoneOtp {
+  id         String    @id @default(cuid())
+  userId     String
+  /// sha256(code + per-row salt embedded in hash string) — never the code itself
+  codeHash   String
+  phone      String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+// ───────────────────────── Admin (separate auth surface — ADR-007/010) ─────────
+// Deliberately NOT related to User: an authz bug in guest/host code cannot
+// reach admin powers. Created manually (seed script), no self-signup.
+
+model AdminUser {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  /// argon2id hash (set by the admin seed/management script, Phase 2)
+  passwordHash  String
+  /// TOTP secret — AES-256-GCM ciphertext via lib/crypto.ts, never plaintext
+  totpSecretEnc String?
+  displayName   String
+  disabledAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  kycReviews KycSubmission[]
+  auditLogs  AuditLog[]
+}
+
+// ───────────────────────── KYC & payouts (PRODUCT_FLOWS §4.1 ⑥, §5.1) ──────────
+
+enum KycStatus {
+  PENDING_REVIEW
+  NEEDS_INFO
+  APPROVED
+  REJECTED
+}
+
+enum KycDocumentType {
+  THAI_ID
+  RIGHT_TO_RENT
+  SELFIE
+  /// Optional ถูกต้องตามกฎหมาย badge upload (hotel license / non-hotel registration)
+  HOTEL_LICENSE
+}
+
+/// One submission per listing (§1: KYC reviewed per listing; returning hosts
+/// with clean history get lighter review — history is visible via prior rows).
+model KycSubmission {
+  id     String    @id @default(cuid())
+  userId String
+  /// Plain string until Listing lands (Phase 2) — FK added in that migration.
+  listingId String?
+  status    KycStatus @default(PENDING_REVIEW)
+  /// Itemized NEEDS_INFO checklist (§5.1) — array of {item, note?, satisfied}
+  needsInfoItems Json?
+  reviewedByAdminId String?
+  submittedAt       DateTime  @default(now())
+  reviewedAt        DateTime?
+
+  user       User           @relation(fields: [userId], references: [id])
+  reviewedBy AdminUser?     @relation(fields: [reviewedByAdminId], references: [id])
+  documents  KycDocument[]
+
+  @@index([status, submittedAt]) // approval queue, SLA ordering
+  @@index([userId])
+}
+
+/// One row per uploaded document. r2Key points into the PRIVATE bucket —
+/// never store URLs, never serve except via short-lived signed URLs to admin.
+model KycDocument {
+  id           String          @id @default(cuid())
+  submissionId String
+  type         KycDocumentType
+  r2Key        String
+  uploadedAt   DateTime        @default(now())
+  /// Set when the parent submission is rejected/withdrawn: now + 90 days
+  /// (ADR-007). The purge cron deletes the R2 object AND this row.
+  purgeAfter   DateTime?
+
+  submission KycSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([purgeAfter])
+}
+
+/// Host bank account for manual payout runs (§5.2). Reusable across the
+/// host's listings; editing it triggers listing re-review (§4.4).
+model PayoutAccount {
+  id     String @id @default(cuid())
+  userId String
+  /// Thai bank code (e.g. "004" กสิกรไทย) — public reference data, plaintext
+  bankCode String
+  /// AES-256-GCM ciphertext (lib/crypto.ts). Decrypted in EXACTLY one code
+  /// path: the admin payout view. Never logged, never sent to the client.
+  accountNumberEnc String
+  /// Account holder name — must match the name on the Thai ID (mule-account
+  /// check, §4.1 ⑥). Needed plaintext for the payout run + name matching.
+  accountName String
+  verifiedAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// ───────────────────────── Paper trail (append-only — ADR-010) ─────────────────
+// No update/delete code paths exist for these tables, by convention and review.
+
+enum ConsentType {
+  TOS
+  PRIVACY
+  KYC_PROCESSING
+}
+
+model Consent {
+  id            String      @id @default(cuid())
+  userId        String
+  type          ConsentType
+  policyVersion String
+  createdAt     DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, type])
+}
+
+/// Every admin action (§5: who/what/when/before-after). KYC review, payout
+/// marking, holds, suspensions — all write here in the same transaction.
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+
+  admin AdminUser @relation(fields: [adminId], references: [id])
+
+  @@index([targetType, targetId])
+  @@index([adminId, createdAt])
 }
