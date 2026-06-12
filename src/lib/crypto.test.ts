@@ -31,21 +31,23 @@ describe("field encryption (AES-256-GCM, ADR-010)", () => {
     expect(decryptField(a)).toBe(decryptField(b));
   });
 
-  // Property: GCM authentication — corrupting any segment must throw,
-  // never return wrong plaintext silently.
+  // Property: GCM authentication — flipping any BIT of iv/ciphertext/tag must
+  // throw, never return wrong plaintext silently. Tampering happens at the
+  // byte level: flipping base64url *characters* can be a no-op (trailing bits
+  // beyond the encoded byte length are ignored by the decoder) — fast-check
+  // caught exactly that flaw in the first version of this test.
   it("detects tampering anywhere in the payload", () => {
     fc.assert(
-      fc.property(fc.integer({ min: 0, max: 1000 }), (seed) => {
+      fc.property(fc.integer({ min: 0, max: 100_000 }), (seed) => {
         const encrypted = encryptField("110-2-34567-8");
         const segments = encrypted.split(".");
-        // corrupt one base64url segment (iv, ciphertext, or tag)
-        const target = 2 + (seed % 3);
-        const seg = segments[target]!;
-        const pos = seed % seg.length;
-        const flipped =
-          seg.slice(0, pos) + (seg[pos] === "A" ? "B" : "A") + seg.slice(pos + 1);
-        if (flipped === seg) return; // char already differed the same way — skip
-        segments[target] = flipped;
+        const target = 2 + (seed % 3); // iv | ciphertext | tag
+        const bytes = Buffer.from(segments[target]!, "base64url");
+        const byteIdx = (seed >> 3) % bytes.length;
+        const original = bytes[byteIdx];
+        if (original === undefined) throw new Error("unreachable");
+        bytes[byteIdx] = original ^ (1 << seed % 8); // flip one real bit
+        segments[target] = bytes.toString("base64url");
         expect(() => decryptField(segments.join("."))).toThrow();
       }),
     );
