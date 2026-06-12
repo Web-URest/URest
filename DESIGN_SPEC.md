@@ -1,8 +1,8 @@
 # U-Rest — UX/UI Design Specification (v1)
 
-> **2026-06-12 — primary reference changed:** `design/standalone/urest-standalone.html` (interactive, all pages/roles) is now THE design reference, adopted after a full audit against PRODUCT_FLOWS (§9 below = audit verdict + build-time gap list). The static mockups in `design/mockups/` remain as the original token/theme reference. §3 tokens are pending re-derivation from the standalone's palette in a follow-up session — until then, new components follow the standalone's look.
+> **2026-06-12 — primary reference:** `design/standalone/urest-standalone.html` (interactive, all pages/roles) is THE design reference, adopted after a full audit against PRODUCT_FLOWS (§9 below = audit verdict + build-time gap list). The original static mockups were removed the same day (recoverable from git history, commit `0b1b620`). §3 tokens are implemented in `src/app/globals.css` and pending re-derivation from the standalone's palette in a follow-up session — until then, new components follow the standalone's look.
 
-Companion artifacts: interactive standalone in `design/standalone/` + static mockups in `design/mockups/`.
+Companion artifact: the interactive standalone in `design/standalone/`.
 This document is the contract for all UI implementation in Phases 1–5. If code and spec disagree, fix one of them.
 
 ---
@@ -29,7 +29,7 @@ This document is the contract for all UI implementation in Phases 1–5. If code
 
 ## 3. Design tokens
 
-Implemented in `design/mockups/assets/u-rest.css` under `:root`. Use these names in the app (CSS variables / Tailwind config).
+Implemented in `src/app/globals.css` under `@theme`. Use these names in the app (Tailwind utilities / CSS variables).
 
 ### Color
 
@@ -94,25 +94,25 @@ Thai line-height needs +10% vs Latin defaults; never below 1.5 for body. `font-f
 - Host & Admin areas swap the sand topbar for an ink-900 one (instant context cue: "back of house").
 - Sticky mobile action bar (`.actionbar`): white, hairline top, contains price + primary CTA. Used on listing, checkout, wizard.
 
-## 5. Pages (mockup file → spec)
+## 5. Pages (per-page spec — interactive reference: `design/standalone/urest-standalone.html`)
 
-### 5.1 `home.html` — Home / Search
+### 5.1 Home / Search
 - **Hero** on ink-900 with caustic aqua radial glows + grain. Chonburi headline: `พูลวิลล่าที่ใช่ จองแล้วเงินไม่หาย` + trust subline. Staggered fade-up.
 - **Search card** overlapping hero bottom (white, raised): ที่ไหน (region select) / เช็คอิน–เช็คเอาท์ (dates) / กี่คน (guests) / aqua search button. Stacks vertically on mobile.
-- **AI concierge entry**: full-width banner card under search — chat-bubble icon, `บอกความต้องการ เดี๋ยว AI หาให้` + example chips (`"วิลล่า 10 คน ใกล้หาดจอมเทียน มีคาราโอเกะ"`). Tapping → `concierge.html`. This is a primary entry, not a corner widget.
+- **AI concierge entry**: full-width banner card under search — chat-bubble icon, `บอกความต้องการ เดี๋ยว AI หาให้` + example chips (`"วิลล่า 10 คน ใกล้หาดจอมเทียน มีคาราโอเกะ"`). Tapping opens the concierge chat. This is a primary entry, not a corner widget.
 - **Trust row**: 3 compact value props (โฮสต์ยืนยันตัวตน / เงินถือไว้จนเช็คอิน / รีวิวจากผู้เข้าพักจริง) each with icon — rendered as the escrow story, not generic feature bullets.
 - **Region rail**: horizontal scroll cards (พัทยา, หัวหิน, เขาใหญ่, เชียงใหม่, กาญจนบุรี, ภูเก็ต) with villa counts.
 - **Featured villas grid**: villa cards (see component below).
 
 **Villa card**: photo (3:2, radius 14) with ♡ save + `โฮสต์ยืนยันแล้ว ✓` jade badge overlay → name (Anuphan 700) → meta line (region · sleeps N · bedrooms) → amenity chips (max 3 + "+N") → bottom row: `฿12,900 / คืน` + `ศ–ส ฿15,900` weekend price hint + ★ 4.8 (23).
 
-### 5.2 `search.html` — Results
+### 5.2 Search results
 - Sticky sub-header: editable summary (region·dates·guests) + filter chips (ราคา, จำนวนคน, ⚡ จองทันที, สระส่วนตัว, คาราโอเกะ, BBQ, สัตว์เลี้ยง) + sort.
 - Desktop: results list (cards, 2-col) left + sticky map right (40%). Mobile: list only + floating `แผนที่` pill toggling full-screen map. Map pins = price pills (aqua selected).
 - Result count + "AI ช่วยเลือกจากผลลัพธ์นี้" link into concierge with filters carried over.
 - Empty state: ripple illustration + loosen-filters suggestions + concierge CTA.
 
-### 5.3 `listing.html` — Villa detail
+### 5.3 Villa detail
 - Gallery: mobile swipe carousel (dots), desktop 1 large + 4 grid + `ดูรูปทั้งหมด (24)`.
 - Title block: name, region link, ★ rating · review count, jade verified badge, booking-mode badge.
 - **Booking card** (desktop right sticky / mobile sticky actionbar + section): date fields, guest stepper, price breakdown per night (each line labeled by pricing rule: ธรรมดา / ศ–ส / ไฮซีซั่น / วันหยุด), total. CTA depends on booking mode: request → `ส่งคำขอจอง` (aqua) + caption `ยังไม่ต้องจ่ายตอนนี้ — จ่ายหลังโฮสต์ยืนยัน`; instant → `⚡ จองทันที` (aqua) + caption `ชำระเงินทันที — ยืนยันการจองเลย ไม่ต้องรอโฮสต์`. Compact escrow strip at card bottom.
@@ -120,7 +120,7 @@ Thai line-height needs +10% vs Latin defaults; never below 1.5 for body. `font-f
 - Footer of page: low-key `รายงานที่พักนี้` text link → ReportModal (category + detail + photos).
 - Sections: host snippet (avatar, ตอบกลับใน ~1 ชม., listings count) → amenities grid (pool dimensions called out — `สระ 8×4 ม. ลึก 1.5 ม.`) → **กฎที่พัก & ปาร์ตี้** (party policy, quiet hours, max guests, damage deposit `฿3,000 เงินสดที่เช็คอิน` — explicit card, this market's #1 dispute source) → availability calendar (2 months, blocked dates sand-300 struck) → **ที่เที่ยวใกล้ ๆ** (attraction cards w/ distance — feeds from AI cache later) → reviews (rating summary bars + cards, `ผู้เข้าพักจริง ✓` on each) → cancellation policy tier card.
 
-### 5.4 `booking.html` — Booking flows (stateful mockup; switcher in mockup only)
+### 5.4 Booking flows (both modes; all payment/timer states)
 Two flows by listing booking mode:
 - **Request mode** — stepper `1 ส่งคำขอ → 2 โฮสต์ยืนยัน → 3 ชำระเงิน → 4 จองสำเร็จ` (states below).
 - **⚡ Instant mode** — stepper `1 ยืนยันและชำระเงิน → 2 จองสำเร็จ`: state-1 layout merged with the payment UI (trip summary + breakdown + rules checkbox + PromptPay/card tabs on one screen, 1h countdown instead of 12h), then the same confirmed screen.
@@ -129,47 +129,44 @@ Two flows by listing booking mode:
 - **State 3 — payment**: THE coral screen. 12h payment countdown banner (coral). Tabs: **PromptPay QR** (QR card with tile-strip top edge, amount in Chonburi, `เปิดแอปธนาคารแล้วสแกน`) | **บัตรเครดิต/เดบิต** (form). Full escrow strip prominent. Pay button coral.
 - **State 4 — confirmed**: jade check splash, booking code `UR-2406-8842`, detail summary, `เพิ่มลงปฏิทิน` / `คุยกับโฮสต์` / `ดูทริปของฉัน`. Compact escrow strip showing step 2 active ("U-Rest ถือเงินไว้").
 
-### 5.5 `trips.html` — Guest trips
+### 5.5 Guest trips
 - Tabs: กำลังจะถึง / รอดำเนินการ / ที่ผ่านมา.
 - Trip cards: photo, villa, dates, status pill, contextual action (`ชำระภายใน 8:42 ชม.` coral for AWAITING_PAYMENT, `เขียนรีวิว` for COMPLETED, `ดูเส้นทาง` for CONFIRMED). Pending requests show countdown to host deadline.
 - Each card expands to mini escrow strip showing where the money currently is.
 
-### 5.6 `concierge.html` — AI chat ("น้องเรสต์")
+### 5.6 AI chat ("น้องเรสต์")
 - Full-height chat, ink header with aqua status dot `น้องเรสต์ — AI ผู้ช่วยหาที่พัก`.
 - Bubbles: user sand-100 right; AI white left with small ripple avatar.
 - **Tool results render as rich cards in-stream**: villa result carousel (mini villa cards with `ว่าง ✓` availability tag), attraction list card, and the **booking draft card** — villa + dates + guests + total + `ตรวจสอบและชำระเงิน →` button that deep-links to checkout. Draft card carries caption: `น้องเรสต์จองให้ไม่ได้ — คุณกดยืนยันเองเสมอ` (AI acts, human pays, stated in-product).
 - Quick-reply chips after AI turns. Input bar with suggestion placeholder. Typing indicator = three ripple dots.
 - First-open state: greeting + 3 example prompts as tappable cards.
 
-### 5.7 `host.html` — Host dashboard (ink "back of house" chrome)
+### 5.7 Host dashboard (ink "back of house" chrome)
 - Sidebar (desktop) / bottom tabs (mobile): ภาพรวม · คำขอจอง · ปฏิทิน · ที่พักของฉัน · รายรับ.
 - **ภาพรวม**: stat cards (เดือนนี้: รายรับ, การจอง, อัตราตอบรับ, เรตติ้ง) + actionable inbox preview.
 - **คำขอจอง**: request rows with guest, dates, party-size, total, countdown chip `ตอบภายใน 9:12 ชม.`, accept (aqua) / decline (ghost). Accept → confirm modal stating guest then has 12h to pay.
 - **ปฏิทิน**: **villa switcher chips at top — one calendar per villa, never merged**; 2-month grid; states: ว่าง (white) / จองแล้ว (aqua, guest name) / ปิดเอง (sand-300 diagonal). Tap-drag to block dates — the tool that prevents Facebook double-bookings; banner reminds host to block externally-booked dates (stronger copy when the villa is ⚡ instant).
 - **รายรับ**: payout ledger (date, booking code, gross, `ค่าบริการ 10%`, net, status: ถือไว้ใน escrow / โอนแล้ว / 🔒 ระงับชั่วคราว with reason tooltip) + escrow strip in host orientation (`ผู้เข้าพักชำระแล้ว → U-Rest ถือไว้ → โอนให้คุณหลังเช็คอิน 24 ชม.`).
 
-### 5.8 `host-wizard.html` — Listing wizard
+### 5.8 Listing wizard
 - 6 steps, progress dots + save-draft: ① ข้อมูลพื้นฐาน (type, region, address pin) ② รูปภาพ (drag-drop grid, min 5, cover star) ③ รายละเอียด & สิ่งอำนวยความสะดวก (amenity checkboxes incl. pool size fields) ④ กฎที่พัก (party policy radio, quiet hours, deposit amount) ⑤ ราคา & โหมดการจอง ⑥ ยืนยันตัวตน (Thai ID upload + right-to-rent doc + selfie).
 - **Step ⑤** = pricing layers + booking mode: base weekday/weekend inputs → **SeasonEditor** (named date-range rows, each with own weekday/weekend rates, `+ เพิ่มซีซั่น`, overlapping ranges rejected inline) → holiday rate (system Thai-holiday calendar note) → extra-guest fee → earnings preview after 10% fee → **BookingModeToggle** (ส่งคำขอก่อน default / ⚡ จองทันที gated by acknowledgment checkbox about calendar accuracy + strike consequence).
 - Final screen: `ส่งให้ทีมงานตรวจสอบ` → PENDING_REVIEW state card explaining ~24h review (the trust gate, framed as a feature: `ทุกที่พักผ่านการตรวจสอบ เพื่อให้ผู้เข้าพักมั่นใจ`).
-- Mockup shows step ⑤ ราคา (most novel) with stepper context.
+- The standalone shows all six steps; step ⑤ ราคา (seasonal pricing) is the most novel and matches the locked pricing model.
 
-### 5.9 `admin.html` — Admin (dense, ink chrome, desktop-first; Anuphan only, no display font)
+### 5.9 Admin console (dense, ink chrome, desktop-first; Anuphan only, no display font)
 - Queue table: listing, host, region, KYC docs status, submitted-at, SLA chip (>24h = coral).
 - Review drawer: photos strip, details, ID doc viewer placeholder, right-to-rent doc, checklist (ID ↔ name match, docs readable, photos real, address coherent) → อนุมัติ (jade) / **ขอข้อมูลเพิ่ม (opens itemized checklist picker — admin ticks exactly which docs/details are required + per-item note; host receives a to-do list)** / ปฏิเสธ (with reason templates).
 - Nav tabs: ตรวจสอบที่พัก · โอนเงินโฮสต์ (due list with 🔒 hold action per booking + freeze-all-host-payouts) · ข้อพิพาท · **รายงาน (reports queue: category, target, money-at-risk flag, triage actions)** · ผู้ใช้.
 
-### 5.10 `index.html` — Mockup hub
-Design-system sampler (palette, type, buttons, pills, escrow strip) + linked card for every mockup. Not a product page.
-
-### 5.11 `host-edit.html` — Edit Villa page (ink chrome)
+### 5.10 Edit Villa page (ink chrome)
 - Header: villa name + live status pill (PUBLISHED / PENDING_REVIEW / UNLISTED) — status changes from edits are visible immediately.
 - Section-per-card layout mirroring wizard steps, each with its own บันทึก: ข้อมูลพื้นฐาน · ตำแหน่งที่ตั้ง (⚠ warning banner: editing unlists until re-review) · รูปภาพ · สิ่งอำนวยความสะดวก · กฎที่พัก · ราคา & ซีซั่น (SeasonEditor) · โหมดการจอง (BookingModeToggle) · เอกสาร & บัญชี (⚠ re-review).
 - Sections that trigger re-review carry a gold `ต้องตรวจสอบใหม่` tag on the card header; operational sections save instantly with a jade toast.
 
-### 5.12 `/saved` — ที่บันทึกไว้ (spec-only, decision 2026-06-12; no mockup yet — build in Phase 2, lowest-novelty page in the product)
+### 5.11 `/saved` — ที่บันทึกไว้ (decision 2026-06-12; present in the standalone reference as ที่บันทึกไว้ — build in Phase 2, lowest-novelty page in the product)
 - Standard villa-card grid (same component as §5.2 results, no map), newest-saved first, page title `ที่บันทึกไว้` + count.
-- **♡ states**: unfilled outline (default, as on existing mockups) → **filled coral-500** when saved; optimistic toggle with a brief scale "pop" micro-interaction. Unsave on this page un-fills in place + jade undo toast (`เลิกบันทึกแล้ว · เลิกทำ`); card removed on next visit, not yanked mid-scroll.
+- **♡ states**: unfilled outline (default) → **filled coral-500** when saved; optimistic toggle with a brief scale "pop" micro-interaction. Unsave on this page un-fills in place + jade undo toast (`เลิกบันทึกแล้ว · เลิกทำ`); card removed on next visit, not yanked mid-scroll.
 - **Empty state**: ripple illustration (reuse §5.2 empty pattern), `ยังไม่มีที่พักที่บันทึกไว้` + line `เจอที่ถูกใจ กด ♡ เก็บไว้เปรียบเทียบได้เลย` + aqua `ค้นหาที่พัก` CTA + concierge chip.
 - **Login bottom-sheet** (fires on logged-out ♡ tap anywhere): `เข้าสู่ระบบเพื่อบันทึกที่พัก` + LINE Login button + one trust line (`บันทึกไว้ดูได้ทุกอุปกรณ์`); after login the pending save completes automatically and the sheet closes with the heart filling.
 - **Nav**: ♡ icon in the header (guest chrome) linking here; no badge count (save counts parked in v2).
@@ -186,9 +183,9 @@ Design-system sampler (palette, type, buttons, pills, escrow strip) + linked car
 - All state pills carry text, never color alone.
 - `lang="th"` default; every string through i18n keys from day one (`next-intl`); EN is secondary locale. Buddhist-era years are NOT used in UI (use CE, Thai month names).
 
-## 8. Out of scope for v1 mockups
+## 8. Out of scope for v1 design
 
-Dark mode · native-app patterns · email/LINE message templates (Phase 3) · marketing/landing pages beyond home · English locale mockups (structure supports it; copy TH only).
+Dark mode · native-app patterns · email/LINE message templates (Phase 3) · marketing/landing pages beyond home · English locale designs (structure supports it; copy TH only).
 
 ## 9. Standalone-design audit (2026-06-12) — verdict + build checklist
 
