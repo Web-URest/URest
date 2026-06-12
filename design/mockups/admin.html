@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>U-Rest Admin — คิวตรวจสอบที่พัก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Chonburi&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/u-rest.css">
+<style>
+  body{background:#F2EFE6}
+  .admin-lay{display:grid;gap:18px;margin:20px 0 60px}
+  @media(min-width:1080px){.admin-lay{grid-template-columns:1.4fr 1fr}}
+  .qrow{cursor:pointer}
+  .qrow.sel td{background:var(--aqua-100)}
+  .drawer{position:sticky;top:84px;align-self:start}
+  .docbox{border:1.5px dashed var(--sand-300);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;font-size:.8125rem;background:var(--sand-50)}
+  .checks label{display:flex;gap:10px;align-items:center;font-size:.8438rem;padding:7px 0;border-bottom:1px solid var(--line)}
+  .checks label:last-child{border:none}
+  .checks input{width:17px;height:17px;accent-color:var(--jade-500)}
+  .photostrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+  .photostrip .ph{width:110px;height:78px;flex-shrink:0}
+  .sla-bad{color:var(--coral-600);font-weight:700}
+</style>
+</head>
+<body>
+
+<header class="topbar topbar--ink">
+  <div class="wrap inner">
+    <a class="logo" href="home.html">U<b>·</b>Rest <span class="tiny" style="font-family:var(--font-ui);color:var(--coral-500);font-weight:700">ADMIN</span></a>
+    <nav class="nav" style="display:flex">
+      <a class="on" href="#">ตรวจสอบที่พัก <span class="count" style="padding:1px 8px;margin-left:4px">4</span></a>
+      <a href="#">โอนเงินโฮสต์ (2)</a>
+      <a href="#">ข้อพิพาท (0)</a>
+      <a href="#">ผู้ใช้</a>
+    </nav>
+    <div class="avatar" style="background:var(--coral-500)">แอด</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="flex between" style="margin-top:20px;flex-wrap:wrap;gap:10px">
+    <div>
+      <h1 style="font-size:1.3rem">คิวตรวจสอบที่พัก</h1>
+      <div class="small muted">SLA: ตรวจภายใน 24 ชม. หลังโฮสต์ส่ง · ค้าง 4 รายการ</div>
+    </div>
+    <div class="flex gap8">
+      <button class="chip on">รอตรวจ (4)</button>
+      <button class="chip">ขอข้อมูลเพิ่ม (1)</button>
+      <button class="chip">ตรวจแล้ววันนี้ (6)</button>
+    </div>
+  </div>
+
+  <div class="admin-lay">
+    <div class="card" style="overflow-x:auto;align-self:start">
+      <table class="table">
+        <thead><tr><th>ที่พัก</th><th>โฮสต์</th><th>เอกสาร</th><th>ส่งเมื่อ</th><th>SLA</th></tr></thead>
+        <tbody>
+          <tr class="qrow sel">
+            <td><b>Palm Breeze 2</b><div class="tiny muted">พูลวิลล่า · นาจอมเทียน ชลบุรี</div></td>
+            <td>สุนิสา ว. <span class="pill pill-verified tiny">เคยผ่าน 2 หลัง</span></td>
+            <td>บัตร ✓ · โฉนด ✓ · เซลฟี่ ✓</td>
+            <td>เมื่อวาน 16:20</td>
+            <td>18:24 ชม.</td>
+          </tr>
+          <tr class="qrow">
+            <td><b>Baan Suan Rim Khao</b><div class="tiny muted">บ้านพัก · ปากช่อง นครราชสีมา</div></td>
+            <td>ประวิทย์ ก. <span class="pill pill-review tiny">โฮสต์ใหม่</span></td>
+            <td>บัตร ✓ · สัญญาเช่า ✓ · เซลฟี่ ✓</td>
+            <td>เมื่อวาน 11:02</td>
+            <td class="sla-bad">23:42 ชม. ⚠️</td>
+          </tr>
+          <tr class="qrow">
+            <td><b>Phuket Hilltop Pool Villa</b><div class="tiny muted">พูลวิลล่า · กะทู้ ภูเก็ต</div></td>
+            <td>Anchalee T. <span class="pill pill-review tiny">โฮสต์ใหม่</span></td>
+            <td>บัตร ✓ · โฉนด <b class="coral">✕ ไม่ชัด</b> · เซลฟี่ ✓</td>
+            <td>วันนี้ 08:15</td>
+            <td>9:51 ชม.</td>
+          </tr>
+          <tr class="qrow">
+            <td><b>วิลล่าน้ำใส ระยอง</b><div class="tiny muted">พูลวิลล่า · แกลง ระยอง</div></td>
+            <td>มงคล ส. <span class="pill pill-review tiny">โฮสต์ใหม่</span></td>
+            <td>บัตร ✓ · โฉนด ✓ · เซลฟี่ <b class="coral">✕ ขาด</b></td>
+            <td>วันนี้ 10:40</td>
+            <td>12:16 ชม.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="card card-pad drawer">
+      <div class="flex between">
+        <b>Palm Breeze 2 — สุนิสา ว.</b>
+        <span class="pill pill-review">รอตรวจสอบ</span>
+      </div>
+      <div class="tiny muted" style="margin-bottom:10px">ส่งเมื่อวาน 16:20 · โฮสต์เดิม (Palm Breeze, Baan Lalin — ★ 4.8)</div>
+
+      <div class="photostrip">
+        <div class="ph" style="--ph-a:#0E7C82;--ph-b:#7FD6D9"><span class="ph-label">รูป 1/14</span></div>
+        <div class="ph" style="--ph-a:#15808E;--ph-b:#9BDCE0"><span class="ph-label">รูป 2</span></div>
+        <div class="ph" style="--ph-a:#0E628C;--ph-b:#9BC9E8"><span class="ph-label">รูป 3</span></div>
+        <div class="ph" style="--ph-a:#247A6B;--ph-b:#A0E8CE"><span class="ph-label">รูป 4</span></div>
+      </div>
+
+      <div class="grid" style="gap:8px;margin-top:10px">
+        <div class="docbox">🪪 <div><b>บัตรประชาชน</b> — สุนิสา วงศ์สว่าง<div class="tiny muted">ตรงกับชื่อบัญชีรับเงิน SCB •••4012 ✓</div></div><a class="small" style="margin-left:auto" href="#">เปิดดู</a></div>
+        <div class="docbox">📜 <div><b>โฉนดที่ดิน น.ส.4จ</b><div class="tiny muted">ชื่อเจ้าของตรงกับบัตร ✓ · ที่ตั้ง ต.นาจอมเทียน</div></div><a class="small" style="margin-left:auto" href="#">เปิดดู</a></div>
+        <div class="docbox">🤳 <div><b>เซลฟี่คู่บัตร</b><div class="tiny muted">ใบหน้าตรงกับบัตร ✓</div></div><a class="small" style="margin-left:auto" href="#">เปิดดู</a></div>
+      </div>
+
+      <div class="checks" style="margin-top:12px">
+        <label><input type="checkbox" checked> ชื่อบนบัตร = ชื่อเจ้าของเอกสารสิทธิ์ = บัญชีรับเงิน</label>
+        <label><input type="checkbox" checked> เอกสารอ่านชัด ไม่มีร่องรอยตัดต่อ</label>
+        <label><input type="checkbox" checked> รูปที่พักเป็นรูปจริง (ค้นย้อนกลับแล้วไม่ซ้ำเพจอื่น)</label>
+        <label><input type="checkbox"> พิกัดแผนที่ตรงกับที่อยู่ในเอกสาร</label>
+      </div>
+
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+        <button class="btn btn-jade btn-sm">✓ อนุมัติเผยแพร่</button>
+        <button class="btn btn-ghost btn-sm">ขอข้อมูลเพิ่ม</button>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-block" style="margin-top:8px;color:var(--coral-600);border-color:var(--coral-100)">ปฏิเสธ (เลือกเหตุผล…)</button>
+      <p class="tiny muted" style="margin-top:8px">การอนุมัติจะแจ้งโฮสต์ทาง LINE และเผยแพร่ประกาศทันที</p>
+    </aside>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="tile-strip"></div>
+  <div class="wrap"><div class="legal">U-Rest Internal · admin.urest.co · การเข้าถึงถูกบันทึก log ทุกครั้ง</div></div>
+</footer>
+
+</body>
+</html>

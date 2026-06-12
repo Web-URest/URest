@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>พูลวิลล่า พัทยา 19–21 มิ.ย. · U-Rest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Chonburi&family=Sriracha&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/u-rest.css">
+<style>
+  .subhead{position:sticky;top:60px;z-index:40;background:rgba(251,247,238,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 0}
+  .summary{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 16px;font-size:.8125rem;font-weight:600}
+  .summary i{font-style:normal;color:var(--ink-40)}
+  .filters{display:flex;gap:8px;overflow-x:auto;padding-top:10px}
+  .layout{display:grid;gap:24px;margin-top:20px}
+  @media(min-width:980px){.layout{grid-template-columns:1.5fr 1fr}}
+  .results{display:grid;gap:22px}
+  @media(min-width:640px){.results{grid-template-columns:repeat(2,1fr)}}
+  .mapbox{display:none}
+  @media(min-width:980px){
+    .mapbox{display:block;position:sticky;top:124px;height:calc(100vh - 148px);border-radius:var(--r-card);overflow:hidden;border:1px solid var(--line)}
+  }
+  .map{
+    width:100%;height:100%;position:relative;
+    background:
+      linear-gradient(rgba(20,168,174,.06) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(20,168,174,.06) 1px,transparent 1px),
+      radial-gradient(60% 45% at 70% 80%, #CDE9E4 0%, transparent 60%),
+      #EFEADC;
+    background-size:36px 36px,36px 36px,auto,auto;
+  }
+  .map .road{position:absolute;background:#fff;border-radius:99px}
+  .pin{
+    position:absolute;transform:translate(-50%,-50%);
+    background:#fff;border:1.5px solid var(--ink-12);border-radius:999px;
+    font-size:.75rem;font-weight:700;padding:4px 11px;box-shadow:var(--shadow-sm);cursor:pointer;
+  }
+  .pin.on{background:var(--ink-900);color:#fff;border-color:var(--ink-900)}
+  .map-toggle{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:55}
+  @media(min-width:980px){.map-toggle{display:none}}
+  .ai-inline{display:flex;align-items:center;gap:10px;background:var(--aqua-100);border:1px solid var(--aqua-300);border-radius:var(--r-card);padding:12px 16px;font-size:.8438rem;font-weight:600}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap inner">
+    <a class="logo" href="home.html">U<b>·</b>Rest</a>
+    <nav class="nav">
+      <a class="on" href="search.html">ค้นหาที่พัก</a>
+      <a href="concierge.html">AI ช่วยหา</a>
+      <a href="host.html">เป็นโฮสต์กับเรา</a>
+    </nav>
+    <div class="flex gap12"><button class="lang">TH</button><div class="avatar">ปอ</div></div>
+  </div>
+</header>
+
+<div class="subhead">
+  <div class="wrap">
+    <button class="summary">พัทยา · ชลบุรี <i>·</i> ศ. 19 – อา. 21 มิ.ย. <i>·</i> 10 คน <i>✎</i></button>
+    <div class="filters">
+      <a class="chip on">ราคา: ≤ ฿16,000 ✕</a>
+      <a class="chip on">สระส่วนตัว ✕</a>
+      <a class="chip">คาราโอเกะ</a>
+      <a class="chip">BBQ / ปิ้งย่าง</a>
+      <a class="chip">สัตว์เลี้ยงได้</a>
+      <a class="chip">สไลเดอร์</a>
+      <a class="chip">↕ เรียง: แนะนำ</a>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="layout">
+    <div>
+      <div class="flex between" style="margin:18px 0 14px">
+        <div><b>24 หลังว่าง</b> <span class="muted small">ในพัทยา · คืนวันที่เลือก</span></div>
+      </div>
+
+      <div class="ai-inline" style="margin-bottom:18px">
+        💬 เลือกไม่ถูก? <a href="concierge.html" style="font-weight:700">ให้น้องเรสต์ช่วยเลือกจาก 24 หลังนี้ →</a>
+      </div>
+
+      <div class="results">
+
+        <a class="vcard" href="listing.html">
+          <div class="ph" style="--ph-a:#0E7C82;--ph-b:#7FD6D9">
+            <span class="vbadge">✓ โฮสต์ยืนยันแล้ว</span><button class="vsave">♡</button><span class="ph-label">photo</span>
+          </div>
+          <h3>Palm Breeze Pool Villa</h3>
+          <div class="vmeta">นาจอมเทียน — นอน 10 · 4 ห้องนอน · สระ 8×4 ม.</div>
+          <div class="vchips"><span>สระส่วนตัว</span><span>คาราโอเกะ</span><span>BBQ</span><span>+4</span></div>
+          <div class="vprice">
+            <div><b>฿28,800</b> <span class="small muted">รวม 2 คืน</span></div>
+            <div class="small"><span class="star">★</span> 4.8 (23)</div>
+          </div>
+        </a>
+
+        <a class="vcard" href="listing.html">
+          <div class="ph" style="--ph-a:#15808E;--ph-b:#9BDCE0">
+            <span class="vbadge">✓ โฮสต์ยืนยันแล้ว</span><button class="vsave">♡</button><span class="ph-label">photo</span>
+          </div>
+          <h3>Aqua Garden Villa 2</h3>
+          <div class="vmeta">ห้วยใหญ่ — นอน 12 · 4 ห้องนอน · สระ 10×4 ม.</div>
+          <div class="vchips"><span>สระส่วนตัว</span><span>เครื่องเสียง</span><span>โต๊ะพูล</span><span>+5</span></div>
+          <div class="vprice">
+            <div><b>฿30,400</b> <span class="small muted">รวม 2 คืน</span></div>
+            <div class="small"><span class="star">★</span> 4.9 (35)</div>
+          </div>
+        </a>
+
+        <a class="vcard" href="listing.html">
+          <div class="ph" style="--ph-a:#0E628C;--ph-b:#9BC9E8">
+            <span class="vbadge">✓ โฮสต์ยืนยันแล้ว</span><button class="vsave">♡</button><span class="ph-label">photo</span>
+          </div>
+          <h3>The Slide House Pattaya</h3>
+          <div class="vmeta">เขาพระตำหนัก — นอน 10 · 3 ห้องนอน · สไลเดอร์</div>
+          <div class="vchips"><span>สระส่วนตัว</span><span>สไลเดอร์</span><span>คาราโอเกะ</span><span>+2</span></div>
+          <div class="vprice">
+            <div><b>฿25,800</b> <span class="small muted">รวม 2 คืน</span></div>
+            <div class="small"><span class="star">★</span> 4.6 (14)</div>
+          </div>
+        </a>
+
+        <a class="vcard" href="listing.html">
+          <div class="ph" style="--ph-a:#247A6B;--ph-b:#A0E8CE">
+            <span class="vbadge">✓ โฮสต์ยืนยันแล้ว</span><button class="vsave">♡</button><span class="ph-label">photo</span>
+          </div>
+          <h3>บ้านสวนมะพร้าว พูลวิลล่า</h3>
+          <div class="vmeta">บางเสร่ — นอน 8 · 3 ห้องนอน · ใกล้หาด 600 ม.</div>
+          <div class="vchips"><span>สระส่วนตัว</span><span>BBQ</span><span>สัตว์เลี้ยงได้</span><span>+3</span></div>
+          <div class="vprice">
+            <div><b>฿21,600</b> <span class="small muted">รวม 2 คืน</span></div>
+            <div class="small"><span class="star">★</span> 4.7 (28)</div>
+          </div>
+        </a>
+
+      </div>
+
+      <div style="text-align:center;margin-top:28px">
+        <button class="btn btn-ghost">โหลดเพิ่ม (อีก 20 หลัง)</button>
+      </div>
+    </div>
+
+    <aside class="mapbox" aria-label="แผนที่ผลการค้นหา">
+      <div class="map">
+        <div class="road" style="left:8%;right:10%;top:34%;height:7px;transform:rotate(-4deg)"></div>
+        <div class="road" style="left:30%;top:10%;bottom:18%;width:7px;transform:rotate(8deg)"></div>
+        <div class="road" style="left:46%;right:4%;top:62%;height:6px;transform:rotate(3deg)"></div>
+        <button class="pin on" style="left:38%;top:42%">฿28,800</button>
+        <button class="pin" style="left:60%;top:30%">฿30,400</button>
+        <button class="pin" style="left:52%;top:68%">฿25,800</button>
+        <button class="pin" style="left:24%;top:74%">฿21,600</button>
+        <button class="pin" style="left:74%;top:52%">฿33,000</button>
+        <span style="position:absolute;right:10px;bottom:8px;font-size:.65rem;color:var(--ink-40)">map placeholder — Google Maps ในระบบจริง</span>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<button class="btn btn-ink map-toggle">🗺️ แผนที่</button>
+
+<footer class="footer">
+  <div class="tile-strip"></div>
+  <div class="wrap"><div class="legal">© 2026 U-Rest Co., Ltd. · ข้อกำหนดการใช้งาน · นโยบายความเป็นส่วนตัว (PDPA)</div></div>
+</footer>
+
+</body>
+</html>
