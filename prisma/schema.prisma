@@ -14,7 +14,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [vector] // pgvector — semantic search (listings, attractions; Phase 2+)
+  extensions = [vector, btree_gist] // pgvector (semantic search, Phase 2+) + btree_gist (Season GiST exclusion — DATA_MODEL.md)
 }
 
 // ───────────────────────── Identity (guests + hosts — one account, ADR-007) ─────
@@ -143,6 +143,9 @@ model Listing {
 
   @@index([regionId, status])
   @@index([hostId, status])
+  // GIN index for amenity-filter search. Declared so Prisma owns it (no migrate
+  // drift); the raw migration creates it under this same name (DATA_MODEL.md).
+  @@index([amenities], type: Gin, map: "Listing_amenities_gin")
 }
 
 model ListingPhoto {

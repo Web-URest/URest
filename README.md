@@ -14,7 +14,8 @@ Prereqs: **Node ≥22**, **pnpm** (`corepack enable`, or `npm i -g pnpm@10`), **
 pnpm install          # also runs prisma generate
 cp .env.example .env  # defaults work for local dev
 pnpm db:up            # Postgres + pgvector in Docker
-pnpm db:migrate       # apply schema
+pnpm db:migrate       # apply schema (incl. raw-SQL constraints)
+pnpm db:seed          # regions, Thai holidays, dev villa (idempotent)
 pnpm dev              # http://localhost:3000
 ```
 
