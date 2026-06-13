@@ -38,4 +38,11 @@ jobs:
       - name: Build
         run: pnpm build
         env:
+          # Dummy config so env.ts boot-validation passes during `next build`
+          # page-data collection (the auth route imports env). Real values are
+          # injected at runtime on Railway.
           DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
+          DATA_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+          AUTH_SECRET: "ci-build-dummy-secret-at-least-32-characters"
+          LINE_CLIENT_ID: "ci-dummy"
+          LINE_CLIENT_SECRET: "ci-dummy"
