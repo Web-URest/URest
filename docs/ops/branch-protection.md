@@ -9,26 +9,28 @@ branch-protection API and the rulesets API return:
 403: Upgrade to GitHub Pro or make this repository public to enable this feature.
 ```
 
-So a PR can currently be merged without CI passing or a review. Hard enforcement needs the
-`Web-URest` org on **GitHub Team** (or the repo made public). This doc is the one-step path to turn
-it on the moment Team is active, plus the free interim we run until then.
+So a PR can be merged without CI passing or a review. Enforcement needs the repo to be either
+**public** or on a paid/Education **GitHub Team** plan. This doc is the one-step path to turn it on,
+plus the interim we run until then.
 
-## Getting GitHub Team for free (chosen path: GitHub Education)
+## The plan (decided 2026-06-13)
 
-Free GitHub Team for an **organization** is *not* available to students self-serve — the Student
-Developer Pack only grants **personal** Pro. The free org route is faculty-sponsored:
+1. **Build phase → public.** Make the repo public to unlock rulesets/branch protection **for free**,
+   and apply the ruleset below. The repo carries a **proprietary, all-rights-reserved `LICENSE`**, so
+   public visibility grants no usage rights (it's viewable, not open source). Git history was checked
+   clean of secrets before going public (`.env` gitignored, no keys ever committed).
+2. **Launch → private + GitHub Team.** When the product is ready, flip the repo private and subscribe
+   to **GitHub Team** (~฿420/mo for 3 seats, within the ฿1,000 ceiling) to keep the same enforcement;
+   re-apply the ruleset then.
+   - *Free alternative:* a KMUTT instructor applies as a **GitHub Educator** (Settings → Billing →
+     Education benefits → Teacher, verified with a KMUTT email) and upgrades the `Web-URest` org to
+     **GitHub Team for free** for academic use. Keeps it private at no cost; needs a faculty sponsor +
+     a few days' verification. (The Student Developer Pack only gives *personal* Pro — it does not
+     cover an org repo.)
+3. **If the pilot is shelved**, the repo can be relicensed open (MIT/Apache) and kept public as a
+   portfolio piece. Loosening a license later is always possible; un-granting an open one is not.
 
-1. A **KMUTT instructor/advisor** signs in to GitHub → **Settings → Billing & plans → Education
-   benefits → Teacher**, and verifies with their KMUTT email + proof of faculty status.
-2. Once verified, they request / apply **GitHub Team for free** for the `Web-URest` organization
-   (academic use), or upgrade the org to Team via the education benefit.
-3. (Optional, do regardless) each student claims the **Student Developer Pack** at
-   <https://education.github.com/pack> for personal Pro + Copilot — useful, but it does **not**
-   enforce the org repo by itself.
-
-Verification can take a few days. Until it lands, use the interim below.
-
-## Apply the ruleset (run once Team is active)
+## Apply the ruleset (once the repo is public, or once on GitHub Team)
 
 The ruleset is versioned at [`main-ruleset.json`](./main-ruleset.json). Apply it with:
 
@@ -58,10 +60,10 @@ satisfied (GitHub won't let an author approve their own PR, and he's the only ow
 code-owner specifically mandatory. If you ever want a break-glass, add a `bypass_actors` entry for the
 org-admin role to `main-ruleset.json` (not included by default, on purpose).
 
-## Free interim (already in effect — no Team needed)
+## Interim (until the ruleset is applied)
 - **CODEOWNERS auto-request is live now** (the file is on `main`): every new PR pings its lane
-  reviewer automatically, so reviews/comments can happen. Note: a PR authored by the sole owner of a
-  path (Aok on `prisma/`, `env.ts`, etc.) gets no auto-reviewer — manually request bard or poom.
+  reviewer automatically. Note: a PR authored by the sole owner of a path (Aok on `prisma/`,
+  `env.ts`, etc.) gets no auto-reviewer — manually request bard or poom.
 - **Convention (`docs/CONTRIBUTING.md`):** only Aok merges, and only after **CI is green** and there
   is **≥1 review** — including a bard/poom review on Aok's own PRs. This is the same gate as the
-  ruleset, enforced by one person's discipline until Team makes it mechanical.
+  ruleset, enforced by discipline until the ruleset makes it mechanical.
