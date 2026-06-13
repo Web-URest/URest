@@ -1,6 +1,6 @@
 # U-Rest — agent instructions
 
-Escrow-protected Thai pool-villa booking marketplace. Real startup, pilot phase, 2-dev student team, ฿1,000/month infra ceiling. **Trust is the product** — every convention below exists because this codebase moves other people's money.
+Escrow-protected Thai pool-villa booking marketplace. Real startup, pilot phase, 3-dev student team, ฿1,000/month infra ceiling. **Trust is the product** — every convention below exists because this codebase moves other people's money.
 
 ## Source-of-truth documents (read before designing anything)
 
@@ -46,5 +46,21 @@ Never contradict a locked decision silently — if a task seems to require it, s
 
 ## Workflow
 
-- `main` is always deployable (Railway deploys it). Work on branches, PR even between the two devs, small PRs.
+- `main` is always deployable (Railway deploys it). Work on branches, small PRs — see **`docs/CONTRIBUTING.md`** for the full team workflow: feature-vertical ownership, branch naming `feat/<issue#>-slug`, the shared-file protocol, and the `afk`/`hitl` agent-dispatch lifecycle.
+- **One issue = one branch = one PR; only the lead (Aok / `@AokDesu`) merges.** Every PR auto-requests its `CODEOWNERS` reviewer. `afk` = a fully-specified issue a background Claude agent can pick up; `hitl` = needs a human (keys, decisions). Pick up work from your lane: `gh issue list --assignee @me`.
+- Shared files have a protocol (`docs/CONTRIBUTING.md` § shared-file): `schema.prisma` is additive-only + Aok-integrated (`docs/DATA_MODEL.md` first); `env.ts` + `.env.example` move in lockstep; `messages/{th,en}.json` are append-only per feature section; `globals.css` `@theme` is frozen after the design-token PR.
 - Phase 4 only: any change to AI prompts/tools/model requires `pnpm eval:concierge` to pass (the ~102-case golden set is the launch gate — see AI_CONCIERGE_SPEC §6).
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live in the `Web-URest/URest` GitHub Issues, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical triage roles map to this repo's existing labels: `ready-for-agent → afk`, `ready-for-human → hitl`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one root `docs/adr/` (+ a `CONTEXT.md` once `/grill-with-docs` creates one). See `docs/agents/domain.md`.

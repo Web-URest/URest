@@ -1,0 +1,42 @@
+# U-Rest code ownership.
+# @AokDesu (Aok, lead) reviews & merges EVERY PR — the catch-all below auto-requests him.
+# Later, more-specific rules ADD the domain owner as co-reviewer for their lane.
+# HIGH-RISK shared paths at the BOTTOM force @AokDesu only (last match wins).
+# Owners: Aok=@AokDesu · bard=@Chavaphon · poom=@Mrmo0p
+# NOTE: CODEOWNERS treats [ ] as a glob char-class, so the Next.js [locale] route
+#       segment is written as a single * (matches the literal [locale] directory).
+
+# --- catch-all: Aok reviews everything ---
+*                           @AokDesu
+
+# --- governance / process (lead) ---
+/.github/                   @AokDesu
+/CLAUDE.md                  @AokDesu
+/docs/adr/                  @AokDesu
+
+# --- feature lanes: domain owner co-reviews ---
+/src/app/*/listings/        @AokDesu @Chavaphon
+/src/app/*/saved/           @AokDesu @Chavaphon
+/src/app/*/chat/            @AokDesu @Chavaphon
+/src/lib/concierge/         @AokDesu @Chavaphon
+/docs/AI_CONCIERGE_SPEC.md  @AokDesu @Chavaphon
+/src/app/*/(auth)/          @AokDesu @Mrmo0p
+/src/app/*/admin/           @AokDesu @Mrmo0p
+/src/lib/auth/              @AokDesu @Mrmo0p
+/src/lib/listing/           @AokDesu @Mrmo0p
+/src/lib/admin/             @AokDesu @Mrmo0p
+
+# --- HIGH-RISK shared paths: @AokDesu only (override lane co-reviewers) ---
+# Money & ledger: integer-satang + append-only invariants (CLAUDE.md 1, ADR-003)
+/src/lib/money.ts           @AokDesu
+/src/lib/crypto.ts          @AokDesu
+/src/lib/ledger/            @AokDesu
+/src/lib/booking/           @AokDesu
+# Schema & migrations: additive-only, DATA_MODEL.md-first, btree_gist constraints
+/prisma/                    @AokDesu
+/docs/DATA_MODEL.md         @AokDesu
+# Config: env.ts + .env.example lockstep (CLAUDE.md 4)
+/src/lib/env.ts             @AokDesu
+/.env.example               @AokDesu
+# Design tokens: frozen after the Phase-1 token PR (CLAUDE.md 8)
+/src/app/globals.css        @AokDesu
