@@ -2,6 +2,7 @@
   "name": "u-rest",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "U-Rest — escrow-protected Thai pool-villa booking. จองพูลวิลล่าโดยไม่ต้องเสี่ยงโดนโกง",
   "engines": {
     "node": ">=22"

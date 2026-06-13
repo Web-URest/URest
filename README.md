@@ -36,3 +36,7 @@ PR gate (CI runs the same): `pnpm typecheck && pnpm lint && pnpm test`
 ## Build phases
 
 0. ✅ Design prototype & specs → 1. **Foundation** (current) → 2. Listings → 3. Booking & escrow → 4. AI concierge → 5. Trust & polish
+
+## License
+
+**Proprietary — all rights reserved** (see [`LICENSE`](LICENSE)). This repository is publicly viewable for development convenience only; it is **not** open source. You may not use, copy, modify, or distribute it beyond viewing/forking on GitHub. © 2026 the U-Rest founders.
