@@ -3,5 +3,13 @@
     "title": "The right pool villa, with your money protected",
     "subtitle": "Every stay is verified. Hosts are paid only after you check in.",
     "status": "Under development — Phase 1"
+  },
+  "Auth": {
+    "signInTitle": "Sign in",
+    "signInSubtitle": "Use your LINE account to sign in",
+    "signInWithLine": "Sign in with LINE",
+    "signOut": "Sign out",
+    "errorGeneric": "Sign-in failed. Please try again.",
+    "errorAccountNotLinked": "This account is already linked to another sign-in method."
   }
 }

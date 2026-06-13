@@ -21,10 +21,13 @@ const schema = z.object({
     .string()
     .min(44, "DATA_ENCRYPTION_KEY must be 32 bytes base64-encoded (44 chars)"),
 
-  // --- Phase 1: auth (uncomment when LINE Login lands) ---
-  // AUTH_SECRET: z.string().min(32),
-  // LINE_CLIENT_ID: z.string().min(1),
-  // LINE_CLIENT_SECRET: z.string().min(1),
+  // --- Phase 1: auth (LINE Login — ADR-007) ---
+  /** Auth.js session/CSRF signing secret. `openssl rand -base64 32`. */
+  AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be ≥32 chars (openssl rand -base64 32)"),
+  /** LINE Login channel ID (LINE Developers console). */
+  LINE_CLIENT_ID: z.string().min(1),
+  /** LINE Login channel secret. */
+  LINE_CLIENT_SECRET: z.string().min(1),
 
   // --- Phase 3: payments ---
   // OPN_PUBLIC_KEY: z.string().startsWith("pkey_"),
