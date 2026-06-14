@@ -9,11 +9,12 @@ U-Rest is a **single-context** repo: one root `docs/adr/`, no `CONTEXT-MAP.md`, 
 
 - **`CONTEXT.md`** at the repo root — the domain glossary. It does **not** exist yet; proceed silently
   when it's absent (see below).
-- **`docs/adr/`** — read the ADRs that touch the area you're about to work in (ADR-001…011: payments,
-  hosting, ledger, monolith, notifications, AI, auth, i18n, tooling, data protection, data model).
+- **`docs/adr/`** — read the ADRs that touch the area you're about to work in (ADR-001…013: payments,
+  hosting, ledger, monolith, notifications, AI, auth, i18n, tooling, data protection, data model,
+  in-app booking obligation, design-system workflow).
 - U-Rest also keeps canonical functional/spec docs that carry domain vocabulary today: **`PRODUCT_FLOWS.md`**
   (the functional contract), **`docs/DATA_MODEL.md`**, **`docs/AI_CONCIERGE_SPEC.md`**, **`PRD.md`**, and
-  **`DESIGN_SPEC.md`** + `design/standalone/urest-standalone.html`. Treat these as the working glossary
+  **`DESIGN_SPEC.md`** + the `src/components/ui/` component library (catalogued at `/styleguide`). Treat these as the working glossary
   until `CONTEXT.md` exists.
 
 If `CONTEXT.md` doesn't exist, **proceed silently**. Don't flag its absence or suggest creating it
@@ -26,7 +27,7 @@ upfront — `/grill-with-docs` creates it lazily when terms actually get resolve
 ├── CONTEXT.md          ← created lazily by /grill-with-docs
 ├── docs/adr/
 │   ├── ADR-001-payment-gateway-opn.md
-│   └── … ADR-011-data-model.md
+│   └── … ADR-013-design-system-workflow.md
 └── src/
 ```
 

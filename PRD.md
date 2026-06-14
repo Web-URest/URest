@@ -1,13 +1,13 @@
 # U-Rest — Product Requirements Document (v1)
 
 **Date:** 2026-06-12 · **Status:** Draft for team review
-**Companion documents:** `PRODUCT_FLOWS.md` (the functional contract — flows, state machines, screens), `DESIGN_SPEC.md` + `design/standalone/urest-standalone.html` (visual contract; gap list in DESIGN_SPEC §9), `BUSINESS_PLAN.md` (market, money, legal), `docs/adr/` (architecture decisions)
+**Companion documents:** `PRODUCT_FLOWS.md` (the functional contract — flows, state machines, screens), `DESIGN_SPEC.md` + the `src/components/ui/` component library previewed at `/styleguide` (visual contract; historical gap list in DESIGN_SPEC §9), `BUSINESS_PLAN.md` (market, money, legal), `docs/adr/` (architecture decisions)
 
 ---
 
 ## 1. Vision
 
-**จองพูลวิลล่าโดยไม่ต้องเสี่ยงโดนโกง.** U-Rest is the trust layer for Thai pool-villa group trips: every villa is identity-verified, every baht sits in escrow until 24 hours after check-in, and every conversation stays on-platform until the booking is real. The enemy is the bank-transfer deposit scam in Facebook/LINE booking — not other companies.
+**จองพูลวิลล่าโดยไม่ต้องเสี่ยงโดนโกง.** U-Rest is the trust layer for Thai pool-villa group trips: every villa is identity-verified, every baht sits in escrow until the guest checks out, every booking runs through U-Rest (never off-platform), and contact details stay masked until the booking is real. The enemy is the bank-transfer deposit scam in Facebook/LINE booking — not other companies.
 
 **What U-Rest is NOT (v1):** not a channel manager, not a property-management system, not a tour operator, not Airbnb-for-everything. One property type (pool villas / private-pool stays), one market (Pattaya–Jomtien–Huay Yai), one country, one trust promise.
 
@@ -71,17 +71,17 @@ Automated payouts via Opn Transfers API (first v2 item), iCal sync, co-host acco
 ## 6. Launch gate (all must be true before first real booking)
 
 **Legal/compliance** — details in BUSINESS_PLAN.md §6:
-- [ ] Privacy Policy + Business Policy pages live (Opn approval prerequisite + PDPA) — privacy policy **discloses all processors and cross-border transfers** (Railway SG, Cloudflare, Anthropic US, Resend, Google; PDPA §28)
-- [ ] Guest T&Cs + Host T&Cs published; host T&Cs include agent-of-payee clause, Hotel Act compliance warranty, strike/cancellation policy
+- [ ] Privacy Policy + Business Policy pages live (Opn approval prerequisite + PDPA) — privacy policy **discloses all processors and cross-border transfers** (Railway SG, Cloudflare, Anthropic US, Resend, Google, Meta; PDPA §28)
+- [ ] Guest T&Cs + Host T&Cs published; host T&Cs include agent-of-payee clause, Hotel Act compliance warranty, in-app-only booking obligation (ADR-012), strike/cancellation policy
 - [ ] ETDA Digital Platform Services notification filed (small-platform tier)
 - [ ] Opn live account approved; test charge + test refund executed end-to-end
 - [ ] Income-record spreadsheet/runbook for the account-holding founder (pass-through vs commission separation)
-- [ ] Processor DPAs accepted (Railway, Cloudflare, Anthropic, Resend, Google, Opn, LINE)
+- [ ] Processor DPAs accepted (Railway, Cloudflare, Anthropic, Resend, Google, Meta, Opn, LINE)
 - [ ] Breach-response runbook written: PDPC (สคส.) notification ≤72h, user notification when high-risk (ADR-010 §8)
 - [ ] Access-log retention ≥90 days configured (Computer Crime Act §26 — a KEEP obligation)
 
 **Product** — verified against `PRODUCT_FLOWS.md`:
-- [ ] Full happy path in production: signup → KYC → approval → listing live → request → accept → pay (PromptPay sandbox→live) → CONFIRMED → check-in +24h → payout run → PAID
+- [ ] Full happy path in production: signup → KYC → approval → listing live → request → accept → pay (PromptPay sandbox→live) → CONFIRMED → check-in → checkout → payout run → PAID
 - [ ] Full unhappy paths: host declines, request expires, payment window lapses, QR regenerates, guest cancels per policy tier, dispute freezes payout
 - [ ] Ledger reconciliation screen matches Opn dashboard after the above
 - [ ] LINE + email notifications fire for the §6 matrix

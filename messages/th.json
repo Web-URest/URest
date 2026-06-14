@@ -1,7 +1,41 @@
 {
   "Home": {
     "title": "พูลวิลล่าที่ใช่ จองแล้วเงินไม่หาย",
-    "subtitle": "ทุกที่พักผ่านการตรวจสอบ เงินถึงเจ้าของหลังเช็คอินเท่านั้น",
+    "subtitle": "ทุกที่พักผ่านการตรวจสอบ เงินถึงเจ้าของหลังเช็คเอาท์เท่านั้น",
     "status": "อยู่ระหว่างการพัฒนา — Phase 1"
+  },
+  "Status": {
+    "REQUESTED": "รอโฮสต์ยืนยัน",
+    "AWAITING_PAYMENT": "รอชำระเงิน",
+    "CONFIRMED": "ยืนยันแล้ว",
+    "CHECKED_IN": "เช็คอินแล้ว",
+    "DISPUTED": "มีข้อพิพาท",
+    "COMPLETED": "เข้าพักแล้ว",
+    "DECLINED": "ถูกปฏิเสธ",
+    "EXPIRED": "หมดเวลา",
+    "CANCELLED_BY_GUEST": "ยกเลิกแล้ว",
+    "CANCELLED_BY_HOST": "ยกเลิกโดยโฮสต์",
+    "HELD": "ถือไว้ใน escrow",
+    "RELEASABLE": "พร้อมโอน",
+    "PAID": "โอนแล้ว",
+    "FROZEN": "ระงับชั่วคราว",
+    "REVERSED": "คืนเงินแล้ว"
+  },
+  "Escrow": {
+    "guestStep1": "คุณชำระเงิน",
+    "guestStep2": "U-Rest ถือเงินไว้",
+    "guestStep3": "โฮสต์ได้รับเงินหลังเช็คเอาท์",
+    "hostStep1": "ผู้เข้าพักชำระแล้ว",
+    "hostStep2": "U-Rest ถือไว้",
+    "hostStep3": "โอนให้คุณหลังเช็คเอาท์"
+  },
+  "VillaCard": {
+    "verified": "โฮสต์ยืนยันแล้ว",
+    "perNight": "/ คืน",
+    "weekend": "ศ–ส",
+    "sleeps": "{count} คน",
+    "bedrooms": "{count} ห้องนอน",
+    "moreAmenities": "+{count}",
+    "reviews": "({count})"
   }
 }

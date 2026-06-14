@@ -7,11 +7,11 @@ Escrow-protected Thai pool-villa booking marketplace. Real startup, pilot phase,
 | Question | Document |
 |---|---|
 | What does feature X do? Exact states, timers, flows | `PRODUCT_FLOWS.md` — THE functional contract |
-| Why is the architecture like this? | `docs/adr/ADR-001…010` (payments, hosting, ledger, monolith, notifications, AI, auth, i18n, tooling, data protection) |
+| Why is the architecture like this? | `docs/adr/ADR-001…013` (payments, hosting, ledger, monolith, notifications, AI, auth, i18n, tooling, data protection, data model, in-app booking obligation, design-system workflow) |
 | AI concierge implementation | `docs/AI_CONCIERGE_SPEC.md` |
 | Table shapes, enums, raw-SQL constraints | `docs/DATA_MODEL.md` — change the design there BEFORE touching schema.prisma |
 | Scope, metrics, launch gate | `PRD.md` |
-| Visual tokens/components | `DESIGN_SPEC.md` + **`design/standalone/urest-standalone.html`** (primary interactive reference, adopted 2026-06-12 — see DESIGN_SPEC §9 for its audited gap list; §9 items A1–A2 must NOT be copied) |
+| Visual tokens/components | `DESIGN_SPEC.md` (§3 tokens) + the **`src/components/ui/`** component library, previewed at the dev-only **`/styleguide`** route (ADR-013); contribution rules in `docs/DESIGN_SYSTEM.md`. DESIGN_SPEC §9 keeps the historical audit's still-open build gaps — §9 item A2 must NOT be copied. |
 
 Never contradict a locked decision silently — if a task seems to require it, stop and surface the conflict.
 

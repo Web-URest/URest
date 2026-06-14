@@ -4,7 +4,7 @@
 
 ## Context
 
-Two developers (plus Claude Code), one product, pilot scale (~tens of bookings/month). The booking domain is timer-heavy (PRODUCT_FLOWS §6 lists 9 distinct timers) and state-machine-shaped. The temptation in tutorials is queues (BullMQ/Redis), serverless functions, and service splits — all of which add infrastructure for problems we don't have.
+Two developers (plus Claude Code), one product, pilot scale (~tens of bookings/month). The booking domain is timer-heavy (PRODUCT_FLOWS §8 lists the booking timers; the issue-report window and payout release are tied to the checkout transition) and state-machine-shaped. The temptation in tutorials is queues (BullMQ/Redis), serverless functions, and service splits — all of which add infrastructure for problems we don't have.
 
 ## Decision
 

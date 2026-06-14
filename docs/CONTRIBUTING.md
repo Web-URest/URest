@@ -12,8 +12,8 @@ schema slice + i18n + tests). Everyone uses Claude Code, so there is no frontend
 | Person | GitHub | Lane | Owns |
 |---|---|---|---|
 | Aok | `@AokDesu` | infra + escrow money-core + integration | Dev DB, Railway, R2, secrets; `lib/ledger`, `lib/booking`, `lib/money`, quote engine, Opn, payouts, refunds, money E2E; `prisma/` schema integration; **merges every PR**; compliance/launch gate |
-| bard | `@Chavaphon` | guest experience + AI concierge | search/detail, saved villas, instant-book + QR, per-booking messaging, reviews; the whole Phase-4 concierge; design tokens + app shell |
-| poom | `@Mrmo0p` | identity + host authoring + admin/moderation | LINE login, OTP, admin auth; listing wizard + KYC, host dashboard/calendar; admin approval; disputes, reports/strikes |
+| bard | `@Chavaphon` | guest experience + AI concierge | search/detail, saved villas, instant-book + QR, per-booking messaging, reviews; the whole Phase-4 concierge; design tokens + app shell + the `src/components/ui/` library + `/styleguide` |
+| poom | `@Mrmo0p` | identity + host authoring + admin/moderation | login (email/password + Google/Facebook/LINE), OTP, admin auth; listing wizard + KYC, host dashboard/calendar; admin approval; disputes, reports/strikes |
 
 Find your work: `gh issue list -R Web-URest/URest --assignee @me`. Every issue carries a milestone
 (`M1`–`M5`), one `area:*` lane label, and `afk` or `hitl`.
@@ -66,6 +66,11 @@ owner-namespaced, and funnel the truly-serial ones through Aok.**
 - **`src/app/globals.css` `@theme`** — land the design-token PR (#5) **first**, then **freeze**.
   Feature PRs *consume* tokens, never add/change them; a genuinely new token needs its own
   `area:design-system` PR + `DESIGN_SPEC.md` update (CLAUDE.md rule 8).
+- **`src/components/ui/` (the design system)** — UI is built **reuse-first** from this
+  library per `docs/DESIGN_SYSTEM.md`; if a component is missing, add it here + to
+  `/styleguide` (with all its states) rather than inlining a one-off. Features *compose*
+  components — they don't re-style raw elements. Keeps distributed/`afk` work visually +
+  flow-consistent (ADR-013).
 
 ## Issue-tracker hygiene
 

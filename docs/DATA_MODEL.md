@@ -39,7 +39,7 @@ erDiagram
 
 ## Identity domain ✅ (PR #1 — see ADR-007/010)
 
-`User` (nullable PII, soft-delete/anonymize/suspend) · `Account`/`Session`/`VerificationToken` (Auth.js, DB sessions) · `PhoneOtp` (salted hashes) · `AdminUser` (separate table, argon2 + encrypted TOTP) · `KycSubmission` → `KycDocument` (private-R2 keys, `purgeAfter` 90d) · `PayoutAccount` (`accountNumberEnc` AES-GCM) · `Consent` + `AuditLog` (append-only).
+`User` (nullable PII, soft-delete/anonymize/suspend; **`passwordHash?` argon2id for email+password login, ADR-007**) · `Account`/`Session`/`VerificationToken` (Auth.js, DB sessions; **`Account` holds Google/Facebook/LINE OAuth, accounts linked by verified email**) · `PhoneOtp` (salted hashes) · `AdminUser` (separate table, argon2 + encrypted TOTP) · `KycSubmission` → `KycDocument` (private-R2 keys, `purgeAfter` 90d) · `PayoutAccount` (`accountNumberEnc` AES-GCM) · `Consent` + `AuditLog` (append-only).
 
 ## Listings domain ✅ (Phase 2 slice — in schema.prisma now)
 
@@ -60,7 +60,7 @@ erDiagram
 
 | Model | Key fields | Why shaped this way |
 |---|---|---|
-| `Booking` | `code` @unique (UR-YYMM-NNNN, assigned at CONFIRMED) · `BookingStatus` (§2.1 verbatim: REQUESTED, AWAITING_PAYMENT, CONFIRMED, CHECKED_IN, COMPLETED, DECLINED, EXPIRED, CANCELLED_BY_GUEST, CANCELLED_BY_HOST, DISPUTED) · checkIn/checkOut @db.Date · **snapshot block**: `priceLines Json`, totalSatang, commissionSatang, cancellationTier, houseRulesText, bookingMode · **timers**: respondBy?, payBy? · `escrowState` cache (NONE, HELD, RELEASABLE, FROZEN, PAID, REVERSED) written ONLY by lib/ledger · contactUnmaskedAt? | Snapshot = host edits can't move an agreed price (ADR-011 №3); timers are rows swept by cron (rule 3); indexes: (status,respondBy), (status,payBy), (escrowState,checkIn) due-list, (listingId,checkIn) |
+| `Booking` | `code` @unique (UR-YYMM-NNNN, assigned at CONFIRMED) · `BookingStatus` (§2.1 verbatim: REQUESTED, AWAITING_PAYMENT, CONFIRMED, CHECKED_IN, COMPLETED, DECLINED, EXPIRED, CANCELLED_BY_GUEST, CANCELLED_BY_HOST, DISPUTED) · checkIn/checkOut @db.Date · **snapshot block**: `priceLines Json`, totalSatang, commissionSatang, cancellationTier, houseRulesText, bookingMode · **timers**: respondBy?, payBy? · `escrowState` cache (NONE, HELD, RELEASABLE, FROZEN, PAID, REVERSED) written ONLY by lib/ledger · contactUnmaskedAt? | Snapshot = host edits can't move an agreed price (ADR-011 №3); timers are rows swept by cron (rule 3); payout releases at checkout (ADR-012) so the due-list sweep is keyed on checkOut; indexes: (status,respondBy), (status,payBy), (escrowState,checkOut) due-list, (listingId,checkIn) |
 | `BookingCodeCounter` | yearMonth @id, counter | `SELECT … FOR UPDATE` in the confirm transaction |
 | `Payment` | opnChargeId @unique, method (PROMPTPAY,CARD), amountSatang, status (PENDING, SUCCESSFUL, FAILED, EXPIRED), qrExpiresAt? | one row per charge attempt — QR regeneration = new row |
 | `WebhookEvent` | opnEventId @unique, payload Json, processedAt? | idempotency before processing (rule 6) |
@@ -78,7 +78,7 @@ erDiagram
 | `Message` | threadId, senderId, **bodyRaw + bodyMasked + wasMasked** (ADR-011 №5), readAt? | masking frozen at write; raw readable ONLY in admin dispute view; LINE-push throttle via NotificationLog timestamps |
 | `Review` | bookingId @unique, overall + 4 sub-scores (ความสะอาด/ตรงตามรูป/การติดต่อโฮสต์/ความคุ้มค่า §3.4), photoKeys[], removedByAdminId?/removedAt? | one per booking, no edits; soft moderation removal (reason in AuditLog) |
 | `GuestRating` | bookingId @unique, score 1–5 | host→guest, shown to future hosts |
-| `Dispute` | bookingId @unique, status (OPEN, RESOLVED_RELEASED, RESOLVED_PARTIAL, RESOLVED_REFUNDED), partialRefundPct?, guestAppealedAt?/hostAppealedAt? | ≤24h window + one-appeal-each in lib/booking (§5.3) |
+| `Dispute` | bookingId @unique, status (OPEN, RESOLVED_RELEASED, RESOLVED_PARTIAL, RESOLVED_REFUNDED), partialRefundPct?, guestAppealedAt?/hostAppealedAt? | dispute window = check-in → checkout + one-appeal-each in lib/booking (§5.3) |
 | `Report` | reporterId? (nullable: logged-out listing reports), **bookingId?/listingId?/reviewId?/reportedUserId? + CHECK exactly-one** (constraint №3), status (RECEIVED, IN_REVIEW, RESOLVED, DISMISSED) | the §5.6 queue; money-at-risk via bookingId join |
 
 ## Concierge domain 🤖 (Phase 4 — AI_CONCIERGE_SPEC §5)
@@ -100,4 +100,4 @@ App-level checks still run first in `lib/` for friendly errors; the constraints 
 
 ## Index strategy (beyond FK defaults)
 
-Search: `Listing(regionId, status)` · host dashboards: `Listing(hostId, status)` · sweeps: `Booking(status, respondBy)`, `Booking(status, payBy)`, `NotificationLog(status, createdAt)`, `KycDocument(purgeAfter)` · payout due-list: `Booking(escrowState, checkIn)` · queues: `KycSubmission(status, submittedAt)`, `Report(status, createdAt)` · chat: `Message(threadId, createdAt)` · amenities filter: GIN on `Listing.amenities` (raw SQL if Prisma's `type: Gin` lags).
+Search: `Listing(regionId, status)` · host dashboards: `Listing(hostId, status)` · sweeps: `Booking(status, respondBy)`, `Booking(status, payBy)`, `NotificationLog(status, createdAt)`, `KycDocument(purgeAfter)` · payout due-list: `Booking(escrowState, checkOut)` · queues: `KycSubmission(status, submittedAt)`, `Report(status, createdAt)` · chat: `Message(threadId, createdAt)` · amenities filter: GIN on `Listing.amenities` (raw SQL if Prisma's `type: Gin` lags).
