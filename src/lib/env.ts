@@ -21,10 +21,14 @@ const schema = z.object({
     .string()
     .min(44, "DATA_ENCRYPTION_KEY must be 32 bytes base64-encoded (44 chars)"),
 
-  // --- Phase 1: auth (uncomment when LINE Login lands) ---
+  // --- Phase 1: auth (uncomment when login lands) — email/password + OAuth (ADR-007) ---
   // AUTH_SECRET: z.string().min(32),
   // LINE_CLIENT_ID: z.string().min(1),
   // LINE_CLIENT_SECRET: z.string().min(1),
+  // GOOGLE_CLIENT_ID: z.string().min(1),
+  // GOOGLE_CLIENT_SECRET: z.string().min(1),
+  // FACEBOOK_CLIENT_ID: z.string().min(1),
+  // FACEBOOK_CLIENT_SECRET: z.string().min(1),
 
   // --- Phase 3: payments ---
   // OPN_PUBLIC_KEY: z.string().startsWith("pkey_"),

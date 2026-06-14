@@ -30,6 +30,12 @@
   --color-jade-500: #1e9e6a; /* verified / success / confirmed */
   --color-gold-400: #e9b949; /* star ratings only */
 
+  /* Status-pill tints — DESIGN_SPEC §3 pill mapping (soft bg tints + one dark text) */
+  --color-jade-100: #e2f4eb; /* COMPLETED / PAID pill bg */
+  --color-coral-100: #fbe9e4; /* CANCELLED_* / FROZEN / REVERSED pill bg */
+  --color-gold-100: #fbf1d9; /* DISPUTED / PENDING_REVIEW / NEEDS_INFO pill bg */
+  --color-gold-800: #8a6a1f; /* DISPUTED / PENDING_REVIEW / NEEDS_INFO pill text */
+
   /* Typography (fonts injected by next/font in layout.tsx) */
   --font-sans: var(--font-anuphan), "Noto Sans Thai", sans-serif;
   --font-display: var(--font-chonburi), serif;

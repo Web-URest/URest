@@ -22,7 +22,7 @@ const chonburi = Chonburi({
 export const metadata: Metadata = {
   title: "U-Rest — จองพูลวิลล่าโดยไม่ต้องเสี่ยงโดนโกง",
   description:
-    "ทุกที่พักผ่านการตรวจสอบ เงินถึงเจ้าของหลังเช็คอินเท่านั้น — escrow-protected pool villa booking",
+    "ทุกที่พักผ่านการตรวจสอบ เงินถึงเจ้าของหลังเช็คเอาท์เท่านั้น — escrow-protected pool villa booking",
 };
 
 export default async function LocaleLayout({

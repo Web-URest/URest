@@ -1,8 +1,17 @@
 # U-Rest — UX/UI Design Specification (v1)
 
-> **2026-06-12 — primary reference:** `design/standalone/urest-standalone.html` (interactive, all pages/roles) is THE design reference, adopted after a full audit against PRODUCT_FLOWS (§9 below = audit verdict + build-time gap list). The original static mockups were removed the same day (recoverable from git history, commit `0b1b620`). §3 tokens are implemented in `src/app/globals.css` and pending re-derivation from the standalone's palette in a follow-up session — until then, new components follow the standalone's look.
+> **Design source of truth (2026-06-14, ADR-013):** the **design tokens in §3** —
+> implemented in `src/app/globals.css` `@theme`, the single source of truth, no further
+> re-derivation pending — **plus the React component library** in `src/components/ui/`,
+> previewed live at the dev-only **`/styleguide`** route. Build new UI *from those
+> components*; if one is missing, add it to the library + `/styleguide` rather than
+> inlining a one-off (`docs/DESIGN_SYSTEM.md` is the contribution contract). Earlier
+> design-exploration artifacts — the original static mockups and the later single-file
+> HTML prototype — are **retired** (recoverable from git history; mockups at commit
+> `0b1b620`). §9 below preserves that audit's verdict and its still-open build-checklist
+> gaps.
 
-Companion artifact: the interactive standalone in `design/standalone/`.
+Companion: the live component catalog at **`/styleguide`** (run `pnpm dev`).
 This document is the contract for all UI implementation in Phases 1–5. If code and spec disagree, fix one of them.
 
 ---
@@ -13,7 +22,7 @@ This document is the contract for all UI implementation in Phases 1–5. If code
 |---|---|
 | Name | **U-Rest** (ยูเรสต์) |
 | Tagline (TH) | พักให้เต็มที่ จองให้มั่นใจ — "Rest fully, book with confidence" |
-| Trust line | เงินของคุณอยู่กับ U-Rest จนกว่าจะเช็คอิน — appears on every money-related screen |
+| Trust line | เงินของคุณอยู่กับ U-Rest จนกว่าจะเช็คเอาท์ — appears on every money-related screen |
 | Personality | A modern Thai resort: warm, calm, generous — but precise and serious wherever money appears |
 | Anti-goal | Must NOT look like a Facebook villa page, a generic Airbnb clone, or corporate-bank sterile |
 
@@ -25,7 +34,7 @@ This document is the contract for all UI implementation in Phases 1–5. If code
 2. **Thai-first.** All copy designed in Thai first; English is the translation. Numerals: Arabic digits. Currency: `฿12,900` (no decimals). Dates: `ศ. 19 มิ.ย.` short form.
 3. **Mobile-first.** Every screen is designed at 390px and then adapted up. Primary actions live in a sticky bottom bar on mobile.
 4. **One coral per screen.** Coral marks THE money action (pay, payout). If a screen has two coral elements, one is wrong.
-5. **States are first-class.** A booking has 9+ states; each has a defined pill color and copy. Never render a state as plain text.
+5. **States are first-class.** A booking has 10 states; each has a defined pill color and copy. Never render a state as plain text.
 
 ## 3. Design tokens
 
@@ -52,9 +61,9 @@ Implemented in `src/app/globals.css` under `@theme`. Use these names in the app 
 | `--white` | `#FFFFFF` | Cards on sand |
 
 Status pill mapping (booking state → bg/text):
-`REQUESTED` sand-100/ink · `AWAITING_PAYMENT` coral-500/white · `CONFIRMED` aqua-100/teal-600 · `CHECKED_IN` aqua-500/ink · `COMPLETED` jade tint `#E2F4EB`/jade · `DECLINED`,`EXPIRED` sand-300/ink-60% · `CANCELLED_*`,`REFUNDED` `#FBE9E4`/coral-600 · `PENDING_REVIEW`,`NEEDS_INFO` (listings) gold tint `#FBF1D9`/`#8A6A1F`.
+`REQUESTED` sand-100/ink · `AWAITING_PAYMENT` coral-500/white · `CONFIRMED` aqua-100/teal-600 · `CHECKED_IN` aqua-500/ink · `DISPUTED` gold tint `#FBF1D9`/`#8A6A1F` + ⚠ (distinct from listing `PENDING_REVIEW` by the marker + booking context) · `COMPLETED` jade tint `#E2F4EB`/jade · `DECLINED`,`EXPIRED` sand-300/ink-60% · `CANCELLED_*` `#FBE9E4`/coral-600 · `PENDING_REVIEW`,`NEEDS_INFO` (listings) gold tint `#FBF1D9`/`#8A6A1F`.
 
-Payout-state pills: `HELD` ("ถือไว้ใน escrow") = CONFIRMED style · `PAID` ("โอนแล้ว") = COMPLETED style · `FROZEN` ("ระงับชั่วคราว") = CANCELLED style + 🔒.
+Payout-state pills: `HELD` ("ถือไว้ใน escrow") = CONFIRMED style · `PAID` ("โอนแล้ว") = COMPLETED style · `FROZEN` ("ระงับชั่วคราว") = CANCELLED style + 🔒 · `REVERSED` ("คืนเงินแล้ว", guest-facing label **REFUNDED**) = CANCELLED style. **REFUNDED is the money/payout label for the `REVERSED` escrow state — it is NOT a `BookingStatus`. A cancelled booking shows its `CANCELLED_*` booking pill *and* this money pill (two pill families: booking state vs. money state).**
 Booking-mode badge (a listing setting, not a state): `⚡ จองทันที` aqua-100/teal-600 · `ส่งคำขอก่อน` sand-100/ink-60%. Shown on listing pages, villa cards, and host listing rows.
 
 ### Typography
@@ -83,7 +92,7 @@ Thai line-height needs +10% vs Latin defaults; never below 1.5 for body. `font-f
 
 1. **Tile strip** (`.tile-strip`) — 8px-tall checkered aqua pool-tile band. Used: top of footer, under hero, top edge of payment cards. Never more than 2 per screen.
 2. **Ripple underline** (`.ripple`) — aqua SVG squiggle under marketing headings.
-3. **Escrow strip** (`.escrow`) — the brand component. 3-step horizontal tracker: `คุณชำระเงิน → U-Rest ถือเงินไว้ → โฮสต์ได้รับเงินหลังเช็คอิน`, current step highlighted. Appears on: checkout, payment, trip detail, host payout screens, listing page (compact variant).
+3. **Escrow strip** (`.escrow`) — the brand component. 3-step horizontal tracker: `คุณชำระเงิน → U-Rest ถือเงินไว้ → โฮสต์ได้รับเงินหลังเช็คเอาท์`, current step highlighted. Appears on: checkout, payment, trip detail, host payout screens, listing page (compact variant).
 4. **Photo placeholders** — until real photos: layered aqua/sand gradient "caustics" tiles, varying hue per villa. Never gray boxes.
 
 ## 4. Layout system
@@ -94,13 +103,13 @@ Thai line-height needs +10% vs Latin defaults; never below 1.5 for body. `font-f
 - Host & Admin areas swap the sand topbar for an ink-900 one (instant context cue: "back of house").
 - Sticky mobile action bar (`.actionbar`): white, hairline top, contains price + primary CTA. Used on listing, checkout, wizard.
 
-## 5. Pages (per-page spec — interactive reference: `design/standalone/urest-standalone.html`)
+## 5. Pages (per-page spec — live reference: the `/styleguide` catalog + `src/components/ui/`)
 
 ### 5.1 Home / Search
 - **Hero** on ink-900 with caustic aqua radial glows + grain. Chonburi headline: `พูลวิลล่าที่ใช่ จองแล้วเงินไม่หาย` + trust subline. Staggered fade-up.
 - **Search card** overlapping hero bottom (white, raised): ที่ไหน (region select) / เช็คอิน–เช็คเอาท์ (dates) / กี่คน (guests) / aqua search button. Stacks vertically on mobile.
 - **AI concierge entry**: full-width banner card under search — chat-bubble icon, `บอกความต้องการ เดี๋ยว AI หาให้` + example chips (`"วิลล่า 10 คน ใกล้หาดจอมเทียน มีคาราโอเกะ"`). Tapping opens the concierge chat. This is a primary entry, not a corner widget.
-- **Trust row**: 3 compact value props (โฮสต์ยืนยันตัวตน / เงินถือไว้จนเช็คอิน / รีวิวจากผู้เข้าพักจริง) each with icon — rendered as the escrow story, not generic feature bullets.
+- **Trust row**: 3 compact value props (โฮสต์ยืนยันตัวตน / เงินถือไว้จนเช็คเอาท์ / รีวิวจากผู้เข้าพักจริง) each with icon — rendered as the escrow story, not generic feature bullets.
 - **Region rail**: horizontal scroll cards (พัทยา, หัวหิน, เขาใหญ่, เชียงใหม่, กาญจนบุรี, ภูเก็ต) with villa counts.
 - **Featured villas grid**: villa cards (see component below).
 
@@ -146,13 +155,13 @@ Two flows by listing booking mode:
 - **ภาพรวม**: stat cards (เดือนนี้: รายรับ, การจอง, อัตราตอบรับ, เรตติ้ง) + actionable inbox preview.
 - **คำขอจอง**: request rows with guest, dates, party-size, total, countdown chip `ตอบภายใน 9:12 ชม.`, accept (aqua) / decline (ghost). Accept → confirm modal stating guest then has 12h to pay.
 - **ปฏิทิน**: **villa switcher chips at top — one calendar per villa, never merged**; 2-month grid; states: ว่าง (white) / จองแล้ว (aqua, guest name) / ปิดเอง (sand-300 diagonal). Tap-drag to block dates — the tool that prevents Facebook double-bookings; banner reminds host to block externally-booked dates (stronger copy when the villa is ⚡ instant).
-- **รายรับ**: payout ledger (date, booking code, gross, `ค่าบริการ 10%`, net, status: ถือไว้ใน escrow / โอนแล้ว / 🔒 ระงับชั่วคราว with reason tooltip) + escrow strip in host orientation (`ผู้เข้าพักชำระแล้ว → U-Rest ถือไว้ → โอนให้คุณหลังเช็คอิน 24 ชม.`).
+- **รายรับ**: payout ledger (date, booking code, gross, `ค่าบริการ 10%`, net, status: ถือไว้ใน escrow / โอนแล้ว / 🔒 ระงับชั่วคราว with reason tooltip) + escrow strip in host orientation (`ผู้เข้าพักชำระแล้ว → U-Rest ถือไว้ → โอนให้คุณหลังเช็คเอาท์`).
 
 ### 5.8 Listing wizard
 - 6 steps, progress dots + save-draft: ① ข้อมูลพื้นฐาน (type, region, address pin) ② รูปภาพ (drag-drop grid, min 5, cover star) ③ รายละเอียด & สิ่งอำนวยความสะดวก (amenity checkboxes incl. pool size fields) ④ กฎที่พัก (party policy radio, quiet hours, deposit amount) ⑤ ราคา & โหมดการจอง ⑥ ยืนยันตัวตน (Thai ID upload + right-to-rent doc + selfie).
 - **Step ⑤** = pricing layers + booking mode: base weekday/weekend inputs → **SeasonEditor** (named date-range rows, each with own weekday/weekend rates, `+ เพิ่มซีซั่น`, overlapping ranges rejected inline) → holiday rate (system Thai-holiday calendar note) → extra-guest fee → earnings preview after 10% fee → **BookingModeToggle** (ส่งคำขอก่อน default / ⚡ จองทันที gated by acknowledgment checkbox about calendar accuracy + strike consequence).
 - Final screen: `ส่งให้ทีมงานตรวจสอบ` → PENDING_REVIEW state card explaining ~24h review (the trust gate, framed as a feature: `ทุกที่พักผ่านการตรวจสอบ เพื่อให้ผู้เข้าพักมั่นใจ`).
-- The standalone shows all six steps; step ⑤ ราคา (seasonal pricing) is the most novel and matches the locked pricing model.
+- Step ⑤ ราคา (seasonal pricing) is the most novel and matches the locked pricing model.
 
 ### 5.9 Admin console (dense, ink chrome, desktop-first; Anuphan only, no display font)
 - Queue table: listing, host, region, KYC docs status, submitted-at, SLA chip (>24h = coral).
@@ -164,11 +173,11 @@ Two flows by listing booking mode:
 - Section-per-card layout mirroring wizard steps, each with its own บันทึก: ข้อมูลพื้นฐาน · ตำแหน่งที่ตั้ง (⚠ warning banner: editing unlists until re-review) · รูปภาพ · สิ่งอำนวยความสะดวก · กฎที่พัก · ราคา & ซีซั่น (SeasonEditor) · โหมดการจอง (BookingModeToggle) · เอกสาร & บัญชี (⚠ re-review).
 - Sections that trigger re-review carry a gold `ต้องตรวจสอบใหม่` tag on the card header; operational sections save instantly with a jade toast.
 
-### 5.11 `/saved` — ที่บันทึกไว้ (decision 2026-06-12; present in the standalone reference as ที่บันทึกไว้ — build in Phase 2, lowest-novelty page in the product)
+### 5.11 `/saved` — ที่บันทึกไว้ (decision 2026-06-12 — build in Phase 2, lowest-novelty page in the product)
 - Standard villa-card grid (same component as §5.2 results, no map), newest-saved first, page title `ที่บันทึกไว้` + count.
 - **♡ states**: unfilled outline (default) → **filled coral-500** when saved; optimistic toggle with a brief scale "pop" micro-interaction. Unsave on this page un-fills in place + jade undo toast (`เลิกบันทึกแล้ว · เลิกทำ`); card removed on next visit, not yanked mid-scroll.
 - **Empty state**: ripple illustration (reuse §5.2 empty pattern), `ยังไม่มีที่พักที่บันทึกไว้` + line `เจอที่ถูกใจ กด ♡ เก็บไว้เปรียบเทียบได้เลย` + aqua `ค้นหาที่พัก` CTA + concierge chip.
-- **Login bottom-sheet** (fires on logged-out ♡ tap anywhere): `เข้าสู่ระบบเพื่อบันทึกที่พัก` + LINE Login button + one trust line (`บันทึกไว้ดูได้ทุกอุปกรณ์`); after login the pending save completes automatically and the sheet closes with the heart filling.
+- **Login bottom-sheet** (fires on logged-out ♡ tap anywhere): `เข้าสู่ระบบเพื่อบันทึกที่พัก` + login buttons (email/password · Google · Facebook · LINE, ADR-007) + one trust line (`บันทึกไว้ดูได้ทุกอุปกรณ์`); after login the pending save completes automatically and the sheet closes with the heart filling.
 - **Nav**: ♡ icon in the header (guest chrome) linking here; no badge count (save counts parked in v2).
 
 ## 6. Component inventory (build once in Phase 1+ as React components)
@@ -187,12 +196,12 @@ Two flows by listing booking mode:
 
 Dark mode · native-app patterns · email/LINE message templates (Phase 3) · marketing/landing pages beyond home · English locale designs (structure supports it; copy TH only).
 
-## 9. Standalone-design audit (2026-06-12) — verdict + build checklist
+## 9. Design audit (2026-06-12, historical) — verdict + build checklist
 
-`design/standalone/urest-standalone.html` was audited page-by-page, all three roles, against PRODUCT_FLOWS/PRD. **Verdict: ~90% aligned, frequently word-for-word** (timers, escrow strips, NEEDS_INFO checklist, payout reconciliation, dispute mechanics, reports queue, all 10 booking states). Adopted as the primary reference. The gaps below are **requirements for the build** — implement them in the app; the artifact itself stays as-is.
+The retired single-file HTML prototype (`design/standalone/urest-standalone.html` — now removed; see the header note + ADR-013) was audited page-by-page, all three roles, against PRODUCT_FLOWS/PRD. **Verdict at the time: ~90% aligned, frequently word-for-word** (timers, escrow strips, NEEDS_INFO checklist, payout reconciliation, dispute mechanics, reports queue, all 10 booking states). The gaps below remain **requirements for the build** — implement them in `src/components/ui/` + the page routes; this section is kept as the historical gap list.
 
-**A. In the design but contradicts locked decisions — do NOT copy:**
-1. Login = email/password + Google/Apple/LINE. Build: **LINE Login only** (ADR-007), no password form, no Google/Apple.
+**A. Login & admin vs. the artifact** (A1 is now ALIGNED after the 2026-06-14 multi-provider reversal; only A2 remains do-NOT-copy):
+1. Login = email/password + Google/Apple/LINE. **UPDATED 2026-06-14 — ADR-007 reversed to multi-provider: build email/password + Google + Facebook + LINE. Use Facebook in place of Apple (no Apple — a paid Apple Developer account is out of the pilot budget). The multi-button login is now the intended model.**
 2. Admin as a role on the consumer login modal. Build: separate `/admin` surface + `AdminUser` credentials/TOTP (ADR-007/010); guest↔host = context switch in one account, never a login role.
 
 **B. Locked features absent from the design — add during build:**
