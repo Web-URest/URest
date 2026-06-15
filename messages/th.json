@@ -45,5 +45,26 @@
     "bedrooms": "{count} ห้องนอน",
     "moreAmenities": "+{count}",
     "reviews": "({count})"
+  },
+  "Nav": {
+    "search": "ค้นหา",
+    "concierge": "AI ช่วยหา",
+    "becomeHost": "เป็นโฮสต์",
+    "signIn": "เข้าสู่ระบบ",
+    "saved": "ที่บันทึกไว้",
+    "trips": "ทริปของฉัน",
+    "messages": "ข้อความ",
+    "profile": "โปรไฟล์",
+    "menu": "เมนู",
+    "switchToEn": "Switch to English",
+    "switchToTh": "เปลี่ยนเป็นภาษาไทย"
+  },
+  "Footer": {
+    "col1Title": "U-Rest",
+    "col2Title": "ช่วยเหลือ",
+    "col3Title": "ติดตามเรา",
+    "pdpa": "นโยบายความเป็นส่วนตัว",
+    "tos": "ข้อกำหนดการใช้งาน",
+    "trustLine": "เงินของคุณอยู่กับ U-Rest จนกว่าจะเช็คเอาท์"
   }
 }

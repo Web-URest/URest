@@ -3,6 +3,8 @@ import { Anuphan, Chonburi } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { routing } from "@/i18n/routing";
+import { Topbar } from "@/components/ui/Topbar";
+import { Footer } from "@/components/ui/Footer";
 import "../globals.css";
 
 const anuphan = Anuphan({
@@ -40,7 +42,11 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body className={`${anuphan.variable} ${chonburi.variable} antialiased`}>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <Topbar />
+          {children}
+          <Footer />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
