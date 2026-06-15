@@ -37,6 +37,15 @@
     "hostStep2": "U-Rest holds it",
     "hostStep3": "Paid to you after checkout"
   },
+  "VillaCard": {
+    "verified": "Verified host",
+    "perNight": "/ night",
+    "weekend": "Fri–Sat",
+    "sleeps": "{count} guests",
+    "bedrooms": "{count} bedrooms",
+    "moreAmenities": "+{count}",
+    "reviews": "({count})"
+  },
   "Nav": {
     "search": "Search",
     "concierge": "AI Concierge",
@@ -57,14 +66,5 @@
     "pdpa": "Privacy policy",
     "tos": "Terms of service",
     "trustLine": "Your money stays with U-Rest until you check out"
-  },
-  "VillaCard": {
-    "verified": "Verified host",
-    "perNight": "/ night",
-    "weekend": "Fri–Sat",
-    "sleeps": "{count} guests",
-    "bedrooms": "{count} bedrooms",
-    "moreAmenities": "+{count}",
-    "reviews": "({count})"
   }
 }

@@ -8,6 +8,7 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 /**
  * TopbarShell — pure rendering (DESIGN_SPEC §4: sand topbar, hairline bottom).
  * Exported separately so /styleguide can render mock logged-in/out states.
+ * TODO: host/admin variant swaps bg-sand-50 → bg-ink-900 (DESIGN_SPEC §4 "back of house").
  */
 export type TopbarUser = {
   name?: string | null;

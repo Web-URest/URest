@@ -37,6 +37,15 @@
     "hostStep2": "U-Rest ถือไว้",
     "hostStep3": "โอนให้คุณหลังเช็คเอาท์"
   },
+  "VillaCard": {
+    "verified": "โฮสต์ยืนยันแล้ว",
+    "perNight": "/ คืน",
+    "weekend": "ศ–ส",
+    "sleeps": "{count} คน",
+    "bedrooms": "{count} ห้องนอน",
+    "moreAmenities": "+{count}",
+    "reviews": "({count})"
+  },
   "Nav": {
     "search": "ค้นหา",
     "concierge": "AI ช่วยหา",
@@ -57,14 +66,5 @@
     "pdpa": "นโยบายความเป็นส่วนตัว",
     "tos": "ข้อกำหนดการใช้งาน",
     "trustLine": "เงินของคุณอยู่กับ U-Rest จนกว่าจะเช็คเอาท์"
-  },
-  "VillaCard": {
-    "verified": "โฮสต์ยืนยันแล้ว",
-    "perNight": "/ คืน",
-    "weekend": "ศ–ส",
-    "sleeps": "{count} คน",
-    "bedrooms": "{count} ห้องนอน",
-    "moreAmenities": "+{count}",
-    "reviews": "({count})"
   }
 }
