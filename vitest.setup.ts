@@ -6,5 +6,6 @@ process.env.DATABASE_URL ??= "postgresql://test:test@localhost:5432/test";
 process.env.DATA_ENCRYPTION_KEY ??=
   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 process.env.AUTH_SECRET ??= "test-auth-secret-at-least-32-chars-long";
+process.env.ADMIN_SESSION_SECRET ??= "test-admin-session-secret-32-chars-min";
 process.env.LINE_CLIENT_ID ??= "test-line-client-id";
 process.env.LINE_CLIENT_SECRET ??= "test-line-client-secret";
