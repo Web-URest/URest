@@ -13,6 +13,7 @@ The identity slice of the schema holds the most damaging data in the product: po
 
 2. **Field-level AES-256-GCM** (`src/lib/crypto.ts`, key in `DATA_ENCRYPTION_KEY`, 32-byte base64, unique per environment): exactly two columns — `PayoutAccount.accountNumberEnc` and `AdminUser.totpSecretEnc`. Ciphertext format `v1.<keyId>.<iv>.<ct>.<tag>` names its key, so rotation = add key v2, re-encrypt lazily on read. Bank numbers decrypt in **exactly one code path**: the admin payout view (§5.2). Expanding the encrypted-fields list requires updating this ADR.
    - Explicitly NOT encrypted: phone, email, display name — operationally queried (login, notifications, support), lower blast radius; encrypting them buys complexity, not safety, while access control and the never-store list do the heavy lifting.
+   - **Passwords are argon2id hashes, never reversible** (`AdminUser.passwordHash` and the consumer `User.passwordHash` for email+password login, ADR-007) — one-way hashes are deliberately **outside** the field-encrypted list.
    - **Key loss = data loss.** The production key is backed up in the founders' password manager; it is not in git, not in logs, not in Railway build args (runtime env only).
 
 3. **`AdminUser` is a separate table from `User`** — separate credentials (argon2id + TOTP), separate login surface, no self-signup, no relation to the consumer auth path. An authz bug in guest/host code structurally cannot grant admin powers.
@@ -28,6 +29,7 @@ The identity slice of the schema holds the most damaging data in the product: po
    | KYC documents of rejected/withdrawn submissions | 90 days | `KycDocument.purgeAfter` → cron deletes R2 object + row |
    | OTP rows (expired or consumed) | next sweep | `expiresAt` index |
    | Concierge transcripts | 12 months | Phase 4 (AI_CONCIERGE_SPEC §5) |
+   | In-app booking messages (`Message` rows) | 12 months | Phase 3; cron sweep on `Message.createdAt` (aligns PRD §5 "messages retained 12 months") |
    | Sessions | Auth.js expiry | adapter-managed |
    | **Access/traffic logs — retain ≥90 days MINIMUM** | Computer Crime Act B.E. 2560 §26 (service-provider obligation) | Railway log retention + request logging config (Phase 1 ops) |
 
@@ -36,7 +38,7 @@ The identity slice of the schema holds the most damaging data in the product: po
 8. **Thai-law mapping (reviewed 2026-06-12; lawyer agenda items at incorporation):**
    - **Religion on Thai ID cards is PDPA §26 sensitive data.** The KYC upload UI instructs hosts to cover/redact the ศาสนา line before uploading (PRODUCT_FLOWS §4.1 ⑥); KYC consent is recorded explicitly (`Consent` type `KYC_PROCESSING`). We never intentionally collect §26 categories.
    - **Selfies remain ordinary (non-biometric) personal data only while review is HUMAN.** The v2 parking-lot item "automated ID verification (vendor OCR + face match)" would make this biometric processing under PDPA — explicit biometric consent + a new ADR are prerequisites for that upgrade.
-   - **Cross-border transfers (§28):** Railway (Singapore), Cloudflare R2, Anthropic (US), Resend, Google — personal data leaves Thailand. Privacy policy discloses all processors + transfer purposes; each processor's DPA accepted before launch (PRD §6 checklist).
+   - **Cross-border transfers (§28):** Railway (Singapore), Cloudflare R2, Anthropic (US), Resend, Google, Meta (Facebook Login) — personal data leaves Thailand. Privacy policy discloses all processors + transfer purposes; each processor's DPA accepted before launch (PRD §6 checklist).
    - **Breach response:** qualifying breaches notified to the PDPC (สคส.) **within 72 hours**, affected users when high-risk. One-page runbook required before launch (PRD §6).
    - **DPO not required at pilot scale** (no large-scale sensitive-data processing); revisit at the incorporation/scale triggers alongside a lightweight record of processing activities (RoPA).
 
@@ -45,5 +47,5 @@ The identity slice of the schema holds the most damaging data in the product: po
 - ✅ A leaked DB dump exposes no ID numbers (never stored), no usable bank accounts (encrypted), no OTPs (hashed), no documents (in R2 behind separate credentials) — the catastrophic-leak scenario degrades to a bad-but-survivable PII incident.
 - ✅ Trust claims become auditable: consent records, immutable admin audit trail, documented retention windows — the things a future lawyer, accountant, or Opn compliance review asks for first.
 - ⚠️ `lib/crypto.ts` reads `process.env` lazily — the one documented exception to CLAUDE.md rule 4 (key rotation + test injection); boot validation still lives in `env.ts`.
-- ⚠️ Argon2 dependency deferred until the admin login surface is built (Phase 2) — `passwordHash` column exists now, the seed script chooses the library then.
+- ⚠️ Passwords use argon2id: `AdminUser.passwordHash` (column exists now) and a new consumer `User.passwordHash` added when email+password login is wired (Phase 1 auth, ADR-007). Both are one-way hashes — never in the field-encrypted list; the library is chosen when the first login surface is built.
 - ⚠️ The 90-day purge cron must exist before the first real KYC rejection (Phase 2 listing work) — `purgeAfter` is set from day one so no backfill is needed.

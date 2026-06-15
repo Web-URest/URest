@@ -6,7 +6,7 @@
 
 Budget is ~฿1,000/month all-in. The stack is locked (Next.js App Router + TS + Prisma + PostgreSQL/pgvector). Two workload traits constrain hosting:
 
-1. **Timers everywhere.** Host-accept 12h, payment windows 12h/1h, PromptPay QR 15-min expiry, payout release at check-in +24h, review window 14d, SLA alarms. These want a reliable scheduler.
+1. **Timers everywhere.** Host-accept 12h, payment windows 12h/1h, PromptPay QR 15-min expiry, payout release at checkout, review window 14d, SLA alarms. These want a reliable scheduler.
 2. **Money webhooks.** Opn's charge-succeeded webhook confirms payment inside a 15-minute QR window. A cold-starting or sleeping instance that delays webhook processing can cost a real booking.
 
 Options rejected:

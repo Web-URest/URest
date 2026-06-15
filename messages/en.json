@@ -1,7 +1,7 @@
 {
   "Home": {
     "title": "The right pool villa, with your money protected",
-    "subtitle": "Every stay is verified. Hosts are paid only after you check in.",
+    "subtitle": "Every stay is verified. Hosts are paid only after you check out.",
     "status": "Under development — Phase 1"
   },
   "Auth": {
@@ -11,5 +11,39 @@
     "signOut": "Sign out",
     "errorGeneric": "Sign-in failed. Please try again.",
     "errorAccountNotLinked": "This account is already linked to another sign-in method."
+  },
+  "Status": {
+    "REQUESTED": "Awaiting host",
+    "AWAITING_PAYMENT": "Payment due",
+    "CONFIRMED": "Confirmed",
+    "CHECKED_IN": "Checked in",
+    "DISPUTED": "Disputed",
+    "COMPLETED": "Completed",
+    "DECLINED": "Declined",
+    "EXPIRED": "Expired",
+    "CANCELLED_BY_GUEST": "Cancelled",
+    "CANCELLED_BY_HOST": "Cancelled by host",
+    "HELD": "Held in escrow",
+    "RELEASABLE": "Ready to pay out",
+    "PAID": "Paid out",
+    "FROZEN": "On hold",
+    "REVERSED": "Refunded"
+  },
+  "Escrow": {
+    "guestStep1": "You pay",
+    "guestStep2": "U-Rest holds it",
+    "guestStep3": "Host paid after checkout",
+    "hostStep1": "Guest paid",
+    "hostStep2": "U-Rest holds it",
+    "hostStep3": "Paid to you after checkout"
+  },
+  "VillaCard": {
+    "verified": "Verified host",
+    "perNight": "/ night",
+    "weekend": "Fri–Sat",
+    "sleeps": "{count} guests",
+    "bedrooms": "{count} bedrooms",
+    "moreAmenities": "+{count}",
+    "reviews": "({count})"
   }
 }
