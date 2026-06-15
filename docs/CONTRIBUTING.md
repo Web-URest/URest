@@ -59,6 +59,11 @@ owner-namespaced, and funnel the truly-serial ones through Aok.**
 - **`src/lib/env.ts` + `.env.example`** — move in **lockstep, same PR** (CLAUDE.md rule 4). Prefix by
   lane: `AUTH_`, `LINE_`, `OPN_`, `R2_`, `ANTHROPIC_`/`CONCIERGE_` (unprefixed only for the existing
   `DATABASE_URL`, `DATA_ENCRYPTION_KEY`). Append within your prefix group; never reorder existing entries.
+  - **Shared dev secrets:** LINE Login dev keys are shared — one **U-Rest Dev** channel,
+    `LINE_CLIENT_ID`/`LINE_CLIENT_SECRET` from the founders' password manager, callback
+    `http://localhost:3000/api/auth/callback/line` already registered (everyone runs on `:3000`).
+    Production has its own channel; those keys live only in Railway runtime env. `.env` is
+    gitignored — never paste keys into chat, issues, or commits.
 - **`messages/th.json` + `en.json`** — one top-level section per feature (`Auth.*`, `Listing.*`,
   `Booking.*`, `Admin.*`, `Concierge.*`, `Notification.*`, shared atoms in `Common.*`). **Thai-first**
   (`th.json` is the source); mirror the key into `en.json` in the same PR. Append within *your* section
