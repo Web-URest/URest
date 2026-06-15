@@ -12,6 +12,27 @@
     "errorGeneric": "Sign-in failed. Please try again.",
     "errorAccountNotLinked": "This account is already linked to another sign-in method."
   },
+  "Otp": {
+    "title": "Verify your phone",
+    "subtitle": "Verify your phone number to send booking requests and message hosts.",
+    "phoneLabel": "Phone number",
+    "phonePlaceholder": "08X-XXX-XXXX",
+    "sendCode": "Send code",
+    "codeLabel": "6-digit code",
+    "confirm": "Verify",
+    "resend": "Resend code",
+    "sent": "Code sent to {phone}. Enter the 6 digits within 10 minutes.",
+    "verified": "Phone verified ✓",
+    "alreadyVerified": "Your phone is already verified.",
+    "devHint": "Dev mode: the code is printed to the server log (console).",
+    "errorInvalidPhone": "Invalid number. Use a Thai mobile (06/08/09).",
+    "errorRateLimited": "A code was just sent. Please wait a moment and try again.",
+    "errorInvalidCode": "Wrong code. {remaining} attempts left.",
+    "errorExpired": "The code expired. Please request a new one.",
+    "errorTooManyAttempts": "Too many attempts. Please request a new code.",
+    "errorNoActiveCode": "No active code. Please request a new one.",
+    "errorGeneric": "Something went wrong. Please try again."
+  },
   "Status": {
     "REQUESTED": "Awaiting host",
     "AWAITING_PAYMENT": "Payment due",
