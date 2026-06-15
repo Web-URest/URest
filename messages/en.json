@@ -37,6 +37,27 @@
     "hostStep2": "U-Rest holds it",
     "hostStep3": "Paid to you after checkout"
   },
+  "Nav": {
+    "search": "Search",
+    "concierge": "AI Concierge",
+    "becomeHost": "Become a host",
+    "signIn": "Sign in",
+    "saved": "Saved",
+    "trips": "My trips",
+    "messages": "Messages",
+    "profile": "Profile",
+    "menu": "Menu",
+    "switchToEn": "Switch to English",
+    "switchToTh": "Switch to Thai"
+  },
+  "Footer": {
+    "col1Title": "U-Rest",
+    "col2Title": "Support",
+    "col3Title": "Follow us",
+    "pdpa": "Privacy policy",
+    "tos": "Terms of service",
+    "trustLine": "Your money stays with U-Rest until you check out"
+  },
   "VillaCard": {
     "verified": "Verified host",
     "perNight": "/ night",

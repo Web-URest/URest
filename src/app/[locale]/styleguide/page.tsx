@@ -9,6 +9,8 @@ import { EscrowStrip } from "@/components/ui/EscrowStrip";
 import { Button } from "@/components/ui/Button";
 import { VillaCard, type Villa } from "@/components/ui/VillaCard";
 import { TileStrip } from "@/components/ui/TileStrip";
+import { TopbarShell } from "@/components/ui/Topbar";
+import { Footer } from "@/components/ui/Footer";
 
 /**
  * /styleguide — the live design-system catalog (ADR-013, docs/DESIGN_SYSTEM.md).
@@ -186,6 +188,24 @@ export default function StyleguidePage() {
               <VillaCard villa={v} />
             </div>
           ))}
+        </div>
+      </Section>
+
+      <Section title="Topbar — logged-out">
+        <div className="-mx-6 border border-line">
+          <TopbarShell user={null} />
+        </div>
+      </Section>
+
+      <Section title="Topbar — logged-in (avatar fallback)">
+        <div className="-mx-6 border border-line">
+          <TopbarShell user={{ name: "Chavaphon", image: null }} />
+        </div>
+      </Section>
+
+      <Section title="Footer">
+        <div className="-mx-6">
+          <Footer />
         </div>
       </Section>
     </main>
