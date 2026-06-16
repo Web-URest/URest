@@ -20,6 +20,8 @@ The identity slice of the schema holds the most damaging data in the product: po
 
 4. **Auth.js database sessions** (Prisma adapter) — revocable. Suspending or banning a user (§5.4) deletes their sessions and takes effect immediately; JWTs would let a banned fraudster keep working until token expiry.
 
+   > _Amended 2026-06-16:_ #4 governs the **consumer** Auth.js path. The **admin** surface (ADR-010 #3) deliberately uses a **stateless 8h HMAC session token** (`src/lib/admin/session.ts`), not a DB session. Immediate revocation is still guaranteed by a different mechanism — `requireAdmin` re-reads the `AdminUser` row every request and rejects `disabledAt`, so disabling an admin takes effect immediately; the signed expiry bounds a stolen token. The one property not provided — revoking a single issued token without disabling the account (per-device logout) — is deferred (needs a session table) and accepted at pilot scale given the small admin roster.
+
 5. **PDPA mechanics in the schema:** PII columns on `User` are nullable so anonymization can scrub them while the row survives for ledger integrity (soft delete per §3.7: `deletedAt`, `anonymizedAt`). `Consent` records type + policy version + timestamp, append-only — provable consent can't be backfilled. `AuditLog` records every admin action (who/what/when/before-after), append-only; KYC review, payout marking, holds, and suspensions write to it in the same transaction as the action itself.
 
 6. **Retention/purge windows** (enforced by the cron sweep, ADR-004 pattern) — note the last row is a KEEP obligation, not a purge:
