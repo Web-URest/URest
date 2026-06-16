@@ -32,6 +32,7 @@
     "errorTooManyAttempts": "Too many attempts. Please request a new code.",
     "errorNoActiveCode": "No active code. Please request a new one.",
     "errorGeneric": "Something went wrong. Please try again."
+  },
   "Admin": {
     "consoleTitle": "U-Rest Admin",
     "dashboardTitle": "Admin console",

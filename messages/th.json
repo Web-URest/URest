@@ -32,6 +32,7 @@
     "errorTooManyAttempts": "พยายามหลายครั้งเกินไป กรุณาขอรหัสใหม่",
     "errorNoActiveCode": "ไม่พบรหัสที่ใช้งานได้ กรุณาขอรหัสใหม่",
     "errorGeneric": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"
+  },
   "Admin": {
     "consoleTitle": "ทีมงาน U-Rest",
     "dashboardTitle": "แผงควบคุมทีมงาน",
