@@ -1,6 +1,6 @@
 # U-Rest data model — full catalog
 
-**Status:** Designed in full 2026-06-12 (grill #7, decisions in ADR-011) · **Implemented:** identity (PR #1) + listings domain (Phase 2 slice). Phase 3/4 tables below are the agreed design and land with their guarding `lib/` modules — change them here FIRST, then implement.
+**Status:** Designed in full 2026-06-12 (grill #7, decisions in ADR-011) · **Implemented:** identity (PR #1) + listings domain (Phase 2 slice) + booking/escrow + social tables (Phase 3 slice, issue #19 — with `lib/booking` + `lib/ledger`; social-table logic still lands in #24/#26/#27/#28). Phase 4 tables below are the agreed design and land with their guarding `lib/` modules — change them here FIRST, then implement.
 **Contract:** every enum mirrors `PRODUCT_FLOWS.md` state machines verbatim. Conventions: money = `Int` satang · `DateTime` = UTC · cuid ids · transitions only inside `lib/<domain>/`.
 
 Legend: ✅ migrated now · 🔒 Phase 3 (booking/escrow) · 🤖 Phase 4 (AI)
