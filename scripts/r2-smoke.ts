@@ -87,10 +87,12 @@ async function main(): Promise<void> {
   const direct = await fetch(
     `https://${ACCOUNT}.r2.cloudflarestorage.com/${PRIVATE_BUCKET}/${privKey}`,
   );
+  // Any 4xx = rejected (object not served). R2 returns 400 for an unsigned S3
+  // request (no auth header to parse), AWS returns 403 — both mean "blocked".
   check(
     "private object blocks unsigned direct access",
-    direct.status === 401 || direct.status === 403,
-    `status ${direct.status}`,
+    direct.status >= 400 && direct.status < 500,
+    `status ${direct.status} (rejected, not served)`,
   );
 
   // 3a. A signed GET works.
