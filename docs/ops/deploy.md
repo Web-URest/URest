@@ -37,12 +37,17 @@ standalone server → waits for `/api/health` to pass → routes traffic.
    |---|---|---|
    | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | Railway reference variable — links the DB plugin |
    | `DATA_ENCRYPTION_KEY` | *(generated, see below)* | 32 bytes base64; **never commit**; back up in the password manager (ADR-010) |
+   | `AUTH_SECRET` | `openssl rand -base64 32` | Auth.js signing secret (LINE login is live — ADR-007) |
+   | `ADMIN_SESSION_SECRET` | `openssl rand -base64 32` | Admin session HMAC; **separate** from `AUTH_SECRET` (ADR-010 #4) |
+   | `LINE_CLIENT_ID` / `LINE_CLIENT_SECRET` | *(prod LINE Login channel)* | a channel SEPARATE from dev; register the prod callback URL |
    | `NODE_ENV` | `production` | |
    | `HOSTNAME` | `0.0.0.0` | **Required** — the Next standalone server otherwise binds localhost and Railway can't reach it |
 
    `PORT` is injected by Railway; the standalone server reads it automatically — do not set it.
-   These four are all `env.ts` currently requires; add `AUTH_SECRET`, `ADMIN_SESSION_SECRET`,
-   `LINE_*`, `OPN_*`, `ANTHROPIC_API_KEY`, … as each phase un-comments them in `env.ts` (rule 4).
+   All of the above are **required at boot today**: `env.ts` validates them and `instrumentation.ts`
+   exits non-zero if any is missing, so a deploy missing one *fails* rather than going live. Add
+   `GOOGLE_*` / `FACEBOOK_*` (ADR-007 multi-provider), `OPN_*` (Phase 3), and `ANTHROPIC_API_KEY`
+   (Phase 4) as each is un-commented in `env.ts` (rule 4).
 
 4. **Generate + back up `DATA_ENCRYPTION_KEY`** (ADR-010 — key loss = data loss):
    ```bash
@@ -60,26 +65,46 @@ standalone server → waits for `/api/health` to pass → routes traffic.
 Two layers:
 
 1. **Railway managed backups** — enable on the Postgres service (daily).
-2. **Weekly `pg_dump` to Cloudflare R2** — independent copy off Railway:
+2. **Weekly `pg_dump` to Cloudflare R2** — independent copy off Railway. From a laptop, use the
+   Postgres **public** URL (Railway → Postgres → Variables → `DATABASE_PUBLIC_URL`, host
+   `…proxy.rlwy.net` — the internal `…railway.internal` URL only works between Railway services),
+   and a `pg_dump` whose major version is **≥ the server** (prod is **PG 18** as of 2026-06; a pg16
+   client refuses to dump it). Easiest is a version-matched container that writes the dump to the host:
    ```bash
-   pg_dump "$DATABASE_URL" --format=custom --no-owner --file="urest-$(date +%F).dump"
-   # upload urest-<date>.dump to the private R2 bucket (rclone / aws s3 cp --endpoint-url …)
+   docker run --rm pgvector/pgvector:pg18 \
+     pg_dump "$DATABASE_PUBLIC_URL" -Fc --no-owner > "urest-$(date +%F).dump"
+   # then upload urest-<date>.dump to the private R2 bucket (rclone / aws s3 cp --endpoint-url …)
    ```
-   For the pilot this can be a manual weekly task or a scheduled job once the ADR-004 scheduler
-   lands; keep at least the last 4 weekly dumps.
+   For the pilot this is a manual weekly task or a scheduled job once the ADR-004 scheduler lands;
+   keep at least the last 4 weekly dumps. The public URL carries the DB password — keep it out of
+   logs / shell history.
 
 ### Restore test (do once, record below)
 
-```bash
-# Into a SCRATCH database — never the live one:
-createdb urest_restore_test
-pg_restore --no-owner --dbname="postgresql://…/urest_restore_test" urest-<date>.dump
-# sanity-check row counts on a couple of tables, then drop the scratch DB.
+Restore into a **throwaway container** (never the live DB), on a Postgres major version that
+**matches prod** (PG 18) so the dump/restore tools are compatible — use the pgvector image so the
+`vector` extension restores cleanly. From the repo root (PowerShell shown for `$PROD`/sleep):
+
+```powershell
+$PROD = '<DATABASE_PUBLIC_URL from Railway>'   # secret — keep out of shared logs
+
+docker run -d --name pgtest -e POSTGRES_USER=urest -e POSTGRES_PASSWORD=test `
+  -e POSTGRES_DB=urest_restore_test pgvector/pgvector:pg18
+Start-Sleep -Seconds 6   # let it initialize
+
+docker exec pgtest pg_dump "$PROD" -Fc --no-owner -f /tmp/urest.dump
+docker exec pgtest pg_restore -U urest --no-owner -d urest_restore_test /tmp/urest.dump
+docker exec pgtest psql -U urest -d urest_restore_test -c '\dt'                      # tables back?
+docker exec pgtest psql -U urest -d urest_restore_test -c 'SELECT count(*) FROM "User";'
+docker rm -f pgtest   # delete the throwaway container + its data
 ```
+
+(Bash: `PROD='…'`, `sleep 6`, drop the backticks.) Success = `\dt` lists the tables and the
+commands finish without error.
 
 | Date tested | Dump used | By | Result |
 |---|---|---|---|
-| _(fill in)_ | | | |
+| 2026-06-16 | prod `DATABASE_PUBLIC_URL` (PG 18) | @AokDesu | ✅ 22 tables restored (incl. `_prisma_migrations`); `User` count 0 (fresh prod) |
 
 ## Verify (maps to issue #9 acceptance criteria)
 
