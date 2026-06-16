@@ -26,6 +26,14 @@ const schema = z.object({
   // (uncomment + register the OAuth apps when each lands).
   /** Auth.js session/CSRF signing secret. `openssl rand -base64 32`. */
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be ≥32 chars (openssl rand -base64 32)"),
+  /**
+   * HMAC secret for the admin session token (ADR-007/010). Deliberately
+   * SEPARATE from AUTH_SECRET so the admin surface shares no signing material
+   * with the consumer auth path. `openssl rand -base64 32`.
+   */
+  ADMIN_SESSION_SECRET: z
+    .string()
+    .min(32, "ADMIN_SESSION_SECRET must be ≥32 chars (openssl rand -base64 32)"),
   /** LINE Login channel ID (LINE Developers console). */
   LINE_CLIENT_ID: z.string().min(1),
   /** LINE Login channel secret. */

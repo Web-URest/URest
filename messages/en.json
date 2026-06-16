@@ -32,6 +32,18 @@
     "errorTooManyAttempts": "Too many attempts. Please request a new code.",
     "errorNoActiveCode": "No active code. Please request a new one.",
     "errorGeneric": "Something went wrong. Please try again."
+  "Admin": {
+    "consoleTitle": "U-Rest Admin",
+    "dashboardTitle": "Admin console",
+    "dashboardIntro": "Back of house: verify listings, move money, and judge disputes.",
+    "loginTitle": "Admin sign-in",
+    "loginSubtitle": "Staff only — password and 2-factor code required.",
+    "email": "Email",
+    "password": "Password",
+    "totp": "2-factor code (6 digits)",
+    "submit": "Sign in",
+    "logout": "Sign out",
+    "loginError": "Invalid email, password, or 2-factor code."
   },
   "Status": {
     "REQUESTED": "Awaiting host",
