@@ -8,8 +8,8 @@ import { NumberInput } from "@/components/ui/NumberInput";
 import { RadioGroup } from "@/components/ui/RadioGroup";
 import { Select } from "@/components/ui/Select";
 import { TextInput } from "@/components/ui/TextInput";
-import { applyCommission } from "@/lib/listing/pricing";
 import { findSeasonOverlap } from "@/lib/listing/seasons";
+import { buildQuote } from "@/lib/pricing/quote";
 import { formatSatang } from "@/lib/money";
 
 import type { SeasonRow } from "../wizard";
@@ -18,10 +18,29 @@ import type { StepProps } from "./types";
 const CANCELLATION_TIERS = Object.values(CancellationTier);
 const toSatang = (baht: number | null) => Math.round((baht ?? 0) * 100);
 
-/** Net (after 10% commission) for a baht rate, formatted ฿ — or null if unset. */
+/**
+ * Net host earnings (after 10% commission) for a single night at `rateSatang`,
+ * via the canonical pricing engine (`@/lib/pricing/quote`) — never a local 10%
+ * calc. A one-night quote isolates the rate; commission is day-independent.
+ */
 function netLabel(baht: number | null): string | null {
   if (!baht) return null;
-  return formatSatang(applyCommission(toSatang(baht)).netSatang);
+  const rateSatang = toSatang(baht);
+  const { hostEarningsSatang } = buildQuote({
+    config: {
+      baseWeekdaySatang: rateSatang,
+      baseWeekendSatang: rateSatang,
+      holidaySatang: null,
+      includedGuests: 1,
+      extraGuestFeeSatang: 0,
+    },
+    seasons: [],
+    holidays: new Set(),
+    checkIn: "2026-01-05", // any single weekday→weekday night; commission is day-agnostic
+    checkOut: "2026-01-06",
+    guests: 1,
+  });
+  return formatSatang(hostEarningsSatang);
 }
 
 const blankSeason = (): SeasonRow => ({
