@@ -60,3 +60,13 @@ export async function requirePhoneVerified(): Promise<GuardedUser> {
   }
   return user;
 }
+
+/**
+ * Host eligibility for creating/editing a listing (PRODUCT_FLOWS §1, §4.1).
+ * Host is not a stored role — any phone-verified user may start a listing and
+ * becomes a host on their first one. KYC is reviewed per listing at submit, not
+ * gated here. So eligibility is exactly ladder step 2.
+ */
+export async function requireHostEligible(): Promise<GuardedUser> {
+  return requirePhoneVerified();
+}
