@@ -12,7 +12,7 @@ import {
   updateDraft,
   type ListingDraftPatch,
 } from "@/lib/listing/transitions";
-import { storePhoto } from "@/lib/listing/upload";
+import { photoUrl, presignPhotoUpload } from "@/lib/listing/upload";
 import {
   step1Schema,
   step3Schema,
@@ -182,23 +182,35 @@ export async function saveStepAction(
   }
 }
 
-/** Step ② — store one uploaded photo (stub until #11) and attach the row. */
+/** Step ② — presign a photo upload (#11) and attach the row; the client PUTs the bytes. */
 export async function addPhotoAction(
   listingId: string,
   file: { fileName: string; byteLength: number; contentType: string },
-): Promise<ActionResult<{ photo: { id: string; r2Key: string; isCover: boolean; sortOrder: number } }>> {
+): Promise<
+  ActionResult<{
+    photo: { id: string; r2Key: string; url: string; isCover: boolean; sortOrder: number };
+    uploadUrl: string;
+  }>
+> {
   try {
     const user = await requireHostEligible();
     await assertOwnedDraft(listingId, user.id);
 
-    const { r2Key } = await storePhoto({ listingId, ...file });
+    const { r2Key, uploadUrl } = await presignPhotoUpload({ listingId, ...file });
     const count = await prisma.listingPhoto.count({ where: { listingId } });
     const photo = await prisma.listingPhoto.create({
       data: { listingId, r2Key, sortOrder: count, isCover: count === 0 },
     });
     return {
       ok: true,
-      photo: { id: photo.id, r2Key: photo.r2Key, isCover: photo.isCover, sortOrder: photo.sortOrder },
+      photo: {
+        id: photo.id,
+        r2Key: photo.r2Key,
+        url: photoUrl(photo.r2Key),
+        isCover: photo.isCover,
+        sortOrder: photo.sortOrder,
+      },
+      uploadUrl,
     };
   } catch (e) {
     return { ok: false, error: errorKey(e) };

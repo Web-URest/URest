@@ -42,6 +42,10 @@ standalone server → waits for `/api/health` to pass → routes traffic.
    | `LINE_CLIENT_ID` / `LINE_CLIENT_SECRET` | *(prod LINE Login channel)* | a channel SEPARATE from dev; register the prod callback URL |
    | `NODE_ENV` | `production` | |
    | `HOSTNAME` | `0.0.0.0` | **Required** — the Next standalone server otherwise binds localhost and Railway can't reach it |
+   | `R2_ACCOUNT_ID` | *(Cloudflare account id)* | R2 S3 endpoint host (#11) |
+   | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | *(scoped R2 API token)* | object read/write on the two buckets only |
+   | `R2_PUBLIC_BUCKET` / `R2_PRIVATE_BUCKET` | *(bucket names)* | photos vs KYC; **never** attach a CDN to the private one |
+   | `R2_PUBLIC_BASE_URL` | *(public CDN domain)* | e.g. `https://media.urest.app`, no trailing slash |
 
    `PORT` is injected by Railway; the standalone server reads it automatically — do not set it.
    All of the above are **required at boot today**: `env.ts` validates them and `instrumentation.ts`
@@ -59,6 +63,19 @@ standalone server → waits for `/api/health` to pass → routes traffic.
 
 5. **Spend alert (~$15).** Railway → Usage / Billing → set a usage alert at **USD 15/month**
    (ADR-002 §31).
+
+6. **Cloudflare R2 buckets (#11).** Create **two** R2 buckets — public (listing photos) and
+   private (KYC). Attach a CDN/custom domain to the **public** bucket only → `R2_PUBLIC_BASE_URL`;
+   the private bucket gets **no** public access. Mint a **scoped** R2 API token (object read/write
+   on these two buckets) → `R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`; `R2_ACCOUNT_ID` is the
+   Cloudflare account id. Add a CORS rule on the **public** bucket allowing `PUT` from the app
+   origin so browser presigned uploads work. Set all six vars in Railway (table above).
+
+   **Manual acceptance (do once, after the vars are live — issue #11):**
+   - [ ] Host wizard → add a photo → object lands in the **public** bucket and the tile renders via the CDN URL.
+   - [ ] A KYC presign PUT lands in the **private** bucket; the direct (unsigned) object URL returns **403**.
+   - [ ] `kycDocumentSignedUrl` GET opens the document; the same URL after its TTL (5 min) **fails**.
+   - [ ] `grep` Railway logs / Sentry — no `r2Key` or signed URL appears anywhere.
 
 ## Backups (ADR-002 §29 — guest/booking/ledger loss is existential)
 
