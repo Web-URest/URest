@@ -55,6 +55,10 @@ const schema = z.object({
   // FACEBOOK_CLIENT_ID: z.string().min(1),
   // FACEBOOK_CLIENT_SECRET: z.string().min(1),
 
+  // --- Phase 2: listings ---
+  /** Google Maps JS API key — HTTP referrer restricted; $0 billing cap (ADR-009). Optional: map fails closed without it. */
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().min(1).optional(),
+
   // --- Phase 3: payments ---
   // OPN_PUBLIC_KEY: z.string().startsWith("pkey_"),
   // OPN_SECRET_KEY: z.string().startsWith("skey_"),

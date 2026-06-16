@@ -12,6 +12,12 @@ import { TileStrip } from "@/components/ui/TileStrip";
 import { TopbarShell } from "@/components/ui/Topbar";
 import { Footer } from "@/components/ui/Footer";
 import { FormPrimitivesDemo } from "./form-primitives-demo";
+import { DateRangeField } from "@/components/ui/DateRangeField";
+import { GuestStepper } from "@/components/ui/GuestStepper";
+import { PriceBreakdown } from "@/components/ui/PriceBreakdown";
+import { FaqSection } from "@/components/ui/FaqSection";
+import { PriceCalendar } from "@/components/ui/PriceCalendar";
+import type { Quote } from "@/lib/pricing/quote";
 
 /**
  * /styleguide — the live design-system catalog (ADR-013, docs/DESIGN_SYSTEM.md).
@@ -212,6 +218,70 @@ export default function StyleguidePage() {
 
       <Section title="Form primitives (listing wizard)">
         <FormPrimitivesDemo />
+      </Section>
+
+      <Section title="DateRangeField">
+        <div className="max-w-sm">
+          <DateRangeField
+            checkIn=""
+            checkOut=""
+            onCheckInChange={() => {}}
+            onCheckOutChange={() => {}}
+          />
+        </div>
+      </Section>
+
+      <Section title="GuestStepper">
+        <div className="max-w-xs">
+          <GuestStepper value={4} max={12} onChange={() => {}} />
+        </div>
+      </Section>
+
+      <Section title="PriceBreakdown">
+        <div className="max-w-sm">
+          <PriceBreakdown
+            quote={
+              {
+                nights: [
+                  { date: "2026-07-04", rule: "BASE", dayKind: "WEEKDAY", rateSatang: 1_290_000 },
+                  { date: "2026-07-05", rule: "BASE", dayKind: "WEEKEND", rateSatang: 1_590_000 },
+                  { date: "2026-07-06", rule: "SEASON", dayKind: "WEEKDAY", rateSatang: 1_490_000, seasonNameTh: "ไฮซีซั่น" },
+                ],
+                nightsSubtotalSatang: 4_370_000,
+                extraGuestFeeSatang: 90_000,
+                totalSatang: 4_460_000,
+                commissionSatang: 446_000,
+                hostEarningsSatang: 4_014_000,
+                nightCount: 3,
+                guests: 10,
+              } satisfies Quote
+            }
+          />
+        </div>
+      </Section>
+
+      <Section title="FaqSection">
+        <div className="max-w-lg">
+          <FaqSection
+            entries={[
+              { id: "1", question: "สระเหมาะกับเด็กเล็กไหม", answer: "สระลึก 1.5 เมตรตลอดสระ ไม่มีโซนเด็ก" },
+              { id: "2", question: "จอดรถได้กี่คัน", answer: "จอดได้ 3 คันค่ะ" },
+            ]}
+          />
+        </div>
+      </Section>
+
+      <Section title="PriceCalendar">
+        <div className="max-w-2xl">
+          <PriceCalendar
+            calendarBlocks={[
+              {
+                startDate: new Date("2026-07-10"),
+                endDate: new Date("2026-07-15"),
+              },
+            ]}
+          />
+        </div>
       </Section>
     </main>
   );
