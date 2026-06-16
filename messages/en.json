@@ -219,7 +219,7 @@
     "payoutNumberLabel": "Account number",
     "payoutNameLabel": "Account holder name",
     "kycNameMatchWarning": "The account name must match the name on your ID — a mismatch delays approval.",
-    "payoutSavedMasked": "A payout account is saved. Re-enter the number only to change it.",
+    "payoutSavedMasked": "For your security, re-enter your account number to confirm.",
     "kycConsentLabel": "I consent to U-Rest processing these documents to verify my identity (privacy policy).",
     "errorSeasonOverlap": "Season ranges overlap — please make them disjoint.",
     "errorSeasonIncomplete": "Fill in dates and rates for every season.",
