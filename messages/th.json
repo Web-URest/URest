@@ -200,6 +200,7 @@
     "earningsHoliday": "วันหยุดนักขัตฤกษ์",
     "earningsNet": "คุณได้รับ",
     "errorSeasonOverlap": "ช่วงซีซั่นคาบเกี่ยวกัน กรุณาแก้ไขไม่ให้ทับซ้อน",
+    "errorSeasonIncomplete": "ใส่วันที่และราคาของทุกซีซั่นให้ครบ",
     "errorIncomplete": "กรอกข้อมูลที่จำเป็นให้ครบก่อนส่ง",
     "errorInsufficientPhotos": "ต้องมีรูปอย่างน้อย 5 รูป",
     "errorInstantAck": "ต้องยอมรับเงื่อนไขปฏิทินก่อนเปิดจองทันที",

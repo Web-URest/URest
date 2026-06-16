@@ -33,7 +33,11 @@ export function NumberInput({
     <label className="flex flex-col gap-2" htmlFor={id}>
       <span className="text-sm font-medium text-ink-900">{label}</span>
       <div className="flex items-center gap-2 rounded-input border border-line bg-sand-100 px-4 py-3 focus-within:ring-2 focus-within:ring-aqua-500">
-        {prefix && <span className="text-ink-700">{prefix}</span>}
+        {prefix && (
+          <span aria-hidden="true" className="text-ink-700">
+            {prefix}
+          </span>
+        )}
         <input
           id={id}
           type="number"
@@ -46,7 +50,11 @@ export function NumberInput({
           className={`w-full bg-transparent text-ink-900 outline-none disabled:opacity-50 ${className}`}
           {...props}
         />
-        {suffix && <span className="text-ink-700">{suffix}</span>}
+        {suffix && (
+          <span aria-hidden="true" className="text-ink-700">
+            {suffix}
+          </span>
+        )}
       </div>
       <FieldError message={error} />
     </label>

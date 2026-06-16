@@ -200,6 +200,7 @@
     "earningsHoliday": "Public holiday",
     "earningsNet": "You receive",
     "errorSeasonOverlap": "Season ranges overlap — please make them disjoint.",
+    "errorSeasonIncomplete": "Fill in dates and rates for every season.",
     "errorIncomplete": "Fill in all required fields before submitting.",
     "errorInsufficientPhotos": "At least 5 photos are required.",
     "errorInstantAck": "Accept the calendar terms before enabling instant book.",

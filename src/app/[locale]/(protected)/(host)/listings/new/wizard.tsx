@@ -190,6 +190,13 @@ export function ListingWizard({ initial }: { initial: WizardInitial }) {
     }
     if (s === 5) {
       if (!data.baseWeekdayBaht || !data.baseWeekendBaht) return "errorIncomplete";
+      if (
+        data.seasons.some(
+          (x) => !x.startDate || !x.endDate || !x.weekdayBaht || !x.weekendBaht,
+        )
+      ) {
+        return "errorSeasonIncomplete";
+      }
       if (data.bookingMode === "INSTANT" && !data.instantAck) return "errorInstantAck";
     }
     return null;
