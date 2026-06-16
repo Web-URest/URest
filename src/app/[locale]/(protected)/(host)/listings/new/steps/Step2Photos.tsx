@@ -9,6 +9,7 @@ import { addPhotoAction, removePhotoAction, setCoverAction } from "../actions";
 export interface WizardPhoto {
   id: string;
   r2Key: string;
+  url: string;
   isCover: boolean;
   sortOrder: number;
 }
@@ -49,7 +50,19 @@ export function Step2Photos({
           byteLength: f.size,
           contentType: f.type,
         });
-        if (res.ok) added.push(res.photo);
+        if (!res.ok) continue;
+        try {
+          const put = await fetch(res.uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": f.type },
+            body: f,
+          });
+          if (!put.ok) throw new Error("upload failed");
+          added.push(res.photo);
+        } catch {
+          // Upload didn't land — drop the row we just created (no orphan).
+          await removePhotoAction(listingId, res.photo.id);
+        }
       }
       if (added.length) setPhotos([...photos, ...added]);
     });
@@ -92,21 +105,26 @@ export function Step2Photos({
         {photos.map((p) => (
           <div
             key={p.id}
-            className="relative flex aspect-[3/2] flex-col justify-end overflow-hidden rounded-photo border border-line bg-sand-100 p-2"
+            className="relative flex aspect-[3/2] flex-col justify-end overflow-hidden rounded-photo border border-line bg-sand-100"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={p.url}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
             {p.isCover && (
-              <span className="absolute left-2 top-2 rounded-full bg-jade-500 px-2 py-0.5 text-xs text-white">
+              <span className="absolute left-2 top-2 z-10 rounded-full bg-jade-500 px-2 py-0.5 text-xs text-white">
                 {t("coverBadge")}
               </span>
             )}
-            <span className="truncate text-xs text-ink-700">{p.r2Key}</span>
-            <div className="mt-1 flex gap-2">
+            <div className="relative z-10 flex gap-3 bg-ink-900/50 px-2 py-1 text-white">
               {!p.isCover && (
                 <button
                   type="button"
                   onClick={() => setCover(p.id)}
                   disabled={pending}
-                  className="text-xs text-teal-600 underline"
+                  className="text-xs underline"
                 >
                   {t("setCover")}
                 </button>
@@ -115,7 +133,7 @@ export function Step2Photos({
                 type="button"
                 onClick={() => remove(p.id)}
                 disabled={pending}
-                className="text-xs text-coral-600 underline"
+                className="text-xs underline"
               >
                 {t("removePhoto")}
               </button>
@@ -141,7 +159,6 @@ export function Step2Photos({
           {t("addPhoto")}
         </Button>
       </div>
-      <p className="text-xs text-ink-900/60">{t("uploadStubNote")}</p>
     </div>
   );
 }

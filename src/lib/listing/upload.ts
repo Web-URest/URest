@@ -1,37 +1,42 @@
 /**
- * Listing photo upload — thin interface over the storage backend.
+ * Listing photo upload (issue #11). Validates a photo and mints a presigned PUT
+ * to the PUBLIC R2 bucket (CDN-served); the browser uploads the bytes directly.
+ * Step ② of the wizard (PRODUCT_FLOWS §4.1) persists the returned `r2Key` to a
+ * `ListingPhoto` row and renders the photo via `photoUrl`.
  *
- * Step ② of the wizard (PRODUCT_FLOWS §4.1) needs photos in the PUBLIC bucket,
- * CDN-served. The real Cloudflare R2 presigned-PUT pipeline is issue #11 (ADR-002/
- * 007), still pending R2 credentials. Until it lands, this is a dev STUB so the
- * wizard's min-5 / cover-select logic can be built and reviewed end-to-end.
- *
- * TODO(#11): replace `storePhoto` with a real R2 presigned PUT + size/type
- * validation; KYC docs go to the PRIVATE bucket (never here).
+ * KYC documents do NOT go here — they use the PRIVATE bucket (`src/lib/kyc/storage.ts`).
  */
 
-import { env } from "@/lib/env";
-
-export interface StoredPhoto {
-  /** PUBLIC-bucket object key persisted to `ListingPhoto.r2Key`. */
-  r2Key: string;
-}
+import { presignPut, publicUrl } from "@/lib/storage/r2";
 
 export const ACCEPTED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB
 
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
+export interface PhotoUpload {
+  /** PUBLIC-bucket object key persisted to `ListingPhoto.r2Key`. */
+  r2Key: string;
+  /** Presigned PUT URL the browser uploads the bytes to (matching Content-Type). */
+  uploadUrl: string;
+}
+
 /**
- * Persist one uploaded photo and return its public-bucket key. The stub derives
- * a deterministic-looking key from the listing id + original name; it does NOT
- * touch any network. Callers write the returned `r2Key` to a `ListingPhoto` row.
+ * Validate a listing photo and presign its upload. Throws on a disallowed type
+ * or out-of-range size BEFORE signing. The key is `listings/{listingId}/{uuid}.{ext}`
+ * — a random uuid, no original filename (no PII / no collisions).
  */
-export async function storePhoto(args: {
+export async function presignPhotoUpload(args: {
   listingId: string;
   fileName: string;
   byteLength: number;
   contentType: string;
-}): Promise<StoredPhoto> {
-  const { listingId, fileName, byteLength, contentType } = args;
+}): Promise<PhotoUpload> {
+  const { listingId, byteLength, contentType } = args;
 
   if (!ACCEPTED_PHOTO_TYPES.includes(contentType)) {
     throw new Error(`Unsupported photo type: ${contentType}`);
@@ -40,14 +45,18 @@ export async function storePhoto(args: {
     throw new Error(`Photo size out of range: ${byteLength} bytes`);
   }
 
-  // Until #11, only the stub path is wired. Guard so this never silently
-  // "succeeds" against a real bucket in production.
-  if (env.NODE_ENV === "production") {
-    throw new Error(
-      "Listing photo upload not configured (#11 R2 pipeline pending)",
-    );
-  }
+  const ext = EXT_BY_TYPE[contentType] ?? "bin";
+  const r2Key = `listings/${listingId}/${crypto.randomUUID()}.${ext}`;
+  const uploadUrl = await presignPut({
+    bucket: "public",
+    key: r2Key,
+    contentType,
+    contentLength: byteLength,
+  });
+  return { r2Key, uploadUrl };
+}
 
-  const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-  return { r2Key: `dev/listings/${listingId}/${safeName}` };
+/** Public CDN URL for a stored listing photo. */
+export function photoUrl(r2Key: string): string {
+  return publicUrl(r2Key);
 }

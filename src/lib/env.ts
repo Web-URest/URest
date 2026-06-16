@@ -38,6 +38,18 @@ const schema = z.object({
   LINE_CLIENT_ID: z.string().min(1),
   /** LINE Login channel secret. */
   LINE_CLIENT_SECRET: z.string().min(1),
+
+  // --- Media storage: Cloudflare R2 (ADR-002/010, issue #11) ---
+  /** R2 account id → endpoint https://{id}.r2.cloudflarestorage.com */
+  R2_ACCOUNT_ID: z.string().min(1),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(1),
+  /** Public bucket — listing photos, CDN-served. */
+  R2_PUBLIC_BUCKET: z.string().min(1),
+  /** Private bucket — KYC docs; signed URLs only, never public (ADR-010). */
+  R2_PRIVATE_BUCKET: z.string().min(1),
+  /** CDN base URL for the public bucket (no trailing slash), e.g. https://media.urest.app */
+  R2_PUBLIC_BASE_URL: z.string().url(),
   // GOOGLE_CLIENT_ID: z.string().min(1),
   // GOOGLE_CLIENT_SECRET: z.string().min(1),
   // FACEBOOK_CLIENT_ID: z.string().min(1),

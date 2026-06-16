@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 
 import { AuthError, requireHostEligible } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
+import { photoUrl } from "@/lib/listing/upload";
 import { redirect } from "@/i18n/navigation";
 
 import { ListingWizard, type WizardInitial } from "./wizard";
@@ -69,6 +70,7 @@ export default async function NewListingPage({
         photos: listing.photos.map((p) => ({
           id: p.id,
           r2Key: p.r2Key,
+          url: photoUrl(p.r2Key),
           isCover: p.isCover,
           sortOrder: p.sortOrder,
         })),
