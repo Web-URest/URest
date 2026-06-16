@@ -88,20 +88,20 @@ model Listing {
 
   // basics (wizard ①)
   title        String
-  description  String  @default("")
-  address      String  @default("")
+  description  String @default("")
+  address      String @default("")
   mapLat       Float?
   mapLng       Float?
-  propertyType String  @default("pool_villa")
+  propertyType String @default("pool_villa")
 
   // details (wizard ③)
-  bedrooms    Int      @default(1)
-  beds        Int      @default(1)
-  baths       Int      @default(1)
-  maxGuests   Int      @default(2)
-  poolLengthM Decimal? @db.Decimal(4, 2)
-  poolWidthM  Decimal? @db.Decimal(4, 2)
-  poolDepthM  Decimal? @db.Decimal(4, 2)
+  bedrooms    Int       @default(1)
+  beds        Int       @default(1)
+  baths       Int       @default(1)
+  maxGuests   Int       @default(2)
+  poolLengthM Decimal?  @db.Decimal(4, 2)
+  poolWidthM  Decimal?  @db.Decimal(4, 2)
+  poolDepthM  Decimal?  @db.Decimal(4, 2)
   amenities   Amenity[]
 
   // house rules (wizard ④)
@@ -132,14 +132,16 @@ model Listing {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  host           User            @relation(fields: [hostId], references: [id])
-  region         Region          @relation(fields: [regionId], references: [id])
+  host           User              @relation(fields: [hostId], references: [id])
+  region         Region            @relation(fields: [regionId], references: [id])
   photos         ListingPhoto[]
   seasons        Season[]
   calendarBlocks CalendarBlock[]
   faqEntries     ListingFaqEntry[]
   savedBy        SavedVilla[]
   kycSubmissions KycSubmission[]
+  bookings       Booking[]
+  reports        Report[]
 
   @@index([regionId, status])
   @@index([hostId, status])
@@ -165,13 +167,13 @@ model ListingPhoto {
 /// IMPOSSIBLE at the DB level: GiST exclusion constraint in raw migration
 /// SQL (see DATA_MODEL.md §constraints) + friendly app check in lib/listing.
 model Season {
-  id             String   @id @default(cuid())
-  listingId      String
-  nameTh         String
-  startDate      DateTime @db.Date
-  endDate        DateTime @db.Date
-  weekdaySatang  Int
-  weekendSatang  Int
+  id            String   @id @default(cuid())
+  listingId     String
+  nameTh        String
+  startDate     DateTime @db.Date
+  endDate       DateTime @db.Date
+  weekdaySatang Int
+  weekendSatang Int
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
@@ -297,16 +299,16 @@ model NotificationLog {
 // ───────────────────────── Identity (guests + hosts — one account, ADR-007) ─────
 
 model User {
-  id              String    @id @default(cuid())
-  lineUserId      String?   @unique
-  displayName     String
+  id                String    @id @default(cuid())
+  lineUserId        String?   @unique
+  displayName       String
   /// PII columns are nullable so PDPA anonymization can scrub them (§3.7:
   /// delete is soft + anonymized when bookings exist — ledger integrity).
-  email           String?   @unique
-  phone           String?
+  email             String?   @unique
+  phone             String?
   /// Set only by the OTP flow — gates sending requests/messages (ladder step 2).
-  phoneVerifiedAt DateTime?
-  image           String?
+  phoneVerifiedAt   DateTime?
+  image             String?
   /// LINE/email per event group (§3.7) — shape owned by lib/notifications.
   notificationPrefs Json?
 
@@ -326,6 +328,17 @@ model User {
   listings         Listing[]
   savedVillas      SavedVilla[]
   notificationLogs NotificationLog[]
+
+  // Phase 3 (booking/escrow) — guest-side bookings + host accountability
+  bookings             Booking[]
+  hostStrikes          HostStrike[]
+  payoutHolds          PayoutHold[]
+  messagesSent         Message[]
+  reviewsWritten       Review[]
+  guestRatingsGiven    GuestRating[] @relation("GuestRatingsGiven")
+  guestRatingsReceived GuestRating[] @relation("GuestRatingsReceived")
+  reportsSubmitted     Report[]      @relation("ReportsSubmitted")
+  reportsReceived      Report[]      @relation("ReportsReceived")
 }
 
 // Auth.js (Prisma adapter) — database sessions: revocable, so suspend/ban
@@ -405,6 +418,13 @@ model AdminUser {
 
   kycReviews KycSubmission[]
   auditLogs  AuditLog[]
+
+  // Phase 3 — admin acts on the money/trust surface
+  payoutsPaid         Payout[]
+  payoutHoldsCreated  PayoutHold[] @relation("PayoutHoldsCreated")
+  payoutHoldsReleased PayoutHold[] @relation("PayoutHoldsReleased")
+  reviewsRemoved      Review[]
+  reportsTriaged      Report[]
 }
 
 // ───────────────────────── KYC & payouts (PRODUCT_FLOWS §4.1 ⑥, §5.1) ──────────
@@ -427,19 +447,19 @@ enum KycDocumentType {
 /// One submission per listing (§1: KYC reviewed per listing; returning hosts
 /// with clean history get lighter review — history is visible via prior rows).
 model KycSubmission {
-  id     String    @id @default(cuid())
-  userId String
-  listingId String?
-  status    KycStatus @default(PENDING_REVIEW)
+  id                String    @id @default(cuid())
+  userId            String
+  listingId         String?
+  status            KycStatus @default(PENDING_REVIEW)
   /// Itemized NEEDS_INFO checklist (§5.1) — array of {item, note?, satisfied}
-  needsInfoItems Json?
+  needsInfoItems    Json?
   reviewedByAdminId String?
   submittedAt       DateTime  @default(now())
   reviewedAt        DateTime?
 
-  user       User           @relation(fields: [userId], references: [id])
-  listing    Listing?       @relation(fields: [listingId], references: [id])
-  reviewedBy AdminUser?     @relation(fields: [reviewedByAdminId], references: [id])
+  user       User          @relation(fields: [userId], references: [id])
+  listing    Listing?      @relation(fields: [listingId], references: [id])
+  reviewedBy AdminUser?    @relation(fields: [reviewedByAdminId], references: [id])
   documents  KycDocument[]
 
   @@index([status, submittedAt]) // approval queue, SLA ordering
@@ -466,21 +486,22 @@ model KycDocument {
 /// Host bank account for manual payout runs (§5.2). Reusable across the
 /// host's listings; editing it triggers listing re-review (§4.4).
 model PayoutAccount {
-  id     String @id @default(cuid())
-  userId String
+  id               String    @id @default(cuid())
+  userId           String
   /// Thai bank code (e.g. "004" กสิกรไทย) — public reference data, plaintext
-  bankCode String
+  bankCode         String
   /// AES-256-GCM ciphertext (lib/crypto.ts). Decrypted in EXACTLY one code
   /// path: the admin payout view. Never logged, never sent to the client.
   accountNumberEnc String
   /// Account holder name — must match the name on the Thai ID (mule-account
   /// check, §4.1 ⑥). Needed plaintext for the payout run + name matching.
-  accountName String
-  verifiedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  accountName      String
+  verifiedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+  payouts Payout[]
 
   @@index([userId])
 }
@@ -522,4 +543,382 @@ model AuditLog {
 
   @@index([targetType, targetId])
   @@index([adminId, createdAt])
+}
+
+// ───────────────────────── Booking & escrow (Phase 3 — PRODUCT_FLOWS §2; ADR-003/011/012) ──
+// State transitions ONLY via lib/booking (status) and lib/ledger (escrowState +
+// the append-only LedgerEntry log). Money is Int satang. Timers are rows swept
+// by cron, never setTimeout. Raw-SQL constraints (Booking double-booking GiST
+// exclusion, Report/PayoutHold num_nonnulls CHECKs) are hand-appended to the
+// migration — see docs/DATA_MODEL.md §constraints.
+
+/// Booking lifecycle (PRODUCT_FLOWS §2.1 verbatim).
+enum BookingStatus {
+  REQUESTED
+  AWAITING_PAYMENT
+  CONFIRMED
+  CHECKED_IN
+  COMPLETED
+  DECLINED
+  EXPIRED
+  CANCELLED_BY_GUEST
+  CANCELLED_BY_HOST
+  DISPUTED
+}
+
+/// Escrow/payout state (PRODUCT_FLOWS §2.3). Cached on Booking.escrowState;
+/// the source of truth is the append-only LedgerEntry log (ADR-003).
+enum EscrowState {
+  NONE
+  HELD
+  RELEASABLE
+  FROZEN
+  PAID
+  REVERSED
+}
+
+enum PaymentMethod {
+  PROMPTPAY
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+  EXPIRED
+}
+
+/// Why a LedgerEntry was written (ADR-003 §2 — no orphan transitions). One value
+/// per escrow transition lib/ledger can make.
+enum LedgerCause {
+  CHARGE_WEBHOOK // NONE → HELD (Opn charge succeeded)
+  RELEASE_CHECKOUT // HELD → RELEASABLE (checkout, no dispute)
+  HOLD_DISPUTE_OPENED // → FROZEN (guest opened a dispute)
+  HOLD_BOOKING_REPORT // → FROZEN (booking report taken into review)
+  HOLD_ADMIN_MANUAL // → FROZEN (admin manual hold)
+  RELEASE_HOLD_LIFTED // FROZEN → RELEASABLE (hold lifted / dispute released)
+  PAID_ADMIN_TRANSFER // RELEASABLE → PAID (admin bank transfer)
+  REFUND_GUEST_TIER // → REVERSED (guest cancellation, per policy tier)
+  REFUND_HOST_CANCELLED // → REVERSED (host cancelled, 100%)
+  REFUND_DISPUTE_FULL // → REVERSED (dispute resolved, full refund)
+  REFUND_DISPUTE_PARTIAL // → REVERSED (dispute resolved, partial refund)
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED_RELEASED
+  RESOLVED_PARTIAL
+  RESOLVED_REFUNDED
+}
+
+enum ReportCategory {
+  DOESNT_MATCH_LISTING
+  CLEANLINESS
+  SAFETY
+  HOST_BEHAVIOR
+  SUSPECTED_FRAUD
+  OTHER
+}
+
+enum ReportStatus {
+  RECEIVED
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum HostStrikeReason {
+  HOST_CANCELLED // host cancelled a CONFIRMED booking (ADR-012 §2)
+  STALE_CALENDAR_DOUBLE_BOOKING // stale calendar double-booked a paid guest
+}
+
+/// A booking. Status moves only through lib/booking; escrowState only through
+/// lib/ledger. The snapshot block (priceLines…houseRulesText) freezes the agreed
+/// terms so later host edits can't move an in-flight booking (ADR-011 №3).
+model Booking {
+  id          String        @id @default(cuid())
+  /// UR-YYMM-NNNN — assigned at CONFIRMED via BookingCodeCounter (lib/ledger).
+  code        String?       @unique
+  listingId   String
+  userId      String
+  status      BookingStatus @default(REQUESTED)
+  bookingMode BookingMode
+
+  // stay dates — date-only; platform check-in 15:00 / checkout 11:00 Bangkok.
+  checkIn  DateTime @db.Date
+  checkOut DateTime @db.Date
+
+  // deadline timers — rows swept by cron (rule 3), never in-process setTimeout.
+  respondBy DateTime? // host accept deadline (REQUESTED + 12h)
+  payBy     DateTime? // payment deadline (12h request / 1h instant)
+
+  // snapshot block (ADR-011 №3) — frozen at request time.
+  priceLines       Json
+  totalSatang      Int
+  commissionSatang Int
+  cancellationTier CancellationTier
+  houseRulesText   String?
+
+  // escrow cache — written ONLY by lib/ledger (ADR-003).
+  escrowState       EscrowState @default(NONE)
+  contactUnmaskedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing       Listing        @relation(fields: [listingId], references: [id])
+  user          User           @relation(fields: [userId], references: [id])
+  payments      Payment[]
+  ledgerEntries LedgerEntry[]
+  refund        Refund?
+  payout        Payout?
+  payoutHolds   PayoutHold[]
+  hostStrikes   HostStrike[]
+  messageThread MessageThread?
+  review        Review?
+  guestRating   GuestRating?
+  dispute       Dispute?
+  reports       Report[]
+
+  @@index([status, respondBy]) // sweep: host-accept expiry
+  @@index([status, payBy]) // sweep: payment expiry
+  @@index([escrowState, checkOut]) // payout due-list
+  @@index([listingId, checkIn]) // double-booking lookups
+  @@index([userId])
+}
+
+/// One row per calendar month; counter incremented under SELECT … FOR UPDATE
+/// inside the confirm transaction to mint gap-free UR-YYMM-NNNN codes.
+model BookingCodeCounter {
+  yearMonth String @id // "2606"
+  counter   Int    @default(0)
+}
+
+/// One row per charge attempt — a regenerated PromptPay QR is a new row.
+model Payment {
+  id           String        @id @default(cuid())
+  bookingId    String
+  opnChargeId  String        @unique
+  method       PaymentMethod
+  amountSatang Int
+  status       PaymentStatus @default(PENDING)
+  qrExpiresAt  DateTime? // PromptPay QR validity (15 min), regenerable
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+/// Opn webhook idempotency (rule 6): the event id is recorded before processing;
+/// replays short-circuit on the unique constraint.
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  opnEventId  String    @unique
+  payload     Json
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+/// Append-only escrow log (ADR-003): every satang movement is a new row, never
+/// an UPDATE. Booking.escrowState is a cache derived from the latest toState.
+model LedgerEntry {
+  id           String       @id @default(cuid())
+  bookingId    String
+  amountSatang Int
+  fromState    EscrowState?
+  toState      EscrowState
+  cause        LedgerCause
+  /// Opn event id, AdminUser id, Dispute id, etc. — who/what authorized it.
+  causeRef     String?
+  actor        String?
+  createdAt    DateTime     @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+}
+
+/// Money returned to the guest + retained split (90/10 host/platform, §3.6).
+model Refund {
+  id                     String   @id @default(cuid())
+  bookingId              String   @unique
+  refundSatang           Int
+  retainedHostSatang     Int
+  retainedPlatformSatang Int
+  reason                 String?
+  createdAt              DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+/// Manual payout run v1 (§5.2): admin transfers by bank app, records the slip.
+model Payout {
+  id               String    @id @default(cuid())
+  bookingId        String    @unique
+  payoutAccountId  String
+  hostAmountSatang Int
+  slipRef          String?
+  paidByAdminId    String?
+  paidAt           DateTime?
+  createdAt        DateTime  @default(now())
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  payoutAccount PayoutAccount @relation(fields: [payoutAccountId], references: [id])
+  paidByAdmin   AdminUser?    @relation(fields: [paidByAdminId], references: [id])
+
+  @@index([payoutAccountId])
+}
+
+/// Admin hold on payouts — scoped to exactly one of a single booking OR a whole
+/// host (CHECK num_nonnulls = 1, constraint №4). The due-list skips active holds.
+model PayoutHold {
+  id                String    @id @default(cuid())
+  bookingId         String?
+  hostUserId        String?
+  reason            String
+  createdByAdminId  String
+  releasedByAdminId String?
+  releasedAt        DateTime?
+  createdAt         DateTime  @default(now())
+
+  booking    Booking?   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  host       User?      @relation(fields: [hostUserId], references: [id], onDelete: Cascade)
+  createdBy  AdminUser  @relation("PayoutHoldsCreated", fields: [createdByAdminId], references: [id])
+  releasedBy AdminUser? @relation("PayoutHoldsReleased", fields: [releasedByAdminId], references: [id])
+
+  @@index([bookingId])
+  @@index([hostUserId])
+}
+
+/// Host accountability (ADR-012 §2): 3 strikes → suspension (enforced in lib/booking).
+model HostStrike {
+  id         String           @id @default(cuid())
+  hostUserId String
+  bookingId  String?
+  reason     HostStrikeReason
+  createdAt  DateTime         @default(now())
+
+  host    User     @relation(fields: [hostUserId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([hostUserId, createdAt])
+}
+
+// ───────────────────────── Social (Phase 3 — schema only; logic in #24/#26/#27/#28) ─────
+
+/// Per-booking thread, opens at REQUESTED (§3.5).
+model MessageThread {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  createdAt DateTime @default(now())
+
+  booking  Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  messages Message[]
+}
+
+/// Masking frozen at write (ADR-011 №5): bodyRaw readable ONLY in the admin
+/// dispute view; everyone else sees bodyMasked.
+model Message {
+  id         String    @id @default(cuid())
+  threadId   String
+  senderId   String
+  bodyRaw    String
+  bodyMasked String
+  wasMasked  Boolean   @default(false)
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User          @relation(fields: [senderId], references: [id])
+
+  @@index([threadId, createdAt])
+}
+
+/// Guest review (§3.4): overall + 4 sub-scores; one per booking, no edits;
+/// removal is soft moderation (reason in AuditLog).
+model Review {
+  id                 String    @id @default(cuid())
+  bookingId          String    @unique
+  authorId           String
+  overall            Int
+  cleanliness        Int
+  accuracyToPhotos   Int
+  hostResponsiveness Int
+  valueForMoney      Int
+  text               String?
+  photoKeys          String[]
+  removedByAdminId   String?
+  removedAt          DateTime?
+  removedReason      String?
+  createdAt          DateTime  @default(now())
+
+  booking   Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  author    User       @relation(fields: [authorId], references: [id])
+  removedBy AdminUser? @relation(fields: [removedByAdminId], references: [id])
+  reports   Report[]
+}
+
+/// Host → guest rating (§3.4), shown to future hosts on a request.
+model GuestRating {
+  id           String   @id @default(cuid())
+  bookingId    String   @unique
+  hostRaterId  String
+  guestRateeId String
+  score        Int // 1–5
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  rater   User    @relation("GuestRatingsGiven", fields: [hostRaterId], references: [id])
+  ratee   User    @relation("GuestRatingsReceived", fields: [guestRateeId], references: [id])
+
+  @@index([guestRateeId])
+}
+
+/// Dispute opened during the stay (§5.3). Window = check-in → checkout;
+/// one appeal each, enforced in lib/booking.
+model Dispute {
+  id               String        @id @default(cuid())
+  bookingId        String        @unique
+  status           DisputeStatus @default(OPEN)
+  partialRefundPct Int? // 0–100 when RESOLVED_PARTIAL
+  guestAppealedAt  DateTime?
+  hostAppealedAt   DateTime?
+  createdAt        DateTime      @default(now())
+  resolvedAt       DateTime?
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+/// The §5.6 report queue. Targets exactly one of booking/listing/review/user
+/// (CHECK num_nonnulls = 1, constraint №3). reporterId is null for logged-out
+/// listing reports.
+model Report {
+  id              String         @id @default(cuid())
+  reporterId      String?
+  category        ReportCategory
+  text            String
+  photoKeys       String[]
+  bookingId       String?
+  listingId       String?
+  reviewId        String?
+  reportedUserId  String?
+  status          ReportStatus   @default(RECEIVED)
+  resolvedReason  String?
+  triageByAdminId String?
+  triageAt        DateTime?
+  resolvedAt      DateTime?
+  createdAt       DateTime       @default(now())
+
+  reporter     User?      @relation("ReportsSubmitted", fields: [reporterId], references: [id])
+  booking      Booking?   @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  listing      Listing?   @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  review       Review?    @relation(fields: [reviewId], references: [id], onDelete: SetNull)
+  reportedUser User?      @relation("ReportsReceived", fields: [reportedUserId], references: [id])
+  triageBy     AdminUser? @relation(fields: [triageByAdminId], references: [id])
+
+  @@index([status, createdAt])
 }

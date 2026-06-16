@@ -30,6 +30,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Enforce lib-only Booking state writes
+        run: pnpm gate:status
+
       - name: Test
         run: pnpm test
 
