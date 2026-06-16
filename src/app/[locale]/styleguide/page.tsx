@@ -11,6 +11,7 @@ import { VillaCard, type Villa } from "@/components/ui/VillaCard";
 import { TileStrip } from "@/components/ui/TileStrip";
 import { TopbarShell } from "@/components/ui/Topbar";
 import { Footer } from "@/components/ui/Footer";
+import { FormPrimitivesDemo } from "./form-primitives-demo";
 
 /**
  * /styleguide — the live design-system catalog (ADR-013, docs/DESIGN_SYSTEM.md).
@@ -207,6 +208,10 @@ export default function StyleguidePage() {
         <div className="-mx-6">
           <Footer />
         </div>
+      </Section>
+
+      <Section title="Form primitives (listing wizard)">
+        <FormPrimitivesDemo />
       </Section>
     </main>
   );
