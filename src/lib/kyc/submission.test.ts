@@ -6,7 +6,7 @@ vi.mock("@/lib/db", () => ({
     kycSubmission: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn() },
     kycDocument: { create: vi.fn(), findUnique: vi.fn(), delete: vi.fn() },
     payoutAccount: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
-    consent: { create: vi.fn() },
+    consent: { findFirst: vi.fn(), create: vi.fn() },
     $transaction: vi.fn(async (ops: unknown[]) => Promise.all(ops)),
   },
 }));
@@ -28,6 +28,7 @@ const docCreate = prisma.kycDocument.create as unknown as Mock;
 const payoutFindFirst = prisma.payoutAccount.findFirst as unknown as Mock;
 const payoutCreate = prisma.payoutAccount.create as unknown as Mock;
 const payoutUpdate = prisma.payoutAccount.update as unknown as Mock;
+const consentFindFirst = prisma.consent.findFirst as unknown as Mock;
 const consentCreate = prisma.consent.create as unknown as Mock;
 
 const TEST_KEY = randomBytes(32).toString("base64");
@@ -113,6 +114,7 @@ describe("finalizeKyc", () => {
       documents: docsOf([...REQUIRED_DOC_TYPES, "HOTEL_LICENSE"]),
     });
     payoutFindFirst.mockResolvedValue(null);
+    consentFindFirst.mockResolvedValue(null);
     payoutCreate.mockResolvedValue({ id: "p1" });
     consentCreate.mockResolvedValue({ id: "c1" });
 
@@ -138,6 +140,7 @@ describe("finalizeKyc", () => {
       documents: docsOf([...REQUIRED_DOC_TYPES]),
     });
     payoutFindFirst.mockResolvedValue({ id: "p-old" });
+    consentFindFirst.mockResolvedValue(null);
     payoutUpdate.mockResolvedValue({ id: "p-old" });
     consentCreate.mockResolvedValue({ id: "c1" });
 
@@ -147,6 +150,21 @@ describe("finalizeKyc", () => {
     expect(payoutUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "p-old" } }),
     );
+  });
+
+  it("does not write a second consent on resubmit (append-only, ADR-010)", async () => {
+    subFindFirst.mockResolvedValue({
+      id: "s1",
+      userId: "u1",
+      documents: docsOf([...REQUIRED_DOC_TYPES]),
+    });
+    payoutFindFirst.mockResolvedValue({ id: "p-old" });
+    payoutUpdate.mockResolvedValue({ id: "p-old" });
+    consentFindFirst.mockResolvedValue({ id: "c-existing" }); // already consented
+
+    await finalizeKyc("u1", "l1", payout);
+
+    expect(consentCreate).not.toHaveBeenCalled();
   });
 
   it("throws NOT_FOUND when there is no submission for the listing", async () => {

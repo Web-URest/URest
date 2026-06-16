@@ -118,7 +118,12 @@ export async function finalizeKyc(
   }
 
   const accountNumberEnc = encryptField(accountNumber);
-  const existingAccount = await prisma.payoutAccount.findFirst({ where: { userId } });
+  const [existingAccount, existingConsent] = await Promise.all([
+    prisma.payoutAccount.findFirst({ where: { userId } }),
+    prisma.consent.findFirst({
+      where: { userId, type: ConsentType.KYC_PROCESSING },
+    }),
+  ]);
 
   const payoutWrite = existingAccount
     ? prisma.payoutAccount.update({
@@ -129,9 +134,21 @@ export async function finalizeKyc(
         data: { userId, bankCode, accountNumberEnc, accountName },
       });
 
-  const consentWrite = prisma.consent.create({
-    data: { userId, type: ConsentType.KYC_PROCESSING, policyVersion: KYC_POLICY_VERSION },
-  });
+  // Consent is append-only (ADR-010): record it once. A resubmit (e.g. after
+  // submitForReview throws INSUFFICIENT_PHOTOS, which runs after this) must not
+  // write a duplicate KYC_PROCESSING row.
+  const writes = existingConsent
+    ? [payoutWrite]
+    : [
+        payoutWrite,
+        prisma.consent.create({
+          data: {
+            userId,
+            type: ConsentType.KYC_PROCESSING,
+            policyVersion: KYC_POLICY_VERSION,
+          },
+        }),
+      ];
 
-  await prisma.$transaction([payoutWrite, consentWrite]);
+  await prisma.$transaction(writes);
 }
