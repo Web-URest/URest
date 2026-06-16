@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
-
-import { useRouter } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
 
 import { loginAction } from "../actions";
 
 export function AdminLoginForm() {
   const t = useTranslations("Admin");
-  const router = useRouter();
+  const locale = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [token, setToken] = useState("");
@@ -19,9 +17,10 @@ export function AdminLoginForm() {
   function submit() {
     setError(false);
     startTransition(async () => {
-      const result = await loginAction(email, password, token);
-      if (result.ok) router.push("/admin");
-      else setError(true); // generic — never reveal which factor failed
+      // On success the action redirects server-side (throws NEXT_REDIRECT,
+      // handled by Next) — only the failure path returns here.
+      const result = await loginAction(locale, email, password, token);
+      if (!result.ok) setError(true); // generic — never reveal which factor failed
     });
   }
 
@@ -69,7 +68,7 @@ export function AdminLoginForm() {
         />
       </label>
 
-      {error && <p className="text-sm text-coral-500">{t("loginError")}</p>}
+      {error && <p className="text-sm font-semibold text-sand-50">{t("loginError")}</p>}
 
       <button
         type="submit"
