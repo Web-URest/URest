@@ -393,6 +393,16 @@
       "messages": "Messages",
       "soon": "Soon"
     },
+    "requests": {
+      "title": "Booking requests",
+      "empty": "No requests awaiting your response",
+      "guestNote": "Note from guest",
+      "contactMasked": "Contact is shared after the booking is confirmed",
+      "respondByNote": "Respond within 12h or the request expires",
+      "accept": "Accept",
+      "decline": "Decline",
+      "actionError": "Action failed — please try again"
+    },
     "overviewTitle": "Overview",
     "kpiRevenue": "Revenue this month",
     "kpiBookings": "Bookings this month",
