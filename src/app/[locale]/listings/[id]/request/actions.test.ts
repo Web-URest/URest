@@ -41,7 +41,7 @@ const LISTING = {
 };
 
 beforeEach(() => {
-  guard.mockResolvedValue({ id: "guest1" });
+  guard.mockResolvedValue({ id: "guest1", displayName: "สมชาย" });
   getDetail.mockResolvedValue({ listing: LISTING, holidaySet: new Set<string>() });
   quote.mockReturnValue({ nights: [], totalSatang: 2_000_00, commissionSatang: 200_00 });
   requestFn.mockResolvedValue({ id: "bk1" });
@@ -60,7 +60,11 @@ describe("createBookingRequest", () => {
       }),
       expect.any(Date),
     );
-    expect(notifyFn).toHaveBeenCalledWith("host1", "BOOKING_REQUESTED", expect.any(Object));
+    expect(notifyFn).toHaveBeenCalledWith(
+      "host1",
+      "BOOKING_REQUESTED",
+      expect.objectContaining({ listingTitle: "วิลล่า A", guestName: "สมชาย", bookingId: "bk1" }),
+    );
     expect(res).toEqual({ ok: true, bookingId: "bk1" });
   });
 
@@ -76,8 +80,20 @@ describe("createBookingRequest", () => {
   });
 
   it("maps the double-booking exclusion to errorDatesTaken", async () => {
-    requestFn.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("x", { code: "P2010", clientVersion: "6" }));
+    requestFn.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError(
+        'conflicting key value violates exclusion constraint "booking_no_double_booking"',
+        { code: "P2010", clientVersion: "6" },
+      ),
+    );
     expect(await createBookingRequest(INPUT)).toEqual({ ok: false, error: "errorDatesTaken" });
+  });
+
+  it("propagates an unrelated DB error instead of mislabeling it as dates-taken", async () => {
+    requestFn.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Foreign key constraint failed", { code: "P2003", clientVersion: "6" }),
+    );
+    await expect(createBookingRequest(INPUT)).rejects.toThrow();
   });
 
   it("surfaces the phone-unverified ladder error", async () => {

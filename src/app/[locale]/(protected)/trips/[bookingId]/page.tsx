@@ -43,7 +43,11 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
         {booking.status === "REQUESTED" && (
           <p className="text-sm text-ink-900/60">{t("respondByNote")}</p>
         )}
-        <p className="text-sm text-ink-900/70">{contact.phone ?? t("contactMasked")}</p>
+        <p className="text-sm text-ink-900/70">
+          {contact.phone || contact.email
+            ? [contact.phone, contact.email].filter(Boolean).join(" · ")
+            : t("contactMasked")}
+        </p>
         {canWithdraw && <WithdrawButton bookingId={booking.id} />}
       </div>
     </main>

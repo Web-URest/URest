@@ -47,7 +47,11 @@ export default async function HostRequestsPage() {
                   {b.guestNoteToHost}
                 </p>
               )}
-              <p className="text-xs text-ink-900/50">{contact.phone ?? t("contactMasked")}</p>
+              <p className="text-xs text-ink-900/50">
+                {contact.phone || contact.email
+                  ? [contact.phone, contact.email].filter(Boolean).join(" · ")
+                  : t("contactMasked")}
+              </p>
               <p className="text-xs text-coral-600">{t("respondByNote")}</p>
               <RequestActions bookingId={b.id} />
             </div>

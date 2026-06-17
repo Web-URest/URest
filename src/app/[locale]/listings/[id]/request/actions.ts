@@ -27,10 +27,9 @@ export interface RequestInput {
 export async function createBookingRequest(
   input: RequestInput,
 ): Promise<ActionResult<{ bookingId: string }>> {
-  let userId: string;
+  let user: Awaited<ReturnType<typeof requirePhoneVerified>>;
   try {
-    const user = await requirePhoneVerified();
-    userId = user.id;
+    user = await requirePhoneVerified();
   } catch (err) {
     if (err instanceof AuthError) {
       return { ok: false, error: err.reason === "PHONE_UNVERIFIED" ? "errorPhoneUnverified" : "errorUnauthenticated" };
@@ -65,11 +64,12 @@ export async function createBookingRequest(
     guests: input.guests,
   });
 
+  let booking: Awaited<ReturnType<typeof request>>;
   try {
-    const booking = await request(
+    booking = await request(
       {
         listingId: listing.id,
-        userId,
+        userId: user.id,
         checkIn: new Date(input.checkIn),
         checkOut: new Date(input.checkOut),
         priceLines: quote.nights as unknown as Prisma.InputJsonValue,
@@ -84,16 +84,34 @@ export async function createBookingRequest(
       },
       new Date(),
     );
-    await notify(listing.hostId, "BOOKING_REQUESTED", {
-      listingTitle: listing.title,
-      bookingId: booking.id,
-    });
-    return { ok: true, bookingId: booking.id };
   } catch (err) {
-    // The booking double-booking GiST exclusion surfaces as a known DB error.
-    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    // The ONLY expected failure here is the double-booking GiST exclusion
+    // (Postgres 23P01 on `booking_no_double_booking`) → friendly "dates taken".
+    // Match by code/constraint so an unrelated DB fault isn't mislabeled, and
+    // so the exclusion is caught regardless of which Prisma error class wraps
+    // it. Anything else is a real fault → propagate (→ generic 500).
+    if (isDoubleBookingError(err)) {
       return { ok: false, error: "errorDatesTaken" };
     }
     throw err;
   }
+
+  // notify is fire-and-forget (never throws — see lib/notifications); kept out
+  // of the create try so a notification path can't be mistaken for "dates taken".
+  await notify(listing.hostId, "BOOKING_REQUESTED", {
+    listingTitle: listing.title,
+    guestName: user.displayName,
+    bookingId: booking.id,
+  });
+  return { ok: true, bookingId: booking.id };
+}
+
+/** True only for the booking double-booking exclusion-constraint violation. */
+function isDoubleBookingError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : "";
+  return (
+    msg.includes("booking_no_double_booking") ||
+    msg.includes("23P01") ||
+    msg.toLowerCase().includes("exclusion constraint")
+  );
 }
