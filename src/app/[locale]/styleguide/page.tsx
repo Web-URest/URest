@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   StatusPill,
   type BookingStatus,
+  type ListingStatus,
   type PayoutStatus,
 } from "@/components/ui/StatusPill";
 import { EscrowStrip } from "@/components/ui/EscrowStrip";
@@ -17,6 +18,11 @@ import { GuestStepper } from "@/components/ui/GuestStepper";
 import { PriceBreakdown } from "@/components/ui/PriceBreakdown";
 import { FaqSection } from "@/components/ui/FaqSection";
 import { PriceCalendar } from "@/components/ui/PriceCalendar";
+import { StatCard } from "@/components/ui/StatCard";
+import { ListingSwitcher } from "@/components/ui/ListingSwitcher";
+import { CalendarGrid } from "@/components/ui/CalendarGrid";
+import { SeasonEditor } from "@/components/ui/SeasonEditor";
+import { BookingModeToggle } from "@/components/ui/BookingModeToggle";
 import type { Quote } from "@/lib/pricing/quote";
 
 /**
@@ -45,6 +51,15 @@ const PAYOUT_STATES: PayoutStatus[] = [
   "PAID",
   "FROZEN",
   "REVERSED",
+];
+
+const LISTING_STATES: ListingStatus[] = [
+  "DRAFT",
+  "PENDING_REVIEW",
+  "NEEDS_INFO",
+  "PUBLISHED",
+  "UNLISTED",
+  "REJECTED",
 ];
 
 const SWATCHES: { name: string; className: string }[] = [
@@ -169,6 +184,14 @@ export default function StyleguidePage() {
         </div>
       </Section>
 
+      <Section title="StatusPill — listing lifecycle states">
+        <div className="flex flex-wrap gap-2">
+          {LISTING_STATES.map((s) => (
+            <StatusPill key={s} status={s} />
+          ))}
+        </div>
+      </Section>
+
       <Section title="EscrowStrip — full (guest), step 1 → 3">
         <div className="flex flex-col gap-4">
           <EscrowStrip step={1} audience="guest" />
@@ -280,6 +303,75 @@ export default function StyleguidePage() {
                 endDate: new Date("2026-07-15"),
               },
             ]}
+          />
+        </div>
+      </Section>
+
+      <Section title="StatCard — host KPIs (value + zero-state)">
+        <div className="grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard label="รายรับเดือนนี้" value="฿0" />
+          <StatCard label="การจอง" value={null} hint="พร้อมใช้งานเฟส 3" />
+          <StatCard label="อัตราตอบรับ" value={null} hint="พร้อมใช้งานเฟส 3" />
+          <StatCard label="เรตติ้ง" value={null} hint="พร้อมใช้งานเฟส 3" />
+        </div>
+      </Section>
+
+      <Section title="ListingSwitcher (one calendar per villa)">
+        <ListingSwitcher
+          listings={[
+            { id: "a", title: "บ้านพูลวิลล่าทดสอบ จอมเทียน" },
+            { id: "b", title: "บ้านริมสวน นาเกลือ" },
+          ]}
+          selectedId="a"
+          onSelect={() => {}}
+        />
+      </Section>
+
+      <Section title="CalendarGrid — host (ว่าง / ปิดเอง, tap to toggle)">
+        <div className="max-w-2xl">
+          <CalendarGrid
+            blocks={[
+              {
+                id: "blk1",
+                startDate: new Date("2026-07-10"),
+                endDate: new Date("2026-07-12"),
+              },
+            ]}
+            onToggleDate={() => {}}
+          />
+        </div>
+      </Section>
+
+      <Section title="SeasonEditor (wizard ⑤ + Edit Villa)">
+        <div className="max-w-2xl">
+          <SeasonEditor
+            seasons={[
+              {
+                nameTh: "ไฮซีซั่น",
+                startDate: "2026-11-01",
+                endDate: "2027-02-28",
+                weekdayBaht: 15900,
+                weekendBaht: 18900,
+              },
+            ]}
+            onChange={() => {}}
+          />
+        </div>
+      </Section>
+
+      <Section title="BookingModeToggle (request / instant + ack)">
+        <div className="flex max-w-2xl flex-col gap-6">
+          <BookingModeToggle
+            mode="REQUEST"
+            onModeChange={() => {}}
+            ack={false}
+            onAckChange={() => {}}
+          />
+          <BookingModeToggle
+            mode="INSTANT"
+            onModeChange={() => {}}
+            ack={false}
+            onAckChange={() => {}}
           />
         </div>
       </Section>
