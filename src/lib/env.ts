@@ -59,9 +59,11 @@ const schema = z.object({
   /** Google Maps JS API key — HTTP referrer restricted; $0 billing cap (ADR-009). Optional: map fails closed without it. */
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().min(1).optional(),
 
-  // --- Phase 3: payments ---
-  // OPN_PUBLIC_KEY: z.string().startsWith("pkey_"),
-  // OPN_SECRET_KEY: z.string().startsWith("skey_"),
+  // --- Phase 3: payments — Opn (ADR-001, issue #20); TEST keys until launch gate ---
+  /** Opn publishable key (`pkey_…`) — client-side card tokenization. */
+  OPN_PUBLIC_KEY: z.string().startsWith("pkey_"),
+  /** Opn secret key (`skey_…`) — server charge/source/retrieve + webhook re-fetch verification. */
+  OPN_SECRET_KEY: z.string().startsWith("skey_"),
 
   // --- Phase 4: AI concierge ---
   ANTHROPIC_API_KEY: z.string().min(1).optional(),

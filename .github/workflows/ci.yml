@@ -54,3 +54,5 @@ jobs:
           R2_PUBLIC_BUCKET: "ci-public"
           R2_PRIVATE_BUCKET: "ci-private"
           R2_PUBLIC_BASE_URL: "https://cdn.ci.example"
+          OPN_PUBLIC_KEY: "pkey_test_ci_dummy"
+          OPN_SECRET_KEY: "skey_test_ci_dummy"
