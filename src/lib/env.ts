@@ -64,7 +64,7 @@ const schema = z.object({
   // OPN_SECRET_KEY: z.string().startsWith("skey_"),
 
   // --- Phase 4: AI concierge ---
-  ANTHROPIC_API_KEY: z.string().min(1),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
   CONCIERGE_MODEL: z.string().default("claude-haiku-4-5"),
   /** ฿500/month default = 50,000 satang. Kill switch when monthly spend exceeds this. */
   CONCIERGE_BUDGET_SATANG: z.coerce.number().int().positive().default(50000),

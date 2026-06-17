@@ -17,8 +17,6 @@ import {
   logUsage,
 } from "@/lib/concierge/cost";
 
-const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-
 function sseError(message: string): Response {
   const body = `data: ${JSON.stringify({ type: "error", message })}\n\n`;
   return new Response(body, {
@@ -27,6 +25,9 @@ function sseError(message: string): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (!env.ANTHROPIC_API_KEY) return sseError("KILL_SWITCH");
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+
   // --- Auth (ladder step 1: any logged-in, non-suspended user) ---
   const session = await auth();
   const userId = session?.user?.id ?? null;
