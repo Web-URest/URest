@@ -17,3 +17,16 @@ describe("getTemplate", () => {
     expect(getTemplate("NOPE")).toBeUndefined();
   });
 });
+
+describe("request lifecycle templates", () => {
+  it("renders REQUEST_ACCEPTED (priority) — guest gets a pay prompt", () => {
+    const t = getTemplate("REQUEST_ACCEPTED");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({ listingTitle: "วิลล่า A" })).toContain("วิลล่า A");
+    expect(t?.email({ listingTitle: "วิลล่า A" }).subject).toContain("ยืนยัน");
+  });
+  it("renders REQUEST_DECLINED + REQUEST_EXPIRED", () => {
+    expect(getTemplate("REQUEST_DECLINED")?.line({ listingTitle: "วิลล่า A" })).toContain("วิลล่า A");
+    expect(getTemplate("REQUEST_EXPIRED")?.line({ listingTitle: "วิลล่า A" })).toContain("วิลล่า A");
+  });
+});
