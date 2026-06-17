@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { StatusPill, type ListingStatus } from "@/components/ui/StatusPill";
+import { Link } from "@/i18n/navigation";
 import { requireHostEligible } from "@/lib/auth/guards";
 import { getHostListingForEdit } from "@/lib/listing/queries";
 
@@ -84,6 +85,14 @@ export default async function EditVillaPage({
         <h1 className="font-display text-3xl text-ink-900">{listing.title}</h1>
         <StatusPill status={listing.status as ListingStatus} />
       </header>
+      {listing.status === "NEEDS_INFO" ? (
+        <Link
+          href={`/listings/${listing.id}/needs-info`}
+          className="rounded-2xl border border-coral-500 bg-coral-500/10 px-4 py-3 text-sm font-medium text-coral-600 hover:bg-coral-500/20"
+        >
+          {t("needsInfoCta")}
+        </Link>
+      ) : null}
       <p className="text-ink-700">{t("editTitle")}</p>
       <EditForm listingId={listing.id} initial={initial} faqInitial={faqInitial} />
     </div>
