@@ -9,7 +9,11 @@ export interface NotificationTemplate {
   line(payload: Record<string, unknown>): string;
 }
 
+import { formatSatang } from "@/lib/money";
+
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
+/** Format a satang amount for display in a notification body (the user-facing edge). */
+const satang = (v: unknown): string => (typeof v === "number" ? formatSatang(v) : "");
 
 const templates: Record<string, NotificationTemplate> = {
   BOOKING_REQUESTED: {
@@ -83,6 +87,22 @@ const templates: Record<string, NotificationTemplate> = {
       body: `ขออภัย วันที่ของ ${str(p.listingTitle)} ไม่ว่างแล้วในจังหวะที่ชำระเงินเข้ามา เราได้คืนเงินเต็มจำนวนให้คุณเรียบร้อยแล้ว (อาจใช้เวลา 2–3 วันทำการกว่าจะเห็นในบัญชี)`,
     }),
     line: (p) => `↩️ คืนเงินเต็มจำนวนแล้วสำหรับ ${str(p.listingTitle)} — วันที่ไม่ว่างพอดีตอนชำระเงิน ขออภัยในความไม่สะดวกค่ะ`,
+  },
+  BOOKING_CANCELLED_BY_GUEST: {
+    priority: false,
+    email: (p) => ({
+      subject: `การจอง ${str(p.listingTitle)} ถูกยกเลิกโดยแขก`,
+      body: `แขกได้ยกเลิกการจอง ${str(p.listingTitle)} วันที่ถูกปล่อยคืนแล้วและพร้อมรับการจองใหม่`,
+    }),
+    line: (p) => `แขกยกเลิกการจอง ${str(p.listingTitle)} — วันที่ว่างกลับมาแล้ว`,
+  },
+  BOOKING_CANCELLED_BY_HOST: {
+    priority: true,
+    email: (p) => ({
+      subject: `การจอง ${str(p.listingTitle)} ถูกยกเลิกโดยโฮสต์ — คืนเงินเต็มจำนวน`,
+      body: `ขออภัย โฮสต์ได้ยกเลิกการจอง ${str(p.listingTitle)} เราได้คืนเงินเต็มจำนวน ${satang(p.refundSatang)} ให้คุณแล้ว (อาจใช้เวลา 2–3 วันทำการ) ลองดูที่พักอื่นที่ว่างในช่วงเวลาเดียวกันได้เลย`,
+    }),
+    line: (p) => `⚠️ โฮสต์ยกเลิกการจอง ${str(p.listingTitle)} — คืนเงินเต็มจำนวน ${satang(p.refundSatang)} แล้ว`,
   },
 };
 
