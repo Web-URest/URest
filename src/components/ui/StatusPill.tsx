@@ -22,7 +22,16 @@ export type BookingStatus =
 
 export type PayoutStatus = "HELD" | "RELEASABLE" | "PAID" | "FROZEN" | "REVERSED";
 
-export type PillStatus = BookingStatus | PayoutStatus;
+/** Listing lifecycle states (PRODUCT_FLOWS §2.2; DESIGN_SPEC §3 gold-tint pending). */
+export type ListingStatus =
+  | "DRAFT"
+  | "PENDING_REVIEW"
+  | "NEEDS_INFO"
+  | "PUBLISHED"
+  | "UNLISTED"
+  | "REJECTED";
+
+export type PillStatus = BookingStatus | PayoutStatus | ListingStatus;
 
 const STYLES: Record<PillStatus, string> = {
   // Booking states
@@ -42,6 +51,13 @@ const STYLES: Record<PillStatus, string> = {
   PAID: "bg-jade-100 text-jade-500",
   FROZEN: "bg-coral-100 text-coral-600",
   REVERSED: "bg-coral-100 text-coral-600",
+  // Listing lifecycle states (DESIGN_SPEC §3)
+  DRAFT: "bg-sand-100 text-ink-900",
+  PENDING_REVIEW: "bg-gold-100 text-gold-800",
+  NEEDS_INFO: "bg-gold-100 text-gold-800",
+  PUBLISHED: "bg-jade-100 text-jade-500",
+  UNLISTED: "bg-sand-300 text-ink-900/60",
+  REJECTED: "bg-coral-100 text-coral-600",
 };
 
 /** Glyph prefixes for attention states (text still carries the meaning — never color alone). */

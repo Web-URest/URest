@@ -140,6 +140,103 @@ export async function getListingDetail(id: string) {
   return { listing, holidaySet, attractions: withDistance };
 }
 
+// ── Host-scoped reads (PRODUCT_FLOWS §4.2 dashboard, §4.4 edit) ───────────────
+// Unlike the guest reads above, these are NOT filtered to PUBLISHED — a host sees
+// their listings in every status — and every one is gated to the owning host.
+
+export type HostListingSummary = {
+  id: string;
+  title: string;
+  status: string;
+  bookingMode: string;
+  regionNameTh: string;
+  coverKey: string | null;
+};
+
+/** The host's listings (all statuses) for the ที่พักของฉัน list + overview. */
+export async function getHostListings(hostId: string): Promise<HostListingSummary[]> {
+  const listings = await prisma.listing.findMany({
+    where: { hostId },
+    include: {
+      region: { select: { nameTh: true } },
+      photos: { where: { isCover: true }, take: 1 },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  return listings.map((l) => ({
+    id: l.id,
+    title: l.title,
+    status: l.status,
+    bookingMode: l.bookingMode,
+    regionNameTh: l.region.nameTh,
+    coverKey: l.photos[0]?.r2Key ?? null,
+  }));
+}
+
+const hostEditInclude = {
+  region: { select: { id: true, nameTh: true, slug: true } },
+  photos: { orderBy: { sortOrder: "asc" as const } },
+  seasons: { orderBy: { startDate: "asc" as const } },
+  faqEntries: { orderBy: { sortOrder: "asc" as const } },
+  calendarBlocks: { orderBy: { startDate: "asc" as const } },
+} satisfies Prisma.ListingInclude;
+
+export type HostListingForEdit = Prisma.ListingGetPayload<{
+  include: typeof hostEditInclude;
+}>;
+
+/** Full listing for the Edit Villa page, gated to the owner (null otherwise). */
+export async function getHostListingForEdit(
+  listingId: string,
+  hostId: string,
+): Promise<HostListingForEdit | null> {
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    include: hostEditInclude,
+  });
+  if (!listing || listing.hostId !== hostId) return null;
+  return listing;
+}
+
+export type HostOverview = {
+  statusCounts: Record<string, number>;
+  /**
+   * Booking-derived KPIs (PRODUCT_FLOWS §4.2). Booking/Review data is Phase 3 and
+   * not seeded yet, so these are zero-states until M3 populates them — the UI
+   * renders "—", never a fabricated number.
+   */
+  kpis: {
+    revenueSatang: number | null;
+    bookingsThisMonth: number | null;
+    responseRatePct: number | null;
+    avgRating: number | null;
+  };
+};
+
+/** Status tallies for the overview alert tiles + zero-state KPIs. */
+export async function getHostOverview(hostId: string): Promise<HostOverview> {
+  const grouped = await prisma.listing.groupBy({
+    by: ["status"],
+    where: { hostId },
+    _count: { _all: true },
+  });
+
+  const statusCounts: Record<string, number> = {};
+  for (const g of grouped) statusCounts[g.status] = g._count._all;
+
+  return {
+    statusCounts,
+    // Phase 3 (M3) fills these from Booking/Review. Until then: zero-state.
+    kpis: {
+      revenueSatang: null,
+      bookingsThisMonth: null,
+      responseRatePct: null,
+      avgRating: null,
+    },
+  };
+}
+
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
