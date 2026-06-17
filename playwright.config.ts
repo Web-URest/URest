@@ -24,6 +24,11 @@ const TEST_ENV: Record<string, string> = {
   R2_PUBLIC_BASE_URL: "https://cdn.e2e.example",
 };
 
+// Also apply to THIS process (workers + globalSetup) so the harness's `@/lib/db`
+// → env.ts boot-validation passes and points at the test DB. `??=` keeps any real
+// env (none set in CI) authoritative.
+for (const [k, v] of Object.entries(TEST_ENV)) process.env[k] ??= v;
+
 export default defineConfig({
   testDir: "./e2e/specs",
   globalSetup: "./e2e/global-setup.ts",
