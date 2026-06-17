@@ -57,3 +57,14 @@ export async function getSessionTokenCount(sessionId: string): Promise<number> {
   });
   return result._sum.inputTokens ?? 0;
 }
+
+/** Written whenever the model fires the refusal script (AI_CONCIERGE_SPEC §5, PRODUCT_FLOWS §5.7). */
+export async function logUnansweredQuestion(
+  sessionId: string,
+  questionText: string,
+  listingId?: string | null,
+): Promise<void> {
+  await prisma.unansweredQuestion.create({
+    data: { sessionId, questionText, listingId: listingId ?? null },
+  });
+}

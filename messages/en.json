@@ -44,7 +44,19 @@
     "totp": "2-factor code (6 digits)",
     "submit": "Sign in",
     "logout": "Sign out",
-    "loginError": "Invalid email, password, or 2-factor code."
+    "loginError": "Invalid email, password, or 2-factor code.",
+    "UnansweredQuestions": {
+      "title": "Unanswered questions",
+      "subtitle": "Questions น้องเรสต์ could not answer — suggest them to hosts as FAQ entries to grow coverage.",
+      "noQuestions": "No open questions",
+      "listingUnknown": "(no listing)",
+      "timesAsked": "{count} times",
+      "suggestFaq": "Suggest as FAQ",
+      "dismiss": "Dismiss",
+      "suggestConfirm": "Suggest this question to the host as a FAQ entry?",
+      "successSuggest": "Suggested as FAQ. The host will see it as a fill-in prompt.",
+      "successDismiss": "Question dismissed."
+    }
   },
   "Status": {
     "REQUESTED": "Awaiting host",
