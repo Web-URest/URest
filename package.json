@@ -25,7 +25,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "admin:create": "tsx scripts/admin.ts",
-    "r2:smoke": "tsx scripts/r2-smoke.ts"
+    "r2:smoke": "tsx scripts/r2-smoke.ts",
+    "opn:spike": "tsx scripts/opn-spike.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

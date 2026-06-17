@@ -15,3 +15,5 @@ process.env.R2_SECRET_ACCESS_KEY ??= "test-secret-key";
 process.env.R2_PUBLIC_BUCKET ??= "test-public";
 process.env.R2_PRIVATE_BUCKET ??= "test-private";
 process.env.R2_PUBLIC_BASE_URL ??= "https://cdn.test.example";
+process.env.OPN_PUBLIC_KEY ??= "pkey_test_0000000000000000000";
+process.env.OPN_SECRET_KEY ??= "skey_test_0000000000000000000";

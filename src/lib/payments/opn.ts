@@ -1,0 +1,120 @@
+/**
+ * Opn (formerly Omise) REST client — the thin edge that talks to the gateway
+ * (ADR-001, issue #20). U-Rest needs only three calls: create a PromptPay charge,
+ * create a card charge, and retrieve a charge by id — the last is the webhook
+ * re-fetch that *is* our verification (we never trust the webhook payload).
+ *
+ * Boring on purpose (CLAUDE.md "boring over clever"): plain `fetch`, no SDK. The
+ * Opn API is form-encoded with bracket notation for nested params; amounts are
+ * already integer satang (Omise's THB minor unit == satang — no conversion, rule 1).
+ */
+import { env } from "@/lib/env";
+
+const OPN_API_BASE = "https://api.omise.co";
+
+/** The subset of the Opn charge object U-Rest reads. */
+export interface OpnCharge {
+  object: "charge";
+  id: string;
+  status: "pending" | "successful" | "failed" | "expired" | "reversed";
+  paid: boolean;
+  amount: number; // satang
+  currency: string;
+  metadata: Record<string, unknown>;
+  expires_at?: string | null;
+  source?: {
+    type: string;
+    scannable_code?: { image?: { download_uri?: string } };
+  } | null;
+}
+
+export class OpnError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "OpnError";
+  }
+}
+
+/** Flatten params to a form body, nesting via bracket notation (`metadata[bookingId]`). */
+function toFormBody(params: Record<string, unknown>): string {
+  const out = new URLSearchParams();
+  const walk = (prefix: string, value: unknown): void => {
+    if (value === undefined || value === null) return;
+    if (typeof value === "object") {
+      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        walk(prefix ? `${prefix}[${k}]` : k, v);
+      }
+    } else {
+      out.set(prefix, String(value));
+    }
+  };
+  walk("", params);
+  return out.toString();
+}
+
+/** Secret key as Basic-auth username, empty password (Omise convention). */
+function authHeader(): string {
+  return `Basic ${Buffer.from(`${env.OPN_SECRET_KEY}:`).toString("base64")}`;
+}
+
+async function opnRequest(
+  method: "GET" | "POST",
+  path: string,
+  params?: Record<string, unknown>,
+): Promise<OpnCharge> {
+  const res = await fetch(`${OPN_API_BASE}${path}`, {
+    method,
+    headers: {
+      Authorization: authHeader(),
+      ...(params ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
+    },
+    ...(params ? { body: toFormBody(params) } : {}),
+  });
+
+  if (!res.ok) {
+    const detail: unknown = await res.json().catch(() => null);
+    const message =
+      detail && typeof detail === "object" && "message" in detail
+        ? String((detail as { message: unknown }).message)
+        : res.statusText;
+    throw new OpnError(res.status, message);
+  }
+
+  const body: unknown = await res.json();
+  return body as OpnCharge;
+}
+
+/** Create a PromptPay charge; the QR lives at `source.scannable_code.image.download_uri`. */
+export function createPromptPayCharge(input: {
+  amountSatang: number;
+  bookingId: string;
+}): Promise<OpnCharge> {
+  return opnRequest("POST", "/charges", {
+    amount: input.amountSatang,
+    currency: "thb",
+    source: { type: "promptpay" },
+    metadata: { bookingId: input.bookingId },
+  });
+}
+
+/** Create a charge from a card token (tokenized client-side with the public key). */
+export function createCardCharge(input: {
+  amountSatang: number;
+  bookingId: string;
+  token: string;
+}): Promise<OpnCharge> {
+  return opnRequest("POST", "/charges", {
+    amount: input.amountSatang,
+    currency: "thb",
+    card: input.token,
+    metadata: { bookingId: input.bookingId },
+  });
+}
+
+/** Retrieve a charge by id — the authoritative status used for webhook verification. */
+export function retrieveCharge(chargeId: string): Promise<OpnCharge> {
+  return opnRequest("GET", `/charges/${chargeId}`);
+}
