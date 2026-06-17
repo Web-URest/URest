@@ -98,13 +98,18 @@ describe("createChargeForBooking", () => {
     });
   });
 
-  it("creates a card charge from the supplied token", async () => {
+  it("creates a card charge from the supplied token and return_uri", async () => {
     findBooking.mockResolvedValue(booking());
     cardCharge.mockResolvedValue(charge({ id: "chrg_card", source: null, expires_at: null }));
 
-    await createChargeForBooking("bk1", PaymentMethod.CARD, { cardToken: "tokn_9" });
+    await createChargeForBooking("bk1", PaymentMethod.CARD, { cardToken: "tokn_9", returnUri: "https://app/th/trips/bk1/pay" });
 
-    expect(cardCharge).toHaveBeenCalledWith({ amountSatang: 12_900_00, bookingId: "bk1", token: "tokn_9" });
+    expect(cardCharge).toHaveBeenCalledWith({
+      amountSatang: 12_900_00,
+      bookingId: "bk1",
+      token: "tokn_9",
+      returnUri: "https://app/th/trips/bk1/pay",
+    });
     expect(paymentCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         method: PaymentMethod.CARD,
@@ -116,7 +121,7 @@ describe("createChargeForBooking", () => {
 
   it("rejects a card charge with no token", async () => {
     findBooking.mockResolvedValue(booking());
-    await expect(createChargeForBooking("bk1", PaymentMethod.CARD)).rejects.toMatchObject({
+    await expect(createChargeForBooking("bk1", PaymentMethod.CARD, { returnUri: "https://app/x" })).rejects.toMatchObject({
       reason: "CARD_TOKEN_REQUIRED",
     });
     expect(cardCharge).not.toHaveBeenCalled();

@@ -32,7 +32,7 @@ export class PaymentError extends Error {
 export async function createChargeForBooking(
   bookingId: string,
   method: PaymentMethod,
-  opts: { cardToken?: string } = {},
+  opts: { cardToken?: string; returnUri?: string } = {},
 ): Promise<{ payment: Payment; charge: OpnCharge }> {
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking) throw new PaymentError("BOOKING_NOT_FOUND");
@@ -42,11 +42,12 @@ export async function createChargeForBooking(
 
   let charge: OpnCharge;
   if (method === PaymentMethod.CARD) {
-    if (!opts.cardToken) throw new PaymentError("CARD_TOKEN_REQUIRED");
+    if (!opts.cardToken || !opts.returnUri) throw new PaymentError("CARD_TOKEN_REQUIRED");
     charge = await createCardCharge({
       amountSatang: booking.totalSatang,
       bookingId,
       token: opts.cardToken,
+      returnUri: opts.returnUri,
     });
   } else {
     charge = await createPromptPayCharge({ amountSatang: booking.totalSatang, bookingId });

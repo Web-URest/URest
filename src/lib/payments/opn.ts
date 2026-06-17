@@ -22,6 +22,7 @@ export interface OpnCharge {
   currency: string;
   metadata: Record<string, unknown>;
   expires_at?: string | null;
+  authorize_uri?: string | null; // 3DS redirect target for card charges
   source?: {
     type: string;
     scannable_code?: { image?: { download_uri?: string } };
@@ -100,16 +101,21 @@ export function createPromptPayCharge(input: {
   });
 }
 
-/** Create a charge from a card token (tokenized client-side with the public key). */
+/**
+ * Create a charge from a card token (tokenized client-side with the public key).
+ * `returnUri` is where Opn returns the browser after 3DS authorization.
+ */
 export function createCardCharge(input: {
   amountSatang: number;
   bookingId: string;
   token: string;
+  returnUri: string;
 }): Promise<OpnCharge> {
   return opnRequest("POST", "/charges", {
     amount: input.amountSatang,
     currency: "thb",
     card: input.token,
+    return_uri: input.returnUri,
     metadata: { bookingId: input.bookingId },
   });
 }
