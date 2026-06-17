@@ -151,8 +151,9 @@ async function notifyPaymentReceived(bookingId: string): Promise<void> {
  * Paid-race fallback (§3.2): a charge succeeded but the booking already expired, so
  * the guest is charged with no booking → refund the full charge. The Payment-status
  * CAS makes this fire exactly once across webhook re-deliveries (count 0 = already
- * refunded). If the Opn refund call itself fails, the row is already REFUNDED and the
- * gap surfaces in admin reconciliation against the Opn dashboard (§5.2).
+ * refunded). If the Opn refund call fails we roll the claim back to PENDING and
+ * rethrow, so the webhook retry re-attempts — we never leave a charge marked REFUNDED
+ * that wasn't actually refunded, and the guest is only notified once it truly is.
  */
 async function refundStrandedCharge(
   chargeId: string,
@@ -164,7 +165,17 @@ async function refundStrandedCharge(
     data: { status: PaymentStatus.REFUNDED },
   });
   if (claim.count === 0) return { kind: "refunded", bookingId }; // already refunded by an earlier delivery
-  await refundCharge(chargeId, amountSatang);
+
+  try {
+    await refundCharge(chargeId, amountSatang);
+  } catch (err) {
+    await prisma.payment.updateMany({
+      where: { opnChargeId: chargeId, status: PaymentStatus.REFUNDED },
+      data: { status: PaymentStatus.PENDING },
+    });
+    throw err; // → 500, Opn retries, the next delivery re-claims and re-attempts
+  }
+
   await notifyPaymentRefunded(bookingId);
   return { kind: "refunded", bookingId };
 }

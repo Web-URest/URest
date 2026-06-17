@@ -198,6 +198,22 @@ describe("applyChargeEvent", () => {
     expect(result).toEqual({ kind: "refunded", bookingId: "bk1" });
   });
 
+  it("rolls the Payment back to PENDING and rethrows if the Opn refund fails (no false notify)", async () => {
+    fetchCharge.mockResolvedValue(charge({ status: "successful", amount: 12_900_00 }));
+    confirm.mockRejectedValue(new BookingError("WRONG_STATE"));
+    paymentUpdateMany.mockResolvedValue({ count: 1 });
+    refundFn.mockRejectedValue(new Error("opn 502"));
+
+    await expect(applyChargeEvent("evnt_2", "chrg_1", {}, NOW)).rejects.toThrow();
+
+    expect(notifyFn).not.toHaveBeenCalled();
+    // claim (PENDING→REFUNDED) then rollback (REFUNDED→PENDING)
+    expect(paymentUpdateMany).toHaveBeenCalledWith({
+      where: { opnChargeId: "chrg_1", status: PaymentStatus.REFUNDED },
+      data: { status: PaymentStatus.PENDING },
+    });
+  });
+
   it("ignores a successful charge whose booking does not exist (no auto-refund)", async () => {
     fetchCharge.mockResolvedValue(charge({ status: "successful" }));
     confirm.mockRejectedValue(new BookingError("NOT_FOUND"));
