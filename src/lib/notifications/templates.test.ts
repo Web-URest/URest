@@ -61,6 +61,37 @@ describe("payment lifecycle templates", () => {
   });
 });
 
+describe("listing approval templates (#14)", () => {
+  it("LISTING_APPROVED is priority and names the listing", () => {
+    const t = getTemplate("LISTING_APPROVED");
+    expect(t?.priority).toBe(true);
+    expect(t?.email({ listingTitle: "วิลล่า A" }).subject).toContain("วิลล่า A");
+    expect(t?.line({ listingTitle: "วิลล่า A" })).toContain("วิลล่า A");
+  });
+
+  it("LISTING_NEEDS_INFO body renders the itemized checklist labels + notes", () => {
+    const t = getTemplate("LISTING_NEEDS_INFO");
+    expect(t?.priority).toBe(true);
+    const body = t?.email({
+      listingTitle: "วิลล่า A",
+      items: [
+        { item: "THAI_ID_UNCLEAR", satisfied: false },
+        { item: "BANK_NAME_MISMATCH", note: "ชื่อไม่ตรง", satisfied: false },
+      ],
+    }).body;
+    expect(body).toContain("บัตรประชาชนไม่ชัด");
+    expect(body).toContain("ชื่อบัญชีธนาคารไม่ตรงกับบัตร");
+    expect(body).toContain("ชื่อไม่ตรง"); // per-item note
+  });
+
+  it("LISTING_REJECTED carries the rejection reason", () => {
+    const t = getTemplate("LISTING_REJECTED");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({ listingTitle: "วิลล่า A", reason: "ภาพปลอม" })).toContain("ภาพปลอม");
+    expect(t?.email({ listingTitle: "วิลล่า A", reason: "ภาพปลอม" }).body).toContain("ภาพปลอม");
+  });
+});
+
 describe("cancellation templates", () => {
   it("BOOKING_CANCELLED_BY_GUEST notifies the host which listing was cancelled", () => {
     const t = getTemplate("BOOKING_CANCELLED_BY_GUEST");

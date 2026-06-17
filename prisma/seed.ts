@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { KycDocumentType, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -422,6 +422,106 @@ async function main() {
       }
     }
     console.log(`Seeded ${attractionSeeds.length} Pattaya attractions`);
+
+    // Admin approval-queue fixtures (#14): listings awaiting review (one fresh,
+    // one >24h overdue to exercise the SLA flag) + a NEEDS_INFO listing to drive
+    // the host to-do/resubmit loop without first running an admin decision.
+    // KYC doc r2Keys are placeholders — signed-URL GETs 404 on missing bytes in
+    // dev; real bytes come from a freshly host-submitted listing.
+    const HOUR_MS = 60 * 60 * 1000;
+    const reviewNow = new Date();
+
+    async function seedReviewListing(opts: {
+      hostId: string;
+      title: string;
+      status: "PENDING_REVIEW" | "NEEDS_INFO";
+      submittedAt: Date;
+      needsInfoItems?: unknown;
+      withHotelLicense?: boolean;
+    }): Promise<void> {
+      const exists = await prisma.listing.findFirst({ where: { title: opts.title } });
+      if (exists) return;
+
+      const listing = await prisma.listing.create({
+        data: {
+          hostId: opts.hostId,
+          regionId: pattaya.id,
+          status: opts.status,
+          title: opts.title,
+          description: "วิลล่าทดสอบสำหรับคิวตรวจสอบ สระส่วนตัว ใกล้หาด",
+          address: "ซอยทดสอบ พัทยา ชลบุรี 20150",
+          mapLat: 12.92,
+          mapLng: 100.88,
+          bedrooms: 3,
+          beds: 4,
+          baths: 2,
+          maxGuests: 8,
+          includedGuests: 6,
+          baseWeekdaySatang: 9_900 * 100,
+          baseWeekendSatang: 12_900 * 100,
+          cancellationTier: "MODERATE",
+          bookingMode: "REQUEST",
+          photos: {
+            create: [0, 1, 2, 3, 4].map((i) => ({
+              r2Key: `dev/review/${opts.hostId}-${i}.webp`,
+              sortOrder: i,
+              isCover: i === 0,
+            })),
+          },
+        },
+      });
+
+      const submission = await prisma.kycSubmission.create({
+        data: {
+          userId: opts.hostId,
+          listingId: listing.id,
+          status: opts.status,
+          submittedAt: opts.submittedAt,
+          ...(opts.needsInfoItems
+            ? { needsInfoItems: opts.needsInfoItems as object }
+            : {}),
+        },
+      });
+
+      const types: KycDocumentType[] = [
+        KycDocumentType.THAI_ID,
+        KycDocumentType.RIGHT_TO_RENT,
+        KycDocumentType.SELFIE,
+        ...(opts.withHotelLicense ? [KycDocumentType.HOTEL_LICENSE] : []),
+      ];
+      await prisma.kycDocument.createMany({
+        data: types.map((type) => ({
+          submissionId: submission.id,
+          type,
+          r2Key: `kyc/${submission.id}/${type}`,
+        })),
+      });
+    }
+
+    await seedReviewListing({
+      hostId: host.id,
+      title: "บ้านรอตรวจสอบ จอมเทียน (ทดสอบ)",
+      status: "PENDING_REVIEW",
+      submittedAt: new Date(reviewNow.getTime() - 2 * HOUR_MS),
+    });
+    await seedReviewListing({
+      hostId: host2.id,
+      title: "บ้านรอตรวจสอบเกินเวลา นาเกลือ (ทดสอบ)",
+      status: "PENDING_REVIEW",
+      submittedAt: new Date(reviewNow.getTime() - 26 * HOUR_MS),
+      withHotelLicense: true,
+    });
+    await seedReviewListing({
+      hostId: host3.id,
+      title: "บ้านขอข้อมูลเพิ่ม พัทยาใต้ (ทดสอบ)",
+      status: "NEEDS_INFO",
+      submittedAt: new Date(reviewNow.getTime() - 10 * HOUR_MS),
+      needsInfoItems: [
+        { item: "THAI_ID_UNCLEAR", note: "รูปบัตรเบลอ ถ่ายใหม่ให้ชัด", satisfied: false },
+        { item: "BANK_NAME_MISMATCH", note: "ชื่อบัญชีไม่ตรงกับบัตร", satisfied: false },
+      ],
+    });
+    console.log("Seeded 3 approval-queue fixtures (pending, overdue, needs-info)");
   }
 }
 

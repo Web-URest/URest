@@ -31,7 +31,9 @@ export type KycErrorReason =
   | "NOT_FOUND"
   | "NOT_OWNER"
   | "MISSING_DOCS"
-  | "MISSING_PAYOUT";
+  | "MISSING_PAYOUT"
+  | "WRONG_STATE"
+  | "ITEM_NOT_IN_CHECKLIST";
 
 export class KycError extends Error {
   constructor(public readonly reason: KycErrorReason) {

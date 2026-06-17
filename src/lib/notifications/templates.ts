@@ -15,6 +15,36 @@ const str = (v: unknown): string => (typeof v === "string" ? v : "");
 /** Format a satang amount for display in a notification body (the user-facing edge). */
 const satang = (v: unknown): string => (typeof v === "number" ? formatSatang(v) : "");
 
+/**
+ * Thai labels for the §5.1 NEEDS_INFO checklist. Notifications are a Thai-only
+ * channel of record (the UI uses i18n keys separately); the keys mirror
+ * `NEEDS_INFO_ITEM_KEYS` in lib/kyc/review.
+ */
+const NEEDS_INFO_LABELS_TH: Record<string, string> = {
+  THAI_ID_UNCLEAR: "บัตรประชาชนไม่ชัด/ถ่ายใหม่",
+  RIGHT_TO_RENT_DOC: "เอกสารสิทธิ์/โฉนด",
+  RENTAL_CONSENT: "สัญญาเช่า + หนังสือยินยอมให้ปล่อยเช่าช่วง",
+  SELFIE_WITH_ID: "เซลฟี่คู่บัตร",
+  REMAP_PIN: "ปักหมุดแผนที่ใหม่",
+  MORE_PHOTOS: "รูปที่พักเพิ่มเติม",
+  BANK_NAME_MISMATCH: "ชื่อบัญชีธนาคารไม่ตรงกับบัตร",
+};
+
+/** Render the NEEDS_INFO checklist payload as a Thai bullet list (defensive). */
+const needsInfoList = (v: unknown): string => {
+  if (!Array.isArray(v)) return "";
+  const lines: string[] = [];
+  for (const entry of v) {
+    if (typeof entry !== "object" || entry === null) continue;
+    const rec = entry as Record<string, unknown>;
+    const label = typeof rec.item === "string" ? NEEDS_INFO_LABELS_TH[rec.item] : undefined;
+    if (!label) continue;
+    const note = typeof rec.note === "string" && rec.note ? ` — ${rec.note}` : "";
+    lines.push(`• ${label}${note}`);
+  }
+  return lines.join("\n");
+};
+
 const templates: Record<string, NotificationTemplate> = {
   BOOKING_REQUESTED: {
     priority: true,
@@ -103,6 +133,30 @@ const templates: Record<string, NotificationTemplate> = {
       body: `ขออภัย โฮสต์ได้ยกเลิกการจอง ${str(p.listingTitle)} เราได้คืนเงินเต็มจำนวน ${satang(p.refundSatang)} ให้คุณแล้ว (อาจใช้เวลา 2–3 วันทำการ) ลองดูที่พักอื่นที่ว่างในช่วงเวลาเดียวกันได้เลย`,
     }),
     line: (p) => `⚠️ โฮสต์ยกเลิกการจอง ${str(p.listingTitle)} — คืนเงินเต็มจำนวน ${satang(p.refundSatang)} แล้ว`,
+  },
+  LISTING_APPROVED: {
+    priority: true,
+    email: (p) => ({
+      subject: `ที่พักได้รับอนุมัติแล้ว — ${str(p.listingTitle)}`,
+      body: `ยินดีด้วย! ที่พัก "${str(p.listingTitle)}" ผ่านการตรวจสอบและเผยแพร่แล้ว พร้อมรับการจองได้เลย`,
+    }),
+    line: (p) => `✅ ที่พัก "${str(p.listingTitle)}" ได้รับอนุมัติแล้ว — พร้อมรับการจอง`,
+  },
+  LISTING_NEEDS_INFO: {
+    priority: true,
+    email: (p) => ({
+      subject: `ต้องแก้ไขข้อมูลก่อนอนุมัติ — ${str(p.listingTitle)}`,
+      body: `ทีมงานขอข้อมูลเพิ่มเติมสำหรับ "${str(p.listingTitle)}" ก่อนอนุมัติ:\n${needsInfoList(p.items)}\n\nแก้ไขแต่ละรายการแล้วกดส่งตรวจสอบอีกครั้งได้ในแอป`,
+    }),
+    line: (p) => `⚠️ "${str(p.listingTitle)}" ต้องแก้ไขข้อมูลก่อนอนุมัติ — ดูรายการและส่งตรวจสอบใหม่ได้ในแอป`,
+  },
+  LISTING_REJECTED: {
+    priority: true,
+    email: (p) => ({
+      subject: `ที่พักไม่ผ่านการอนุมัติ — ${str(p.listingTitle)}`,
+      body: `ขออภัย ที่พัก "${str(p.listingTitle)}" ไม่ผ่านการตรวจสอบ\nเหตุผล: ${str(p.reason)}`,
+    }),
+    line: (p) => `❌ "${str(p.listingTitle)}" ไม่ผ่านการอนุมัติ — ${str(p.reason)}`,
   },
 };
 
