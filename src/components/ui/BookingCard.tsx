@@ -71,9 +71,8 @@ export function BookingCard({
         type="button"
         disabled={!quote}
         onClick={() => {
-          if (!isInstant) {
-            router.push(`/listings/${listingId}/request?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
-          }
+          const path = isInstant ? "instant" : "request";
+          router.push(`/listings/${listingId}/${path}?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
         }}
         className={`w-full rounded-button py-3 text-sm font-semibold transition ${
           isInstant

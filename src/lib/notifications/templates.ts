@@ -76,6 +76,14 @@ const templates: Record<string, NotificationTemplate> = {
     }),
     line: (p) => `⏰ เหลือเวลา 2 ชม. ชำระเงินเพื่อยืนยันการจอง ${str(p.listingTitle)} — อย่าให้วันที่หลุดไปนะคะ`,
   },
+  PAYMENT_REFUNDED_GUEST: {
+    priority: true,
+    email: (p) => ({
+      subject: `คืนเงินเต็มจำนวนแล้ว — ${str(p.listingTitle)}`,
+      body: `ขออภัย วันที่ของ ${str(p.listingTitle)} ไม่ว่างแล้วในจังหวะที่ชำระเงินเข้ามา เราได้คืนเงินเต็มจำนวนให้คุณเรียบร้อยแล้ว (อาจใช้เวลา 2–3 วันทำการกว่าจะเห็นในบัญชี)`,
+    }),
+    line: (p) => `↩️ คืนเงินเต็มจำนวนแล้วสำหรับ ${str(p.listingTitle)} — วันที่ไม่ว่างพอดีตอนชำระเงิน ขออภัยในความไม่สะดวกค่ะ`,
+  },
 };
 
 export function getTemplate(key: string): NotificationTemplate | undefined {

@@ -15,7 +15,7 @@ import { BookingError, confirmFromWebhook } from "@/lib/booking/transitions";
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notifications";
 
-import { createCardCharge, createPromptPayCharge, retrieveCharge, type OpnCharge } from "./opn";
+import { createCardCharge, createPromptPayCharge, refundCharge, retrieveCharge, type OpnCharge } from "./opn";
 
 export type PaymentErrorReason = "BOOKING_NOT_FOUND" | "NOT_AWAITING_PAYMENT" | "CARD_TOKEN_REQUIRED";
 
@@ -71,6 +71,7 @@ export async function createChargeForBooking(
 /** The outcome of processing one Opn webhook event (the route maps these to HTTP). */
 export type ChargeEventOutcome =
   | { kind: "confirmed"; bookingId: string }
+  | { kind: "refunded"; bookingId: string }
   | { kind: "failed"; bookingId: string }
   | { kind: "expired"; bookingId: string }
   | { kind: "ignored"; bookingId?: string };
@@ -100,7 +101,15 @@ export async function applyChargeEvent(
     try {
       ({ freshlyConfirmed } = await confirmFromWebhook({ bookingId, opnEventId, payload }, now));
     } catch (err) {
-      if (err instanceof BookingError) return { kind: "ignored", bookingId };
+      if (err instanceof BookingError) {
+        // Paid-race (§3.2): a successful charge whose booking is no longer
+        // AWAITING_PAYMENT (the 1h window expired just before this webhook, or the
+        // booking already settled) — the guest is charged for something we can't
+        // honor, so refund. NOT_FOUND = an unaccountable charge → leave for admin
+        // reconciliation rather than auto-refunding blind.
+        if (err.reason === "WRONG_STATE") return refundStrandedCharge(chargeId, charge.amount, bookingId);
+        return { kind: "ignored", bookingId };
+      }
       throw err;
     }
     await markPayment(chargeId, PaymentStatus.SUCCESSFUL);
@@ -136,4 +145,47 @@ async function notifyPaymentReceived(bookingId: string): Promise<void> {
   const params = { listingTitle: b.listing.title, code: b.code ?? "", bookingId };
   await notify(b.userId, "PAYMENT_RECEIVED_GUEST", params);
   await notify(b.listing.hostId, "PAYMENT_RECEIVED_HOST", params);
+}
+
+/**
+ * Paid-race fallback (§3.2): a charge succeeded but the booking already expired, so
+ * the guest is charged with no booking → refund the full charge. The Payment-status
+ * CAS makes this fire exactly once across webhook re-deliveries (count 0 = already
+ * refunded). If the Opn refund call fails we roll the claim back to PENDING and
+ * rethrow, so the webhook retry re-attempts — we never leave a charge marked REFUNDED
+ * that wasn't actually refunded, and the guest is only notified once it truly is.
+ */
+async function refundStrandedCharge(
+  chargeId: string,
+  amountSatang: number,
+  bookingId: string,
+): Promise<ChargeEventOutcome> {
+  const claim = await prisma.payment.updateMany({
+    where: { opnChargeId: chargeId, status: PaymentStatus.PENDING },
+    data: { status: PaymentStatus.REFUNDED },
+  });
+  if (claim.count === 0) return { kind: "refunded", bookingId }; // already refunded by an earlier delivery
+
+  try {
+    await refundCharge(chargeId, amountSatang);
+  } catch (err) {
+    await prisma.payment.updateMany({
+      where: { opnChargeId: chargeId, status: PaymentStatus.REFUNDED },
+      data: { status: PaymentStatus.PENDING },
+    });
+    throw err; // → 500, Opn retries, the next delivery re-claims and re-attempts
+  }
+
+  await notifyPaymentRefunded(bookingId);
+  return { kind: "refunded", bookingId };
+}
+
+/** Tell the guest their paid-race charge was refunded in full (§6). Best-effort. */
+async function notifyPaymentRefunded(bookingId: string): Promise<void> {
+  const b = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { userId: true, listing: { select: { title: true } } },
+  });
+  if (!b) return;
+  await notify(b.userId, "PAYMENT_REFUNDED_GUEST", { listingTitle: b.listing.title, bookingId });
 }

@@ -12,6 +12,7 @@ vi.mock("./opn", () => ({
   createPromptPayCharge: vi.fn(),
   createCardCharge: vi.fn(),
   retrieveCharge: vi.fn(),
+  refundCharge: vi.fn(),
 }));
 
 // Keep the real BookingError (for instanceof) but stub the transition itself.
@@ -27,7 +28,7 @@ import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notifications";
 
 import { applyChargeEvent, createChargeForBooking, PaymentError } from "./charge";
-import { createCardCharge, createPromptPayCharge, retrieveCharge } from "./opn";
+import { createCardCharge, createPromptPayCharge, refundCharge, retrieveCharge } from "./opn";
 
 const findBooking = prisma.booking.findUnique as unknown as Mock;
 const paymentCreate = prisma.payment.create as unknown as Mock;
@@ -35,6 +36,7 @@ const paymentUpdateMany = prisma.payment.updateMany as unknown as Mock;
 const ppCharge = createPromptPayCharge as unknown as Mock;
 const cardCharge = createCardCharge as unknown as Mock;
 const fetchCharge = retrieveCharge as unknown as Mock;
+const refundFn = refundCharge as unknown as Mock;
 const confirm = confirmFromWebhook as unknown as Mock;
 const notifyFn = notify as unknown as Mock;
 
@@ -165,16 +167,61 @@ describe("applyChargeEvent", () => {
     expect(result).toEqual({ kind: "confirmed", bookingId: "bk1" });
   });
 
-  it("ignores a duplicate/late event when the booking is no longer awaiting payment", async () => {
-    // confirmFromWebhook's own claim-based replay no-op is proven in booking/transitions.test
-    // + ledger/apply.test; here we prove the orchestrator swallows the resulting BookingError.
-    fetchCharge.mockResolvedValue(charge({ status: "successful" }));
+  it("auto-refunds a paid-race charge (booking no longer AWAITING_PAYMENT) and notifies the guest", async () => {
+    // The 1h window expired (sweep → EXPIRED) just before this webhook landed, so
+    // confirmFromWebhook throws WRONG_STATE on a *successful* charge → refund the guest.
+    fetchCharge.mockResolvedValue(charge({ status: "successful", amount: 12_900_00 }));
     confirm.mockRejectedValue(new BookingError("WRONG_STATE"));
+    paymentUpdateMany.mockResolvedValue({ count: 1 }); // CAS claim succeeds
+    findBooking.mockResolvedValue({ userId: "g1", listing: { title: "วิลล่า A" } });
 
     const result = await applyChargeEvent("evnt_2", "chrg_1", {}, NOW);
 
+    expect(paymentUpdateMany).toHaveBeenCalledWith({
+      where: { opnChargeId: "chrg_1", status: PaymentStatus.PENDING },
+      data: { status: PaymentStatus.REFUNDED },
+    });
+    expect(refundFn).toHaveBeenCalledWith("chrg_1", 12_900_00);
+    expect(notifyFn).toHaveBeenCalledWith("g1", "PAYMENT_REFUNDED_GUEST", expect.objectContaining({ listingTitle: "วิลล่า A", bookingId: "bk1" }));
+    expect(result).toEqual({ kind: "refunded", bookingId: "bk1" });
+  });
+
+  it("does not double-refund a paid-race charge on webhook re-delivery (CAS count 0)", async () => {
+    fetchCharge.mockResolvedValue(charge({ status: "successful" }));
+    confirm.mockRejectedValue(new BookingError("WRONG_STATE"));
+    paymentUpdateMany.mockResolvedValue({ count: 0 }); // already refunded by an earlier delivery
+
+    const result = await applyChargeEvent("evnt_2", "chrg_1", {}, NOW);
+
+    expect(refundFn).not.toHaveBeenCalled();
+    expect(notifyFn).not.toHaveBeenCalled();
+    expect(result).toEqual({ kind: "refunded", bookingId: "bk1" });
+  });
+
+  it("rolls the Payment back to PENDING and rethrows if the Opn refund fails (no false notify)", async () => {
+    fetchCharge.mockResolvedValue(charge({ status: "successful", amount: 12_900_00 }));
+    confirm.mockRejectedValue(new BookingError("WRONG_STATE"));
+    paymentUpdateMany.mockResolvedValue({ count: 1 });
+    refundFn.mockRejectedValue(new Error("opn 502"));
+
+    await expect(applyChargeEvent("evnt_2", "chrg_1", {}, NOW)).rejects.toThrow();
+
+    expect(notifyFn).not.toHaveBeenCalled();
+    // claim (PENDING→REFUNDED) then rollback (REFUNDED→PENDING)
+    expect(paymentUpdateMany).toHaveBeenCalledWith({
+      where: { opnChargeId: "chrg_1", status: PaymentStatus.REFUNDED },
+      data: { status: PaymentStatus.PENDING },
+    });
+  });
+
+  it("ignores a successful charge whose booking does not exist (no auto-refund)", async () => {
+    fetchCharge.mockResolvedValue(charge({ status: "successful" }));
+    confirm.mockRejectedValue(new BookingError("NOT_FOUND"));
+
+    const result = await applyChargeEvent("evnt_2", "chrg_1", {}, NOW);
+
+    expect(refundFn).not.toHaveBeenCalled();
     expect(result).toEqual({ kind: "ignored", bookingId: "bk1" });
-    expect(paymentUpdateMany).not.toHaveBeenCalled();
   });
 
   it("marks the Payment FAILED on a failed charge without touching the booking", async () => {

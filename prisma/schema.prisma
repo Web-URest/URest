@@ -590,6 +590,7 @@ enum PaymentStatus {
   SUCCESSFUL
   FAILED
   EXPIRED
+  REFUNDED // paid-race auto-refund (#22): charge succeeded after the booking expired
 }
 
 /// Why a LedgerEntry was written (ADR-003 §2 — no orphan transitions). One value

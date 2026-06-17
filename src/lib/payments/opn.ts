@@ -29,6 +29,14 @@ export interface OpnCharge {
   } | null;
 }
 
+/** The subset of the Opn refund object U-Rest reads. */
+export interface OpnRefund {
+  object: "refund";
+  id: string;
+  amount: number; // satang
+  status: string;
+}
+
 export class OpnError extends Error {
   constructor(
     public readonly status: number,
@@ -61,11 +69,11 @@ function authHeader(): string {
   return `Basic ${Buffer.from(`${env.OPN_SECRET_KEY}:`).toString("base64")}`;
 }
 
-async function opnRequest(
+async function opnRequest<T = OpnCharge>(
   method: "GET" | "POST",
   path: string,
   params?: Record<string, unknown>,
-): Promise<OpnCharge> {
+): Promise<T> {
   const res = await fetch(`${OPN_API_BASE}${path}`, {
     method,
     headers: {
@@ -85,7 +93,7 @@ async function opnRequest(
   }
 
   const body: unknown = await res.json();
-  return body as OpnCharge;
+  return body as T;
 }
 
 /** Create a PromptPay charge; the QR lives at `source.scannable_code.image.download_uri`. */
@@ -123,4 +131,9 @@ export function createCardCharge(input: {
 /** Retrieve a charge by id — the authoritative status used for webhook verification. */
 export function retrieveCharge(chargeId: string): Promise<OpnCharge> {
   return opnRequest("GET", `/charges/${chargeId}`);
+}
+
+/** Refund a charge (integer satang). Used for the instant-book paid-race fallback (§3.2). */
+export function refundCharge(chargeId: string, amountSatang: number): Promise<OpnRefund> {
+  return opnRequest<OpnRefund>("POST", `/charges/${chargeId}/refunds`, { amount: amountSatang });
 }

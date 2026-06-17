@@ -53,4 +53,10 @@ describe("payment lifecycle templates", () => {
     expect(t?.priority).toBe(true);
     expect(t?.line({ listingTitle: "วิลล่า A" })).toContain("วิลล่า A");
   });
+  it("PAYMENT_REFUNDED_GUEST tells the guest they were refunded in full", () => {
+    const t = getTemplate("PAYMENT_REFUNDED_GUEST");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({ listingTitle: "วิลล่า A" })).toContain("วิลล่า A");
+    expect(t?.email({ listingTitle: "วิลล่า A" }).subject).toBeTruthy();
+  });
 });

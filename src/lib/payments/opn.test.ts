@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createCardCharge, createPromptPayCharge, OpnError, retrieveCharge } from "./opn";
+import { createCardCharge, createPromptPayCharge, OpnError, refundCharge, retrieveCharge } from "./opn";
 
 /** A representative Opn charge object (PromptPay, still pending). */
 const CHARGE = {
@@ -100,6 +100,22 @@ describe("retrieveCharge", () => {
     expect(init.headers.Authorization).toMatch(/^Basic /);
     expect(charge.status).toBe("successful");
     expect(charge.paid).toBe(true);
+  });
+});
+
+describe("refundCharge", () => {
+  it("POSTs a full refund (amount in satang) to the charge's refunds endpoint", async () => {
+    const fetchMock = stubFetch(200, { object: "refund", id: "rfnd_1", amount: 50000, status: "closed" });
+
+    const refund = await refundCharge("chrg_test_1", 500_00);
+
+    const [url, init] = lastCall(fetchMock);
+    expect(url).toBe("https://api.omise.co/charges/chrg_test_1/refunds");
+    expect(init.method).toBe("POST");
+    expect(init.headers.Authorization).toMatch(/^Basic /);
+    expect(init.body).toContain("amount=50000");
+    expect(refund.id).toBe("rfnd_1");
+    expect(refund.status).toBe("closed");
   });
 });
 
