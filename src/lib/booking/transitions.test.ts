@@ -156,24 +156,26 @@ describe("confirmFromWebhook", () => {
     (issueBookingCode as unknown as Mock).mockResolvedValue("UR-2606-0001");
     findUnique.mockResolvedValue(booking({ status: BookingStatus.AWAITING_PAYMENT }));
 
-    await confirmFromWebhook({ bookingId: "bk1", opnEventId: "evt_1", payload: {} }, NOW);
+    const result = await confirmFromWebhook({ bookingId: "bk1", opnEventId: "evt_1", payload: {} }, NOW);
 
     expect(update).toHaveBeenCalledWith({
       where: { id: "bk1" },
       data: { status: BookingStatus.CONFIRMED, code: "UR-2606-0001", contactUnmaskedAt: NOW },
     });
     expect(recordCharge).toHaveBeenCalledWith(prisma, "bk1", 10_000_00, "evt_1");
+    expect(result.freshlyConfirmed).toBe(true);
   });
 
   it("is a no-op on a replayed event id", async () => {
     (claimWebhookEvent as unknown as Mock).mockResolvedValue(false);
     findUnique.mockResolvedValue(booking({ status: BookingStatus.CONFIRMED }));
 
-    await confirmFromWebhook({ bookingId: "bk1", opnEventId: "evt_1", payload: {} }, NOW);
+    const result = await confirmFromWebhook({ bookingId: "bk1", opnEventId: "evt_1", payload: {} }, NOW);
 
     expect(update).not.toHaveBeenCalled();
     expect(recordCharge).not.toHaveBeenCalled();
     expect(issueBookingCode).not.toHaveBeenCalled();
+    expect(result.freshlyConfirmed).toBe(false);
   });
 
   it("rejects a charge for a booking not awaiting payment", async () => {
