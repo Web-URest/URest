@@ -21,21 +21,36 @@ async function sendRequest(
 
 const hour = 3_600_000;
 
-test("host declines → DECLINED", async ({ page, context, db }) => {
-  const { host, booking } = await sendRequest(page, context, db, { checkIn: "2026-09-01", checkOut: "2026-09-03" });
-  await db.declineAs(booking.id, host.id);
-  expect((await db.getBooking(booking.id))?.status).toBe("DECLINED");
+const day = 86_400_000;
+const futureDates = (offset: number) => ({
+  checkIn: new Date(Date.now() + offset * day).toISOString().slice(0, 10),
+  checkOut: new Date(Date.now() + (offset + 2) * day).toISOString().slice(0, 10),
+});
+
+test("host declines from the requests inbox → DECLINED + guest notified", async ({ page, context, browser, db }) => {
+  const { host, guest, booking } = await sendRequest(page, context, db, futureDates(20));
+
+  // Host signs in and declines via the real requests-inbox UI (drives declineRequest → notify).
+  const hostCtx = await browser.newContext();
+  await authenticate(hostCtx, host.sessionToken);
+  const hostPage = await hostCtx.newPage();
+  await hostPage.goto("/en/requests");
+  await hostPage.getByRole("button", { name: /decline/i }).click();
+  await expect.poll(async () => (await db.getBooking(booking.id))?.status).toBe("DECLINED");
+  await hostCtx.close();
+
+  expect(await db.prisma.notificationLog.count({ where: { userId: guest.id } })).toBeGreaterThan(0);
 });
 
 test("request expires when the host never responds → EXPIRED", async ({ page, context, db }) => {
-  const { booking } = await sendRequest(page, context, db, { checkIn: "2026-09-10", checkOut: "2026-09-12" });
+  const { booking } = await sendRequest(page, context, db, futureDates(25));
   const respondBy = (await db.getBooking(booking.id))!.respondBy!;
   await db.tick(new Date(respondBy.getTime() + hour).toISOString());
   expect((await db.getBooking(booking.id))?.status).toBe("EXPIRED");
 });
 
 test("payment window lapses after accept → EXPIRED", async ({ page, context, db }) => {
-  const { host, booking } = await sendRequest(page, context, db, { checkIn: "2026-09-20", checkOut: "2026-09-22" });
+  const { host, booking } = await sendRequest(page, context, db, futureDates(30));
   await db.acceptAs(booking.id, host.id);
   const payBy = (await db.getBooking(booking.id))!.payBy!;
   await db.tick(new Date(payBy.getTime() + hour).toISOString());

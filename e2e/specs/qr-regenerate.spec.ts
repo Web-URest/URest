@@ -6,7 +6,10 @@ test("QR regenerate creates a new charge without resetting payBy", async ({ page
   const listing = await db.seedListing({ mode: "INSTANT", hostId: host.id });
   await authenticate(context, guest.sessionToken);
 
-  await page.goto(`/en/listings/${listing.id}/instant?checkIn=2026-09-10&checkOut=2026-09-12&guests=2`);
+  const day = 86_400_000;
+  const checkIn = new Date(Date.now() + 9 * day).toISOString().slice(0, 10);
+  const checkOut = new Date(Date.now() + 11 * day).toISOString().slice(0, 10);
+  await page.goto(`/en/listings/${listing.id}/instant?checkIn=${checkIn}&checkOut=${checkOut}&guests=2`);
   await page.getByLabel(/house rules/i).check();
   await page.getByRole("button", { name: /book now/i }).click();
   await page.waitForURL("**/trips/**/pay");
