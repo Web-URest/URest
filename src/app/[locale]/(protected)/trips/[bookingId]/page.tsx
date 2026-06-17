@@ -5,8 +5,12 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { Link } from "@/i18n/navigation";
 import { requireUser } from "@/lib/auth/guards";
 import { maskedContact } from "@/lib/booking/contact";
+import { computeRefund } from "@/lib/booking/refund";
+import { daysUntil } from "@/lib/booking/transitions";
 import { prisma } from "@/lib/db";
+import { formatSatang } from "@/lib/money";
 
+import { CancelButton } from "./cancel-button";
 import { WithdrawButton } from "./withdraw-button";
 
 /**
@@ -58,6 +62,18 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
           </Link>
         )}
         {canWithdraw && <WithdrawButton bookingId={booking.id} />}
+        {booking.status === "CONFIRMED" && (
+          <CancelButton
+            bookingId={booking.id}
+            refundLabel={formatSatang(
+              computeRefund({
+                totalSatang: booking.totalSatang,
+                tier: booking.cancellationTier,
+                daysBeforeCheckIn: daysUntil(booking.checkIn, new Date()),
+              }).refundSatang,
+            )}
+          />
+        )}
       </div>
     </main>
   );
