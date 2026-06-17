@@ -73,11 +73,14 @@ export async function POST(request: Request): Promise<Response> {
   // a signed cookie. Logged-in users must own the session they reference.
   let resolvedSessionId: string;
   if (sessionId) {
+    // Anonymous callers can never resume a session — no signed cookie means no
+    // ownership proof. null !== null is false in JS, so we must guard explicitly.
+    if (!userId) return sseError("FORBIDDEN");
     const existing = await prisma.conciergeSession.findUnique({
       where: { id: sessionId },
       select: { id: true, userId: true },
     });
-    if (!existing || existing.userId !== userId) {
+    if (!existing || existing.userId == null || existing.userId !== userId) {
       return sseError("FORBIDDEN");
     }
     resolvedSessionId = existing.id;
