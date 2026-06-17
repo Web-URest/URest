@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { StatusPill } from "@/components/ui/StatusPill";
+import { Link } from "@/i18n/navigation";
 import { requireUser } from "@/lib/auth/guards";
 import { maskedContact } from "@/lib/booking/contact";
 import { prisma } from "@/lib/db";
@@ -48,6 +49,14 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
             ? [contact.phone, contact.email].filter(Boolean).join(" · ")
             : t("contactMasked")}
         </p>
+        {booking.status === "AWAITING_PAYMENT" && (
+          <Link
+            href={`/trips/${booking.id}/pay`}
+            className="rounded-card bg-coral-500 px-4 py-2 text-center text-sm font-semibold text-white shadow-card transition hover:brightness-95"
+          >
+            {t("payCta")}
+          </Link>
+        )}
         {canWithdraw && <WithdrawButton bookingId={booking.id} />}
       </div>
     </main>

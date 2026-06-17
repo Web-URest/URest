@@ -13,6 +13,7 @@ import { BookingStatus, PaymentMethod, PaymentStatus, type Payment, type Prisma 
 
 import { BookingError, confirmFromWebhook } from "@/lib/booking/transitions";
 import { prisma } from "@/lib/db";
+import { notify } from "@/lib/notifications";
 
 import { createCardCharge, createPromptPayCharge, retrieveCharge, type OpnCharge } from "./opn";
 
@@ -32,7 +33,7 @@ export class PaymentError extends Error {
 export async function createChargeForBooking(
   bookingId: string,
   method: PaymentMethod,
-  opts: { cardToken?: string } = {},
+  opts: { cardToken?: string; returnUri?: string } = {},
 ): Promise<{ payment: Payment; charge: OpnCharge }> {
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking) throw new PaymentError("BOOKING_NOT_FOUND");
@@ -42,11 +43,12 @@ export async function createChargeForBooking(
 
   let charge: OpnCharge;
   if (method === PaymentMethod.CARD) {
-    if (!opts.cardToken) throw new PaymentError("CARD_TOKEN_REQUIRED");
+    if (!opts.cardToken || !opts.returnUri) throw new PaymentError("CARD_TOKEN_REQUIRED");
     charge = await createCardCharge({
       amountSatang: booking.totalSatang,
       bookingId,
       token: opts.cardToken,
+      returnUri: opts.returnUri,
     });
   } else {
     charge = await createPromptPayCharge({ amountSatang: booking.totalSatang, bookingId });
@@ -94,13 +96,15 @@ export async function applyChargeEvent(
   if (!bookingId) return { kind: "ignored" }; // not ours / no booking reference
 
   if (charge.status === "successful") {
+    let freshlyConfirmed = false;
     try {
-      await confirmFromWebhook({ bookingId, opnEventId, payload }, now);
+      ({ freshlyConfirmed } = await confirmFromWebhook({ bookingId, opnEventId, payload }, now));
     } catch (err) {
       if (err instanceof BookingError) return { kind: "ignored", bookingId };
       throw err;
     }
     await markPayment(chargeId, PaymentStatus.SUCCESSFUL);
+    if (freshlyConfirmed) await notifyPaymentReceived(bookingId);
     return { kind: "confirmed", bookingId };
   }
 
@@ -120,4 +124,16 @@ export async function applyChargeEvent(
 /** Idempotent terminal-status write keyed on the unique Opn charge id. */
 function markPayment(opnChargeId: string, status: PaymentStatus): Promise<unknown> {
   return prisma.payment.updateMany({ where: { opnChargeId }, data: { status } });
+}
+
+/** Notify guest (receipt) + host (prep notice) once a payment confirms (§6). Best-effort — notify never throws. */
+async function notifyPaymentReceived(bookingId: string): Promise<void> {
+  const b = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { userId: true, code: true, listing: { select: { hostId: true, title: true } } },
+  });
+  if (!b) return;
+  const params = { listingTitle: b.listing.title, code: b.code ?? "", bookingId };
+  await notify(b.userId, "PAYMENT_RECEIVED_GUEST", params);
+  await notify(b.listing.hostId, "PAYMENT_RECEIVED_HOST", params);
 }

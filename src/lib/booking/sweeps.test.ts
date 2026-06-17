@@ -1,7 +1,7 @@
 import { BookingStatus } from "@prisma/client";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-vi.mock("@/lib/db", () => ({ prisma: { booking: { findMany: vi.fn() } } }));
+vi.mock("@/lib/db", () => ({ prisma: { booking: { findMany: vi.fn(), updateMany: vi.fn() } } }));
 vi.mock("./transitions", () => ({ expire: vi.fn(), checkIn: vi.fn(), complete: vi.fn() }));
 vi.mock("@/lib/notifications", () => ({ notify: vi.fn() }));
 
@@ -16,9 +16,11 @@ import {
   sweepDueCheckouts,
   sweepOverduePayments,
   sweepOverdueRequests,
+  sweepPaymentReminders,
 } from "./sweeps";
 
 const findMany = prisma.booking.findMany as unknown as Mock;
+const updateMany = prisma.booking.updateMany as unknown as Mock;
 const expireMock = expire as unknown as Mock;
 const checkInMock = checkIn as unknown as Mock;
 const completeMock = complete as unknown as Mock;
@@ -31,6 +33,7 @@ beforeEach(() => {
   checkInMock.mockResolvedValue({});
   completeMock.mockResolvedValue({});
   notifyFn.mockResolvedValue(undefined);
+  updateMany.mockResolvedValue({ count: 1 });
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -81,15 +84,40 @@ describe("sweepOverdueRequests", () => {
 });
 
 describe("sweepOverduePayments", () => {
-  it("expires every AWAITING_PAYMENT booking past its pay-by", async () => {
-    findMany.mockResolvedValue([{ id: "p1" }]);
+  it("expires AWAITING_PAYMENT past pay-by and notifies the host for REQUEST-mode bookings", async () => {
+    findMany.mockResolvedValue([
+      { id: "p1", bookingMode: "REQUEST", listing: { hostId: "h1", title: "วิลล่า A" } },
+      { id: "p2", bookingMode: "INSTANT", listing: { hostId: "h2", title: "วิลล่า B" } },
+    ]);
+
     const n = await sweepOverduePayments(NOW);
+
     expect(findMany).toHaveBeenCalledWith({
       where: { status: BookingStatus.AWAITING_PAYMENT, payBy: { lt: NOW } },
-      select: { id: true },
+      select: { id: true, bookingMode: true, listing: { select: { hostId: true, title: true } } },
     });
     expect(expireMock).toHaveBeenCalledWith("p1", NOW);
+    expect(expireMock).toHaveBeenCalledWith("p2", NOW);
+    expect(notifyFn).toHaveBeenCalledTimes(1); // only the REQUEST-mode host
+    expect(notifyFn).toHaveBeenCalledWith("h1", "PAYMENT_EXPIRED_HOST", { listingTitle: "วิลล่า A", bookingId: "p1" });
+    expect(n).toBe(2);
+  });
+
+  it("isolates a per-row failure (no notify for the failed row)", async () => {
+    findMany.mockResolvedValue([
+      { id: "bad", bookingMode: "REQUEST", listing: { hostId: "h1", title: "วิลล่า A" } },
+      { id: "ok", bookingMode: "REQUEST", listing: { hostId: "h2", title: "วิลล่า B" } },
+    ]);
+    expireMock.mockReset();
+    expireMock.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce({});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const n = await sweepOverduePayments(NOW);
+
+    expect(notifyFn).toHaveBeenCalledTimes(1);
+    expect(notifyFn).toHaveBeenCalledWith("h2", "PAYMENT_EXPIRED_HOST", expect.anything());
     expect(n).toBe(1);
+    spy.mockRestore();
   });
 });
 
@@ -116,6 +144,47 @@ describe("sweepDueCheckouts", () => {
     });
     expect(completeMock).toHaveBeenCalledWith("d1");
     expect(n).toBe(1);
+  });
+});
+
+const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+
+describe("sweepPaymentReminders", () => {
+  it("reminds the guest once when payBy is within 2h, claiming the dedupe field", async () => {
+    findMany.mockResolvedValue([{ id: "p1", userId: "g1", listing: { title: "วิลล่า A" } }]);
+
+    const n = await sweepPaymentReminders(NOW);
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: {
+        status: BookingStatus.AWAITING_PAYMENT,
+        payReminderSentAt: null,
+        payBy: { gt: NOW, lte: new Date(NOW.getTime() + TWO_HOURS_MS) },
+      },
+      select: { id: true, userId: true, listing: { select: { title: true } } },
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "p1", payReminderSentAt: null },
+      data: { payReminderSentAt: NOW },
+    });
+    expect(notifyFn).toHaveBeenCalledWith("g1", "PAYMENT_REMINDER_GUEST", { listingTitle: "วิลล่า A", bookingId: "p1" });
+    expect(n).toBe(1);
+  });
+
+  it("skips a row already claimed by a concurrent sweep (no notify)", async () => {
+    findMany.mockResolvedValue([{ id: "p1", userId: "g1", listing: { title: "วิลล่า A" } }]);
+    updateMany.mockResolvedValue({ count: 0 }); // lost the race
+
+    const n = await sweepPaymentReminders(NOW);
+
+    expect(notifyFn).not.toHaveBeenCalled();
+    expect(n).toBe(0);
+  });
+
+  it("is a no-op when nothing is within the window", async () => {
+    findMany.mockResolvedValue([]);
+    expect(await sweepPaymentReminders(NOW)).toBe(0);
+    expect(notifyFn).not.toHaveBeenCalled();
   });
 });
 

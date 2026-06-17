@@ -4,7 +4,7 @@
  * never write status directly (rule 2). Per-row failures are isolated so one
  * bad row never aborts the batch. Pure functions of `now` for testability.
  */
-import { BookingStatus } from "@prisma/client";
+import { BookingMode, BookingStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notifications";
@@ -53,16 +53,58 @@ export async function sweepOverdueRequests(now: Date): Promise<number> {
   return done;
 }
 
-/** AWAITING_PAYMENT past payBy → EXPIRED. */
+/** AWAITING_PAYMENT past payBy → EXPIRED; for REQUEST-mode, notify the host (instant hosts never saw it). */
 export async function sweepOverduePayments(now: Date): Promise<number> {
   const rows = await prisma.booking.findMany({
     where: { status: BookingStatus.AWAITING_PAYMENT, payBy: { lt: now } },
-    select: { id: true },
+    select: { id: true, bookingMode: true, listing: { select: { hostId: true, title: true } } },
   });
-  return forEachRow(
-    rows.map((r) => r.id),
-    (id) => expire(id, now),
-  );
+  let done = 0;
+  for (const row of rows) {
+    try {
+      await expire(row.id, now);
+      if (row.bookingMode === BookingMode.REQUEST) {
+        await notify(row.listing.hostId, "PAYMENT_EXPIRED_HOST", { listingTitle: row.listing.title, bookingId: row.id });
+      }
+      done++;
+    } catch (err) {
+      console.error(`[cron] expire payment ${row.id} failed:`, err instanceof Error ? err.message : err);
+    }
+  }
+  return done;
+}
+
+const PAY_REMINDER_LEAD_MS = 2 * HOUR_MS;
+
+/**
+ * AWAITING_PAYMENT with payBy within the next 2h and not yet reminded → nudge the
+ * guest once (§6 "payment 2h left"). The CAS update on payReminderSentAt makes the
+ * send fire exactly once even if two ticks overlap (count 0 = already claimed).
+ */
+export async function sweepPaymentReminders(now: Date): Promise<number> {
+  const rows = await prisma.booking.findMany({
+    where: {
+      status: BookingStatus.AWAITING_PAYMENT,
+      payReminderSentAt: null,
+      payBy: { gt: now, lte: new Date(now.getTime() + PAY_REMINDER_LEAD_MS) },
+    },
+    select: { id: true, userId: true, listing: { select: { title: true } } },
+  });
+  let done = 0;
+  for (const row of rows) {
+    try {
+      const claim = await prisma.booking.updateMany({
+        where: { id: row.id, payReminderSentAt: null },
+        data: { payReminderSentAt: now },
+      });
+      if (claim.count === 0) continue; // another tick already sent it
+      await notify(row.userId, "PAYMENT_REMINDER_GUEST", { listingTitle: row.listing.title, bookingId: row.id });
+      done++;
+    } catch (err) {
+      console.error(`[cron] pay reminder ${row.id} failed:`, err instanceof Error ? err.message : err);
+    }
+  }
+  return done;
 }
 
 /** CONFIRMED whose check-in time (15:00 ICT) has arrived → CHECKED_IN. */

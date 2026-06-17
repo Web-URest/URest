@@ -44,6 +44,38 @@ const templates: Record<string, NotificationTemplate> = {
     }),
     line: (p) => `⏰ คำขอจอง ${str(p.listingTitle)} หมดเวลารอโฮสต์ — ลองส่งใหม่หรือดูที่พักอื่นนะคะ`,
   },
+  PAYMENT_RECEIVED_GUEST: {
+    priority: true,
+    email: (p) => ({
+      subject: `ชำระเงินสำเร็จ — ยืนยันการจองแล้ว ${str(p.code)}`,
+      body: `ชำระเงินสำเร็จ! การจอง ${str(p.listingTitle)} ยืนยันแล้ว รหัสจองของคุณคือ ${str(p.code)} ดูรายละเอียดและการติดต่อโฮสต์ได้ในแอป`,
+    }),
+    line: (p) => `✅ ชำระเงินสำเร็จ! ยืนยันการจอง ${str(p.listingTitle)} แล้ว — รหัสจอง ${str(p.code)}`,
+  },
+  PAYMENT_RECEIVED_HOST: {
+    priority: true,
+    email: (p) => ({
+      subject: `การจองยืนยันแล้ว ${str(p.code)} — เตรียมต้อนรับแขก`,
+      body: `แขกชำระเงินสำหรับ ${str(p.listingTitle)} แล้ว การจองยืนยันเรียบร้อย รหัสจอง ${str(p.code)} เตรียมต้อนรับแขกได้เลย`,
+    }),
+    line: (p) => `🎉 ยืนยันการจอง ${str(p.code)}: ${str(p.listingTitle)} — แขกชำระเงินแล้ว`,
+  },
+  PAYMENT_EXPIRED_HOST: {
+    priority: true,
+    email: (p) => ({
+      subject: `คำขอจอง ${str(p.listingTitle)} หมดเวลาชำระเงิน`,
+      body: `แขกไม่ได้ชำระเงินภายในเวลาที่กำหนดสำหรับ ${str(p.listingTitle)} วันที่ถูกปล่อยคืนแล้วและพร้อมรับการจองใหม่`,
+    }),
+    line: (p) => `⏰ ${str(p.listingTitle)} หมดเวลาชำระเงิน — ปล่อยวันที่ว่างแล้ว พร้อมรับจองใหม่`,
+  },
+  PAYMENT_REMINDER_GUEST: {
+    priority: true,
+    email: (p) => ({
+      subject: `เหลือเวลา 2 ชั่วโมง — ชำระเงินเพื่อยืนยันการจอง ${str(p.listingTitle)}`,
+      body: `เหลือเวลาอีกประมาณ 2 ชั่วโมงในการชำระเงินสำหรับ ${str(p.listingTitle)} ชำระเงินเลยเพื่อไม่ให้เสียวันที่จองนี้ไป`,
+    }),
+    line: (p) => `⏰ เหลือเวลา 2 ชม. ชำระเงินเพื่อยืนยันการจอง ${str(p.listingTitle)} — อย่าให้วันที่หลุดไปนะคะ`,
+  },
 };
 
 export function getTemplate(key: string): NotificationTemplate | undefined {

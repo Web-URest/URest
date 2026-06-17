@@ -65,17 +65,26 @@ describe("createPromptPayCharge", () => {
 });
 
 describe("createCardCharge", () => {
-  it("POSTs a charge from a card token instead of a source", async () => {
-    const fetchMock = stubFetch(200, { ...CHARGE, source: null });
+  it("POSTs a charge from a card token + return_uri (3DS) instead of a source", async () => {
+    const fetchMock = stubFetch(200, { ...CHARGE, source: null, authorize_uri: "https://opn/3ds" });
 
-    await createCardCharge({ amountSatang: 500_00, bookingId: "bk2", token: "tokn_test_9" });
+    const charge = await createCardCharge({
+      amountSatang: 500_00,
+      bookingId: "bk2",
+      token: "tokn_test_9",
+      returnUri: "https://app/th/trips/bk2/pay",
+    });
 
     const [url, init] = lastCall(fetchMock);
     expect(url).toBe("https://api.omise.co/charges");
     expect(init.body).toContain("amount=50000");
     expect(init.body).toContain("card=tokn_test_9");
+    expect(init.body).toContain("return_uri=");
+    expect(decodeURIComponent(init.body ?? "")).toContain("return_uri=https://app/th/trips/bk2/pay");
     expect(init.body).toContain("metadata%5BbookingId%5D=bk2");
     expect(init.body).not.toContain("source");
+    // 3DS redirect target is surfaced for the caller
+    expect(charge.authorize_uri).toBe("https://opn/3ds");
   });
 });
 

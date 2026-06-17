@@ -180,13 +180,19 @@ export interface ConfirmInput {
  * code, unmask contact info, and move escrow NONE → HELD. Idempotent: a replayed
  * event id returns the already-confirmed booking untouched.
  */
-export function confirmFromWebhook(input: ConfirmInput, now: Date): Promise<Booking> {
+export function confirmFromWebhook(
+  input: ConfirmInput,
+  now: Date,
+): Promise<{ booking: Booking; freshlyConfirmed: boolean }> {
   return prisma.$transaction(async (tx) => {
     const booking = await tx.booking.findUnique({ where: { id: input.bookingId } });
     if (!booking) throw new BookingError("NOT_FOUND");
 
     const fresh = await claimWebhookEvent(tx, input.opnEventId, input.payload, now);
-    if (!fresh) return booking; // replay — already processed, no-op
+    // Replay: the event was already claimed on an earlier delivery, so no state changes
+    // here. Return the original booking (the caller only reads freshlyConfirmed to gate
+    // notifications) + freshlyConfirmed:false so a redelivered webhook never re-notifies.
+    if (!fresh) return { booking, freshlyConfirmed: false };
 
     if (booking.status !== BookingStatus.AWAITING_PAYMENT) throw new BookingError("WRONG_STATE");
 
@@ -196,7 +202,7 @@ export function confirmFromWebhook(input: ConfirmInput, now: Date): Promise<Book
       data: { status: BookingStatus.CONFIRMED, code, contactUnmaskedAt: now },
     });
     await recordCharge(tx, input.bookingId, booking.totalSatang, input.opnEventId);
-    return confirmed;
+    return { booking: confirmed, freshlyConfirmed: true };
   });
 }
 
