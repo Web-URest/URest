@@ -12,6 +12,11 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    // E2E is Playwright/Node code, not React — its fixture `use()` is not a React hook.
+    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    rules: { "react-hooks/rules-of-hooks": "off" },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",
