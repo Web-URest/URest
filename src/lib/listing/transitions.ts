@@ -18,6 +18,7 @@ export type ListingErrorReason =
   | "NOT_FOUND"
   | "NOT_OWNER"
   | "NOT_DRAFT"
+  | "NOT_EDITABLE"
   | "INCOMPLETE"
   | "INSUFFICIENT_PHOTOS"
   | "SEASON_OVERLAP"
@@ -99,22 +100,25 @@ export async function updateDraft(
   return prisma.listing.update({ where: { id: listingId }, data: patch });
 }
 
+/** The shape `Season` rows are written from (dates already parsed to `Date`). */
+export type SeasonWrite = {
+  nameTh: string;
+  startDate: Date;
+  endDate: Date;
+  weekdaySatang: number;
+  weekendSatang: number;
+};
+
 /**
- * Replace a DRAFT's seasons atomically (step ⑤). App-checks overlap first for a
- * friendly error; the `season_no_overlap` GiST constraint is the backstop.
+ * Atomically replace a listing's seasons — overlap-checked, no state gate.
+ * Callers (`replaceSeasons` for DRAFT, `editSeasons` for live listings) own the
+ * ownership + status check; this is the shared writer so the txn never drifts.
+ * The `season_no_overlap` GiST constraint is the DB backstop.
  */
-export async function replaceSeasons(
+export async function writeSeasons(
   listingId: string,
-  hostId: string,
-  seasons: readonly {
-    nameTh: string;
-    startDate: Date;
-    endDate: Date;
-    weekdaySatang: number;
-    weekendSatang: number;
-  }[],
+  seasons: readonly SeasonWrite[],
 ): Promise<void> {
-  await loadOwnedDraft(listingId, hostId);
   if (findSeasonOverlap(seasons)) throw new ListingError("SEASON_OVERLAP");
 
   await prisma.$transaction([
@@ -123,6 +127,19 @@ export async function replaceSeasons(
       data: seasons.map((s) => ({ listingId, ...s })),
     }),
   ]);
+}
+
+/**
+ * Replace a DRAFT's seasons atomically (step ⑤). App-checks overlap first for a
+ * friendly error; the `season_no_overlap` GiST constraint is the backstop.
+ */
+export async function replaceSeasons(
+  listingId: string,
+  hostId: string,
+  seasons: readonly SeasonWrite[],
+): Promise<void> {
+  await loadOwnedDraft(listingId, hostId);
+  await writeSeasons(listingId, seasons);
 }
 
 /**

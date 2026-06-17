@@ -92,6 +92,45 @@ export const step5Schema = z
     { message: "ต้องยอมรับเงื่อนไขปฏิทินก่อนเปิดจองทันที", path: ["instantAck"] },
   );
 
+// ── Edit Villa: per-section saves (§4.4) ─────────────────────────────────────
+/** Basics card (no re-review): title + description only. */
+export const editBasicsSchema = z.object({
+  title: z.string().trim().min(1, "ใส่ชื่อที่พัก").max(120),
+  description: z.string().trim().max(4000).default(""),
+});
+
+/** Location card (re-review): address + map pin. */
+export const editLocationSchema = z.object({
+  address: z.string().trim().max(500).default(""),
+  mapLat: z.number().min(-90).max(90).nullable().optional(),
+  mapLng: z.number().min(-180).max(180).nullable().optional(),
+});
+
+// ── Edit Villa: FAQ entries (§4.1 FAQ, §4.4) + calendar blocks (§4.2) ─────────
+export const faqEntrySchema = z.object({
+  question: z.string().trim().min(1, "ใส่คำถาม").max(300),
+  answer: z.string().trim().min(1, "ใส่คำตอบ").max(2000),
+});
+
+/** "YYYY-MM-DD" date-only (a calendar night is an Asia/Bangkok date). */
+const ymd = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)");
+
+export const calendarBlockSchema = z
+  .object({
+    startDate: ymd,
+    endDate: ymd,
+    note: z.string().trim().max(200).optional(),
+  })
+  .refine((b) => b.startDate <= b.endDate, {
+    message: "วันเริ่มต้องไม่หลังวันสิ้นสุด",
+    path: ["endDate"],
+  });
+
+export type FaqEntryInput = z.infer<typeof faqEntrySchema>;
+export type CalendarBlockInput = z.infer<typeof calendarBlockSchema>;
+
 export type Step1Input = z.infer<typeof step1Schema>;
 export type Step3Input = z.infer<typeof step3Schema>;
 export type Step4Input = z.infer<typeof step4Schema>;

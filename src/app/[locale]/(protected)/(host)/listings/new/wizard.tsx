@@ -12,6 +12,7 @@ import type {
 
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/FieldError";
+import type { SeasonRow } from "@/components/ui/SeasonEditor";
 import { WizardStepper } from "@/components/ui/WizardStepper";
 import type { SelectOption } from "@/components/ui/Select";
 import { usePathname, useRouter } from "@/i18n/navigation";
@@ -31,14 +32,8 @@ import { Step6Kyc, type KycDoc, type PayoutForm } from "./steps/Step6Kyc";
 /** Required KYC document types before submit (PRODUCT_FLOWS §4.1 ⑥). */
 const REQUIRED_KYC: KycDocumentType[] = ["THAI_ID", "RIGHT_TO_RENT", "SELFIE"];
 
-/** Seasonal-pricing row in the UI (money in baht). */
-export interface SeasonRow {
-  nameTh: string;
-  startDate: string; // YYYY-MM-DD
-  endDate: string;
-  weekdayBaht: number | null;
-  weekendBaht: number | null;
-}
+/** Seasonal-pricing row type lives with its editor; re-exported for step props. */
+export type { SeasonRow };
 
 /** All wizard fields, money held in baht (converted to satang at save). */
 export interface WizardData {
