@@ -335,6 +335,24 @@
     "nights": "{count} คืน",
     "perNight": "/ คืน"
   },
+  "Booking": {
+    "requestTitle": "ตรวจสอบคำขอจอง",
+    "noteLabel": "ข้อความถึงโฮสต์ (ไม่บังคับ)",
+    "notePlaceholder": "มากันกี่คน มาทำอะไร…",
+    "houseRules": "ฉันยอมรับกฎของที่พัก",
+    "submit": "ส่งคำขอจอง",
+    "guests": "{count} คน",
+    "errorUnavailable": "ที่พักนี้ไม่เปิดรับคำขอจองในขณะนี้",
+    "errorDatesTaken": "วันที่เลือกถูกจองแล้ว กรุณาเลือกวันอื่น",
+    "errorPhoneUnverified": "กรุณายืนยันเบอร์โทรก่อนส่งคำขอจอง",
+    "errorUnauthenticated": "กรุณาเข้าสู่ระบบก่อนส่งคำขอจอง",
+    "errorGeneric": "เกิดข้อผิดพลาด กรุณาลองใหม่",
+    "statusTitle": "การจองของฉัน",
+    "respondByNote": "รอโฮสต์ยืนยัน — หากเลยกำหนด คำขอจะหมดอายุอัตโนมัติ",
+    "contactMasked": "ติดต่อได้หลังยืนยันการจอง",
+    "withdraw": "ยกเลิกคำขอ",
+    "withdrawError": "ยกเลิกไม่สำเร็จ กรุณาลองใหม่"
+  },
   "Concierge": {
     "pageTitle": "น้องเรสต์",
     "headerSubtitle": "AI ผู้ช่วยหาที่พัก",
