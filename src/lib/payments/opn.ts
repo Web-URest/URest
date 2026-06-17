@@ -10,7 +10,7 @@
  */
 import { env } from "@/lib/env";
 
-const OPN_API_BASE = "https://api.omise.co";
+const OPN_API_BASE = env.OPN_API_BASE;
 
 /** The subset of the Opn charge object U-Rest reads. */
 export interface OpnCharge {

@@ -64,6 +64,8 @@ const schema = z.object({
   OPN_PUBLIC_KEY: z.string().startsWith("pkey_"),
   /** Opn secret key (`skey_…`) — server charge/source/retrieve + webhook re-fetch verification. */
   OPN_SECRET_KEY: z.string().startsWith("skey_"),
+  /** Opn API base URL — leave default in real envs; E2E overrides it to the local mock (#29). */
+  OPN_API_BASE: z.string().url().default("https://api.omise.co"),
 
   // --- Notifications: Resend email + LINE push (ADR-005) ---
   /** Resend API key for transactional email. Optional — console driver in dev/test. */
