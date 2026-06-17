@@ -7,10 +7,12 @@ vi.mock("@/lib/booking/sweeps", () => ({
   sweepDueCheckIns: vi.fn().mockResolvedValue(0),
   sweepDueCheckouts: vi.fn().mockResolvedValue(0),
 }));
+vi.mock("@/lib/notifications/retry", () => ({ sweepFailedNotifications: vi.fn().mockResolvedValue(0) }));
 vi.mock("@/lib/otp/otp", () => ({ purgeDeadOtps: vi.fn().mockResolvedValue(0) }));
 
 import cron from "node-cron";
 import { sweepDueCheckIns, sweepOverdueRequests } from "@/lib/booking/sweeps";
+import { sweepFailedNotifications } from "@/lib/notifications/retry";
 import { purgeDeadOtps } from "@/lib/otp/otp";
 
 import { runSweeps, startScheduler } from "./scheduler";
@@ -26,6 +28,7 @@ describe("runSweeps", () => {
     expect(sweepOverdueRequests as unknown as Mock).toHaveBeenCalledWith(NOW);
     expect(sweepDueCheckIns as unknown as Mock).toHaveBeenCalledWith(NOW);
     expect(purgeDeadOtps as unknown as Mock).toHaveBeenCalledOnce();
+    expect(sweepFailedNotifications as unknown as Mock).toHaveBeenCalledOnce();
   });
 
   it("isolates a failing sweep so the others still run", async () => {

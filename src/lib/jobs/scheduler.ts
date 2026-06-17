@@ -11,6 +11,7 @@ import {
   sweepOverduePayments,
   sweepOverdueRequests,
 } from "@/lib/booking/sweeps";
+import { sweepFailedNotifications } from "@/lib/notifications/retry";
 import { purgeDeadOtps } from "@/lib/otp/otp";
 
 let started = false;
@@ -23,6 +24,7 @@ export async function runSweeps(now: Date): Promise<void> {
     ["due-check-ins", () => sweepDueCheckIns(now)],
     ["due-checkouts", () => sweepDueCheckouts(now)],
     ["purge-otps", () => purgeDeadOtps()],
+    ["retry-notifications", () => sweepFailedNotifications()],
   ];
   for (const [name, run] of jobs) {
     try {
