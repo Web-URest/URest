@@ -6,6 +6,7 @@ import type {
   Amenity,
   BookingMode,
   CancellationTier,
+  KycDocumentType,
   PartyPolicy,
 } from "@prisma/client";
 
@@ -18,13 +19,17 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import {
   createDraftAction,
   saveStepAction,
-  submitAction,
+  submitKycAction,
 } from "./actions";
 import { Step1Basics } from "./steps/Step1Basics";
 import { Step2Photos, type WizardPhoto } from "./steps/Step2Photos";
 import { Step3Details } from "./steps/Step3Details";
 import { Step4Rules } from "./steps/Step4Rules";
 import { Step5Pricing } from "./steps/Step5Pricing";
+import { Step6Kyc, type KycDoc, type PayoutForm } from "./steps/Step6Kyc";
+
+/** Required KYC document types before submit (PRODUCT_FLOWS §4.1 ⑥). */
+const REQUIRED_KYC: KycDocumentType[] = ["THAI_ID", "RIGHT_TO_RENT", "SELFIE"];
 
 /** Seasonal-pricing row in the UI (money in baht). */
 export interface SeasonRow {
@@ -73,6 +78,10 @@ export interface WizardInitial {
   regions: SelectOption[];
   photos: WizardPhoto[];
   data: WizardData | null;
+  /** Resume KYC state — the account number is never sent back (ADR-010). */
+  kycSubmissionId: string | null;
+  kycDocuments: KycDoc[];
+  payout: { bankCode: string; accountName: string; hasSaved: boolean };
 }
 
 const DEFAULTS: WizardData = {
@@ -112,7 +121,7 @@ function toSatang(baht: number | null): number {
   return Math.round((baht ?? 0) * 100);
 }
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 export function ListingWizard({ initial }: { initial: WizardInitial }) {
   const t = useTranslations("Wizard");
@@ -123,6 +132,13 @@ export function ListingWizard({ initial }: { initial: WizardInitial }) {
   const [listingId, setListingId] = useState<string | null>(initial.listingId);
   const [data, setData] = useState<WizardData>(initial.data ?? DEFAULTS);
   const [photos, setPhotos] = useState<WizardPhoto[]>(initial.photos);
+  const [submissionId, setSubmissionId] = useState<string | null>(initial.kycSubmissionId);
+  const [kycDocuments, setKycDocuments] = useState<KycDoc[]>(initial.kycDocuments);
+  const [payout, setPayout] = useState<PayoutForm>({
+    ...initial.payout,
+    accountNumber: "",
+  });
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -199,6 +215,19 @@ export function ListingWizard({ initial }: { initial: WizardInitial }) {
       }
       if (data.bookingMode === "INSTANT" && !data.instantAck) return "errorInstantAck";
     }
+    if (s === 6) {
+      const types = new Set(kycDocuments.map((d) => d.type));
+      if (!REQUIRED_KYC.every((dt) => types.has(dt)) || !consent) {
+        return "errorKycIncomplete";
+      }
+      if (
+        !payout.bankCode ||
+        payout.accountNumber.trim().length === 0 ||
+        payout.accountName.trim().length === 0
+      ) {
+        return "errorPayoutRequired";
+      }
+    }
     return null;
   }
 
@@ -242,15 +271,18 @@ export function ListingWizard({ initial }: { initial: WizardInitial }) {
 
   function submit() {
     setError(null);
-    const invalid = stepValid(5);
+    const invalid = stepValid(6);
     if (invalid) {
       setError(invalid);
       return;
     }
+    if (!listingId) return;
     startTransition(async () => {
-      const saved = await persistStep(5);
-      if (!saved || !listingId) return;
-      const res = await submitAction(listingId);
+      const res = await submitKycAction(listingId, {
+        bankCode: payout.bankCode,
+        accountNumber: payout.accountNumber.trim(),
+        accountName: payout.accountName.trim(),
+      });
       if (res.ok) setSubmitted(true);
       else setError(res.error);
     });
@@ -270,6 +302,7 @@ export function ListingWizard({ initial }: { initial: WizardInitial }) {
     { label: t("stepDetails") },
     { label: t("stepRules") },
     { label: t("stepPricing") },
+    { label: t("stepKyc") },
   ];
 
   return (
@@ -294,6 +327,20 @@ export function ListingWizard({ initial }: { initial: WizardInitial }) {
         {step === 3 && <Step3Details data={data} patch={patch} t={t} />}
         {step === 4 && <Step4Rules data={data} patch={patch} t={t} />}
         {step === 5 && <Step5Pricing data={data} patch={patch} t={t} />}
+        {step === 6 && (
+          <Step6Kyc
+            listingId={listingId}
+            submissionId={submissionId}
+            setSubmissionId={setSubmissionId}
+            documents={kycDocuments}
+            setDocuments={setKycDocuments}
+            payout={payout}
+            setPayout={setPayout}
+            consent={consent}
+            setConsent={setConsent}
+            t={t}
+          />
+        )}
       </div>
 
       <FieldError message={error ? t(error) : null} />

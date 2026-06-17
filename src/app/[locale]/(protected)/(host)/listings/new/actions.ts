@@ -1,9 +1,18 @@
 "use server";
 
-import { ListingStatus } from "@prisma/client";
+import { KycDocumentType, ListingStatus } from "@prisma/client";
 
 import { AuthError, requireHostEligible } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
+import { presignKycUpload } from "@/lib/kyc/storage";
+import {
+  addDocument,
+  finalizeKyc,
+  getOrCreateSubmission,
+  KycError,
+  removeDocument,
+  type PayoutInput,
+} from "@/lib/kyc/submission";
 import {
   createDraft,
   ListingError,
@@ -19,6 +28,7 @@ import {
   step4Schema,
   step5Schema,
 } from "@/lib/listing/validation";
+import { isValidBankCode } from "@/lib/payout/banks";
 
 /**
  * Server actions for the listing wizard (PRODUCT_FLOWS §4.1). Thin, authenticated
@@ -52,6 +62,9 @@ function errorKey(e: unknown): string {
       default:
         return "errorGeneric";
     }
+  }
+  if (e instanceof KycError) {
+    return e.reason === "MISSING_PAYOUT" ? "errorPayoutRequired" : "errorKycIncomplete";
   }
   return "errorGeneric";
 }
@@ -274,10 +287,80 @@ export async function setCoverAction(
   }
 }
 
-/** Step ⑥ → submit for admin review (DRAFT → PENDING_REVIEW). */
-export async function submitAction(listingId: string): Promise<ActionResult> {
+/** Whether `v` is a known KYC document type (client sends a string). */
+function isKycDocType(v: string): v is KycDocumentType {
+  return (Object.values(KycDocumentType) as string[]).includes(v);
+}
+
+/**
+ * Step ⑥ — presign a KYC document upload to the PRIVATE bucket (#11) and attach
+ * the row; the client PUTs the bytes. The submission is created lazily on the
+ * first document so its id can prefix the R2 key (`kyc/{submissionId}/…`).
+ */
+export async function addKycDocumentAction(
+  listingId: string,
+  docType: string,
+  file: { contentType: string; byteLength: number },
+): Promise<
+  ActionResult<{
+    submissionId: string;
+    document: { id: string; type: KycDocumentType; r2Key: string };
+    uploadUrl: string;
+  }>
+> {
   try {
     const user = await requireHostEligible();
+    await assertOwnedDraft(listingId, user.id);
+    if (!isKycDocType(docType)) return { ok: false, error: "errorGeneric" };
+
+    const submission = await getOrCreateSubmission(user.id, listingId);
+    const { r2Key, uploadUrl } = await presignKycUpload({
+      submissionId: submission.id,
+      contentType: file.contentType,
+      byteLength: file.byteLength,
+    });
+    const document = await addDocument(submission.id, user.id, docType, r2Key);
+
+    return {
+      ok: true,
+      submissionId: submission.id,
+      document: { id: document.id, type: document.type, r2Key: document.r2Key },
+      uploadUrl,
+    };
+  } catch (e) {
+    return { ok: false, error: errorKey(e) };
+  }
+}
+
+/** Step ⑥ — remove a KYC document (re-take / wrong slot / failed upload rollback). */
+export async function removeKycDocumentAction(
+  submissionId: string,
+  documentId: string,
+): Promise<ActionResult> {
+  try {
+    const user = await requireHostEligible();
+    await removeDocument(submissionId, user.id, documentId);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: errorKey(e) };
+  }
+}
+
+/**
+ * Step ⑥ final submit: gate on KYC (3 required docs), persist the encrypted
+ * payout account + KYC consent (`finalizeKyc`), then flip the listing
+ * DRAFT → PENDING_REVIEW (`submitForReview`, the listing state machine).
+ */
+export async function submitKycAction(
+  listingId: string,
+  payout: PayoutInput,
+): Promise<ActionResult> {
+  try {
+    const user = await requireHostEligible();
+    if (!isValidBankCode(payout.bankCode)) {
+      return { ok: false, error: "errorPayoutRequired" };
+    }
+    await finalizeKyc(user.id, listingId, payout);
     await submitForReview(listingId, user.id);
     return { ok: true };
   } catch (e) {
