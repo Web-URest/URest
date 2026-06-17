@@ -11,6 +11,7 @@ import {
   sweepOverduePayments,
   sweepOverdueRequests,
 } from "@/lib/booking/sweeps";
+import { sweepFailedNotifications } from "@/lib/notifications/retry";
 import { purgeDeadOtps } from "@/lib/otp/otp";
 
 let started = false;
@@ -23,6 +24,7 @@ export async function runSweeps(now: Date): Promise<void> {
     ["due-check-ins", () => sweepDueCheckIns(now)],
     ["due-checkouts", () => sweepDueCheckouts(now)],
     ["purge-otps", () => purgeDeadOtps()],
+    ["retry-notifications", () => sweepFailedNotifications()],
   ];
   for (const [name, run] of jobs) {
     try {
@@ -38,8 +40,13 @@ export async function runSweeps(now: Date): Promise<void> {
 export function startScheduler(): void {
   if (started) return;
   started = true;
+  let running = false;
   cron.schedule("* * * * *", () => {
-    void runSweeps(new Date());
+    if (running) return; // previous sweep still in flight — skip this tick (no overlapping work)
+    running = true;
+    void runSweeps(new Date()).finally(() => {
+      running = false;
+    });
   });
   console.info("[cron] scheduler started (minute tick)");
 }
