@@ -410,6 +410,7 @@
       "calendar": "Calendar",
       "listings": "My villas",
       "requests": "Requests",
+      "bookings": "Bookings",
       "earnings": "Earnings",
       "messages": "Messages",
       "soon": "Soon"
@@ -423,6 +424,15 @@
       "accept": "Accept",
       "decline": "Decline",
       "actionError": "Action failed — please try again"
+    },
+    "bookings": {
+      "title": "Confirmed bookings",
+      "empty": "No confirmed bookings yet",
+      "cancel": "Cancel booking",
+      "cancelWarn": "A host cancellation refunds the guest 100% and records a strike (3 strikes = suspension).",
+      "cancelBack": "Back",
+      "cancelConfirm": "Confirm cancellation",
+      "cancelError": "Couldn't cancel — please try again"
     },
     "overviewTitle": "Overview",
     "kpiRevenue": "Revenue this month",

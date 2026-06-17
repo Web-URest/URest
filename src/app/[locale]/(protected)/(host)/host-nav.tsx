@@ -13,6 +13,7 @@ const TABS = [
   { href: "/dashboard", key: "overview" as const },
   { href: "/calendar", key: "calendar" as const },
   { href: "/requests", key: "requests" as const },
+  { href: "/bookings", key: "bookings" as const },
 ];
 
 const SOON_TABS = ["earnings", "messages"] as const;
