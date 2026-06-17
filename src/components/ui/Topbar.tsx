@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Heart, User, Menu } from "lucide-react";
 
 import { auth } from "@/lib/auth/auth";
+import { isKillSwitchActive } from "@/lib/concierge/cost";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
@@ -15,7 +16,13 @@ export type TopbarUser = {
   image?: string | null;
 };
 
-export async function TopbarShell({ user }: { user: TopbarUser | null }) {
+export async function TopbarShell({
+  user,
+  conciergeDisabled = false,
+}: {
+  user: TopbarUser | null;
+  conciergeDisabled?: boolean;
+}) {
   const t = await getTranslations("Nav");
 
   return (
@@ -40,12 +47,21 @@ export async function TopbarShell({ user }: { user: TopbarUser | null }) {
           >
             {t("search")}
           </Link>
-          <Link
-            href="/concierge"
-            className="text-sm font-semibold text-ink-700 transition duration-150 ease-out hover:text-teal-600"
-          >
-            {t("concierge")}
-          </Link>
+          {conciergeDisabled ? (
+            <span
+              className="cursor-default text-sm font-semibold text-ink-700/40"
+              title="น้องเรสต์ขอพักก่อนนะคะ 🌙"
+            >
+              {t("concierge")}
+            </span>
+          ) : (
+            <Link
+              href="/concierge"
+              className="text-sm font-semibold text-ink-700 transition duration-150 ease-out hover:text-teal-600"
+            >
+              {t("concierge")}
+            </Link>
+          )}
           <Link
             href="/host/new"
             className="text-sm font-semibold text-ink-700 transition duration-150 ease-out hover:text-teal-600"
@@ -108,8 +124,16 @@ export async function TopbarShell({ user }: { user: TopbarUser | null }) {
   );
 }
 
-/** Async wrapper — fetches live session and passes to TopbarShell. */
+/** Async wrapper — fetches live session + kill-switch state. */
 export async function Topbar() {
-  const session = await auth();
-  return <TopbarShell user={session?.user ?? null} />;
+  const [session, killSwitch] = await Promise.all([
+    auth(),
+    isKillSwitchActive(),
+  ]);
+  return (
+    <TopbarShell
+      user={session?.user ?? null}
+      conciergeDisabled={killSwitch}
+    />
+  );
 }
