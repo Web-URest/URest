@@ -1,18 +1,14 @@
 "use client";
 
-import { BookingMode, CancellationTier } from "@prisma/client";
+import { CancellationTier } from "@prisma/client";
 
-import { Button } from "@/components/ui/Button";
-import { Checkbox } from "@/components/ui/Checkbox";
+import { BookingModeToggle } from "@/components/ui/BookingModeToggle";
 import { NumberInput } from "@/components/ui/NumberInput";
-import { RadioGroup } from "@/components/ui/RadioGroup";
+import { SeasonEditor } from "@/components/ui/SeasonEditor";
 import { Select } from "@/components/ui/Select";
-import { TextInput } from "@/components/ui/TextInput";
-import { findSeasonOverlap } from "@/lib/listing/seasons";
 import { buildQuote } from "@/lib/pricing/quote";
 import { formatSatang } from "@/lib/money";
 
-import type { SeasonRow } from "../wizard";
 import type { StepProps } from "./types";
 
 const CANCELLATION_TIERS = Object.values(CancellationTier);
@@ -43,34 +39,8 @@ function netLabel(baht: number | null): string | null {
   return formatSatang(hostEarningsSatang);
 }
 
-const blankSeason = (): SeasonRow => ({
-  nameTh: "",
-  startDate: "",
-  endDate: "",
-  weekdayBaht: null,
-  weekendBaht: null,
-});
-
 /** Wizard step ⑤ — rates, seasons, booking mode + live earnings preview. */
 export function Step5Pricing({ data, patch, t }: StepProps) {
-  function updateSeason(i: number, p: Partial<SeasonRow>) {
-    patch({
-      seasons: data.seasons.map((s, idx) => (idx === i ? { ...s, ...p } : s)),
-    });
-  }
-
-  // Live overlap feedback — server enforces it too (DB constraint is the backstop).
-  const ranges = data.seasons
-    .filter((s) => s.startDate && s.endDate)
-    .map((s) => ({
-      nameTh: s.nameTh,
-      startDate: new Date(`${s.startDate}T00:00:00.000Z`),
-      endDate: new Date(`${s.endDate}T00:00:00.000Z`),
-    }));
-  const overlap = findSeasonOverlap(ranges) != null;
-
-  const instant = data.bookingMode === BookingMode.INSTANT;
-
   return (
     <div className="flex flex-col gap-6">
       {/* Base rates + earnings preview */}
@@ -153,73 +123,12 @@ export function Step5Pricing({ data, patch, t }: StepProps) {
         />
       </div>
 
-      {/* Seasons */}
-      <fieldset className="flex flex-col gap-3">
-        <legend className="text-sm font-medium text-ink-900">
-          {t("seasonsLabel")}
-        </legend>
-        <p className="text-sm text-ink-700">{t("seasonsHint")}</p>
-        {data.seasons.map((s, i) => (
-          <div key={i} className="flex flex-col gap-3 rounded-input border border-line p-3">
-            <TextInput
-              id={`w-season-name-${i}`}
-              label={t("seasonName")}
-              value={s.nameTh}
-              onChange={(e) => updateSeason(i, { nameTh: e.target.value })}
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <TextInput
-                id={`w-season-start-${i}`}
-                label={t("seasonStart")}
-                type="date"
-                value={s.startDate}
-                onChange={(e) => updateSeason(i, { startDate: e.target.value })}
-              />
-              <TextInput
-                id={`w-season-end-${i}`}
-                label={t("seasonEnd")}
-                type="date"
-                value={s.endDate}
-                onChange={(e) => updateSeason(i, { endDate: e.target.value })}
-              />
-              <NumberInput
-                id={`w-season-wd-${i}`}
-                label={t("seasonWeekday")}
-                prefix="฿"
-                min={0}
-                value={s.weekdayBaht}
-                onValueChange={(v) => updateSeason(i, { weekdayBaht: v })}
-              />
-              <NumberInput
-                id={`w-season-we-${i}`}
-                label={t("seasonWeekend")}
-                prefix="฿"
-                min={0}
-                value={s.weekendBaht}
-                onValueChange={(v) => updateSeason(i, { weekendBaht: v })}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                patch({ seasons: data.seasons.filter((_, idx) => idx !== i) })
-              }
-              className="self-start text-sm text-coral-600 underline"
-            >
-              {t("removeSeason")}
-            </button>
-          </div>
-        ))}
-        {overlap && <p className="text-sm text-coral-600">{t("errorSeasonOverlap")}</p>}
-        <div>
-          <Button
-            variant="ghost"
-            onClick={() => patch({ seasons: [...data.seasons, blankSeason()] })}
-          >
-            {t("addSeason")}
-          </Button>
-        </div>
-      </fieldset>
+      {/* Seasons — shared editor (also used on the Edit Villa page) */}
+      <SeasonEditor
+        seasons={data.seasons}
+        onChange={(seasons) => patch({ seasons })}
+        idPrefix="w-season"
+      />
 
       {/* Cancellation + booking mode */}
       <Select
@@ -233,33 +142,12 @@ export function Step5Pricing({ data, patch, t }: StepProps) {
         }))}
       />
 
-      <RadioGroup
-        label={t("bookingModeLabel")}
-        name="w-mode"
-        value={data.bookingMode}
-        onValueChange={(v) => patch({ bookingMode: v as BookingMode })}
-        options={[
-          {
-            value: BookingMode.REQUEST,
-            label: t("bookingMode.REQUEST"),
-            hint: t("bookingMode.REQUEST_HINT"),
-          },
-          {
-            value: BookingMode.INSTANT,
-            label: t("bookingMode.INSTANT"),
-            hint: t("bookingMode.INSTANT_HINT"),
-          },
-        ]}
+      <BookingModeToggle
+        mode={data.bookingMode}
+        onModeChange={(mode) => patch({ bookingMode: mode })}
+        ack={data.instantAck}
+        onAckChange={(instantAck) => patch({ instantAck })}
       />
-
-      {instant && (
-        <Checkbox
-          id="w-instant-ack"
-          checked={data.instantAck}
-          onCheckedChange={(on) => patch({ instantAck: on })}
-          label={t("instantAck")}
-        />
-      )}
     </div>
   );
 }
