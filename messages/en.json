@@ -292,5 +292,15 @@
     "ctaInstantCharge": "Immediate payment — confirmed right away, no waiting",
     "nights": "{count} nights",
     "perNight": "/ night"
+  },
+  "SavedVillas": {
+    "pageTitle": "Saved villas",
+    "save": "Save",
+    "unsave": "Unsave",
+    "unsaved": "Removed from saved",
+    "undo": "Undo",
+    "emptyTitle": "No saved villas yet",
+    "emptyHint": "Tap the heart on any villa to save it for later",
+    "errorGeneric": "Something went wrong, please try again"
   }
 }

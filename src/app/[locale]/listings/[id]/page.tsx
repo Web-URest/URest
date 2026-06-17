@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { auth } from "@/lib/auth/auth";
 import { getListingDetail } from "@/lib/listing/queries";
+import { getSavedVillaIds } from "@/lib/savedVilla";
 import { formatSatang } from "@/lib/money";
 import { ListingGallery } from "@/components/ui/ListingGallery";
 import { BookingCard } from "@/components/ui/BookingCard";
 import { FaqSection } from "@/components/ui/FaqSection";
+import { HeartButton } from "@/components/ui/HeartButton";
 import { PriceCalendar } from "@/components/ui/PriceCalendar";
 import { EscrowStrip } from "@/components/ui/EscrowStrip";
 import { Link } from "@/i18n/navigation";
@@ -32,8 +35,13 @@ export default async function ListingPage({ params }: ListingPageProps) {
   const t = await getTranslations("ListingDetail");
   const tBook = await getTranslations("BookingCard");
 
-  const data = await getListingDetail(id);
+  const [session, data] = await Promise.all([auth(), getListingDetail(id)]);
   if (!data) notFound();
+
+  const savedIds = session?.user?.id
+    ? await getSavedVillaIds(session.user.id, [id])
+    : new Set<string>();
+  const isSaved = savedIds.has(id);
 
   const { listing, holidaySet, attractions } = data;
 
@@ -70,21 +78,28 @@ export default async function ListingPage({ params }: ListingPageProps) {
           <div className="flex-1 flex flex-col gap-8">
             {/* Title block */}
             <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                {listing.legalBadgeAt && (
-                  <span className="rounded-full bg-jade-500/10 px-2.5 py-0.5 text-xs font-semibold text-jade-500">
-                    {t("legalBadge")} ✓
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {listing.legalBadgeAt && (
+                    <span className="rounded-full bg-jade-500/10 px-2.5 py-0.5 text-xs font-semibold text-jade-500">
+                      {t("legalBadge")} ✓
+                    </span>
+                  )}
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      isInstant
+                        ? "bg-aqua-100 text-teal-600"
+                        : "bg-sand-100 text-ink-900/60"
+                    }`}
+                  >
+                    {isInstant ? t("bookingModeInstant") : t("bookingModeRequest")}
                   </span>
-                )}
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    isInstant
-                      ? "bg-aqua-100 text-teal-600"
-                      : "bg-sand-100 text-ink-900/60"
-                  }`}
-                >
-                  {isInstant ? t("bookingModeInstant") : t("bookingModeRequest")}
-                </span>
+                </div>
+                <HeartButton
+                  listingId={listing.id}
+                  initialSaved={isSaved}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-sand-100 text-lg transition-opacity"
+                />
               </div>
 
               <h1 className="font-display text-2xl text-ink-900 md:text-3xl">

@@ -1,8 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Link } from "@/i18n/navigation";
+import { auth } from "@/lib/auth/auth";
 import { searchListings } from "@/lib/listing/queries";
+import { getSavedVillaIds } from "@/lib/savedVilla";
 import { VillaCard } from "@/components/ui/VillaCard";
+import { HeartButton } from "@/components/ui/HeartButton";
 import { SearchFilters } from "@/components/ui/SearchFilters";
 import { MapView, type MapPin } from "@/components/ui/MapView";
 
@@ -27,15 +30,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const instantOnly = params.instant === "1";
   const sort = (sp(params.sort) || "price_asc") as "price_asc" | "price_desc" | "rating";
 
-  const listings = await searchListings({
-    regionSlug,
-    checkIn: checkIn || undefined,
-    checkOut: checkOut || undefined,
-    guests,
-    amenities,
-    instantOnly,
-    sort,
-  });
+  const [session, listings] = await Promise.all([
+    auth(),
+    searchListings({
+      regionSlug,
+      checkIn: checkIn || undefined,
+      checkOut: checkOut || undefined,
+      guests,
+      amenities,
+      instantOnly,
+      sort,
+    }),
+  ]);
+
+  const savedIds = session?.user?.id
+    ? await getSavedVillaIds(
+        session.user.id,
+        listings.map((l) => l.id),
+      )
+    : new Set<string>();
 
   const mapPins: MapPin[] = listings
     .filter((l) => l.mapLat !== null && l.mapLng !== null)
@@ -128,24 +141,33 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             ) : (
               <div className="grid grid-cols-1 gap-5 pb-24 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {listings.map((l) => (
-                  <Link key={l.id} href={`/listings/${l.id}`}>
-                    <VillaCard
-                      villa={{
-                        name: l.title,
-                        region: l.regionNameTh,
-                        sleeps: l.maxGuests,
-                        bedrooms: l.bedrooms,
-                        amenities: l.amenities,
-                        pricePerNightSatang: l.baseWeekdaySatang,
-                        weekendPriceSatang: l.baseWeekendSatang !== l.baseWeekdaySatang
-                          ? l.baseWeekendSatang
-                          : undefined,
-                        verified: !!l.legalBadgeAt,
-                        rating: l.rating ?? undefined,
-                        reviewCount: l.reviewCount,
-                      }}
-                    />
-                  </Link>
+                  <div key={l.id} className="relative">
+                    <Link href={`/listings/${l.id}`}>
+                      <VillaCard
+                        villa={{
+                          name: l.title,
+                          region: l.regionNameTh,
+                          sleeps: l.maxGuests,
+                          bedrooms: l.bedrooms,
+                          amenities: l.amenities,
+                          pricePerNightSatang: l.baseWeekdaySatang,
+                          weekendPriceSatang:
+                            l.baseWeekendSatang !== l.baseWeekdaySatang
+                              ? l.baseWeekendSatang
+                              : undefined,
+                          verified: !!l.legalBadgeAt,
+                          rating: l.rating ?? undefined,
+                          reviewCount: l.reviewCount,
+                        }}
+                        heartSlot={
+                          <HeartButton
+                            listingId={l.id}
+                            initialSaved={savedIds.has(l.id)}
+                          />
+                        }
+                      />
+                    </Link>
+                  </div>
                 ))}
               </div>
             )}

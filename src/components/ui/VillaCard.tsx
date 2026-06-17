@@ -27,12 +27,23 @@ export type Villa = {
   hueDeg?: number;
 };
 
+/**
+ * Props for the card component.
+ * `heartSlot` replaces the default aria-hidden heart span with an interactive
+ * element — consumers (search, detail, saved pages) inject a HeartButton here.
+ */
+export type VillaCardProps = {
+  villa: Villa;
+  /** Replaces the static heart span with an interactive toggle. */
+  heartSlot?: React.ReactNode;
+};
+
 const CAUSTICS =
   "radial-gradient(120% 80% at 20% 10%, var(--color-aqua-300), transparent 60%)," +
   "radial-gradient(120% 90% at 90% 100%, var(--color-aqua-100), transparent 55%)," +
   "linear-gradient(160deg, var(--color-aqua-500), var(--color-sand-100))";
 
-export function VillaCard({ villa }: { villa: Villa }) {
+export function VillaCard({ villa, heartSlot }: VillaCardProps) {
   const t = useTranslations("VillaCard");
   const shown = villa.amenities.slice(0, 3);
   const extra = villa.amenities.length - shown.length;
@@ -54,14 +65,16 @@ export function VillaCard({ villa }: { villa: Villa }) {
             {t("verified")} ✓
           </span>
         ) : null}
-        <span
-          aria-hidden
-          className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg shadow-card ${
-            villa.saved ? "text-coral-500" : "text-ink-900/40"
-          }`}
-        >
-          {villa.saved ? "♥" : "♡"}
-        </span>
+        {heartSlot ?? (
+          <span
+            aria-hidden
+            className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg shadow-card ${
+              villa.saved ? "text-coral-500" : "text-ink-900/40"
+            }`}
+          >
+            {villa.saved ? "♥" : "♡"}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-2 p-4">
