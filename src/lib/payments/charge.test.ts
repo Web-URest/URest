@@ -20,8 +20,11 @@ vi.mock("@/lib/booking/transitions", async (importActual) => {
   return { ...actual, confirmFromWebhook: vi.fn() };
 });
 
+vi.mock("@/lib/notifications", () => ({ notify: vi.fn() }));
+
 import { BookingError, confirmFromWebhook } from "@/lib/booking/transitions";
 import { prisma } from "@/lib/db";
+import { notify } from "@/lib/notifications";
 
 import { applyChargeEvent, createChargeForBooking, PaymentError } from "./charge";
 import { createCardCharge, createPromptPayCharge, retrieveCharge } from "./opn";
@@ -33,6 +36,7 @@ const ppCharge = createPromptPayCharge as unknown as Mock;
 const cardCharge = createCardCharge as unknown as Mock;
 const fetchCharge = retrieveCharge as unknown as Mock;
 const confirm = confirmFromWebhook as unknown as Mock;
+const notifyFn = notify as unknown as Mock;
 
 const NOW = new Date("2026-06-17T12:00:00.000Z");
 
@@ -129,9 +133,10 @@ describe("createChargeForBooking", () => {
 });
 
 describe("applyChargeEvent", () => {
-  it("re-fetches the charge, confirms the booking, and marks the Payment SUCCESSFUL", async () => {
+  it("re-fetches the charge, confirms the booking, marks Payment SUCCESSFUL, and notifies guest + host", async () => {
     fetchCharge.mockResolvedValue(charge({ status: "successful" }));
-    confirm.mockResolvedValue(booking({ status: BookingStatus.CONFIRMED }));
+    confirm.mockResolvedValue({ booking: booking({ status: BookingStatus.CONFIRMED }), freshlyConfirmed: true });
+    findBooking.mockResolvedValue({ userId: "g1", code: "UR-2606-0001", listing: { hostId: "h1", title: "วิลล่า A" } });
 
     const result = await applyChargeEvent("evnt_1", "chrg_1", { id: "evnt_1" }, NOW);
 
@@ -144,6 +149,19 @@ describe("applyChargeEvent", () => {
       where: { opnChargeId: "chrg_1" },
       data: { status: PaymentStatus.SUCCESSFUL },
     });
+    expect(notifyFn).toHaveBeenCalledWith("g1", "PAYMENT_RECEIVED_GUEST", { listingTitle: "วิลล่า A", code: "UR-2606-0001", bookingId: "bk1" });
+    expect(notifyFn).toHaveBeenCalledWith("h1", "PAYMENT_RECEIVED_HOST", { listingTitle: "วิลล่า A", code: "UR-2606-0001", bookingId: "bk1" });
+    expect(result).toEqual({ kind: "confirmed", bookingId: "bk1" });
+  });
+
+  it("does NOT notify on a replayed (already-processed) event", async () => {
+    fetchCharge.mockResolvedValue(charge({ status: "successful" }));
+    confirm.mockResolvedValue({ booking: booking({ status: BookingStatus.CONFIRMED }), freshlyConfirmed: false });
+
+    const result = await applyChargeEvent("evnt_1", "chrg_1", {}, NOW);
+
+    expect(notifyFn).not.toHaveBeenCalled();
+    expect(paymentUpdateMany).toHaveBeenCalled(); // terminal write stays idempotent
     expect(result).toEqual({ kind: "confirmed", bookingId: "bk1" });
   });
 
