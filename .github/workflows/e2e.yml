@@ -1,0 +1,43 @@
+name: E2E
+
+# Money-path Playwright suite (#29) — nightly + manual. PR CI (ci.yml) stays fast.
+on:
+  schedule:
+    - cron: "0 18 * * *" # ~01:00 ICT nightly
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: urest
+          POSTGRES_PASSWORD: urest
+          POSTGRES_DB: urest_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          # postinstall runs prisma generate — needs a syntactically valid URL only
+          DATABASE_URL: "postgresql://urest:urest@localhost:5432/urest_e2e"
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run E2E suite
+        run: pnpm e2e
+        # playwright.config.ts injects the test env (DB, OPN_API_BASE→mock, dummy keys)
+        # and global-setup runs `prisma migrate deploy`. CI=true → fresh web servers.
