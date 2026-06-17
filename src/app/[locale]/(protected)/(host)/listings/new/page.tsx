@@ -56,6 +56,9 @@ export default async function NewListingPage({
     regions: regionOptions,
     photos: [],
     data: null,
+    kycSubmissionId: null,
+    kycDocuments: [],
+    payout: { bankCode: "", accountName: "", hasSaved: false },
   };
 
   if (id) {
@@ -64,6 +67,15 @@ export default async function NewListingPage({
       include: { photos: { orderBy: { sortOrder: "asc" } }, seasons: true },
     });
     if (listing && listing.hostId === user.id && listing.status === "DRAFT") {
+      // Resume KYC: reuse the in-flight submission + its docs; prefill the
+      // payout bank/name (NEVER the encrypted number — ADR-010).
+      const [kyc, payoutAccount] = await Promise.all([
+        prisma.kycSubmission.findFirst({
+          where: { userId: user.id, listingId: listing.id, status: "PENDING_REVIEW" },
+          include: { documents: true },
+        }),
+        prisma.payoutAccount.findFirst({ where: { userId: user.id } }),
+      ]);
       initial = {
         listingId: listing.id,
         regions: regionOptions,
@@ -74,6 +86,11 @@ export default async function NewListingPage({
           isCover: p.isCover,
           sortOrder: p.sortOrder,
         })),
+        kycSubmissionId: kyc?.id ?? null,
+        kycDocuments: (kyc?.documents ?? []).map((d) => ({ id: d.id, type: d.type })),
+        payout: payoutAccount
+          ? { bankCode: payoutAccount.bankCode, accountName: payoutAccount.accountName, hasSaved: true }
+          : { bankCode: "", accountName: "", hasSaved: false },
         data: {
           regionId: listing.regionId,
           title: listing.title,
