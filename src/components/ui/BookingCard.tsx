@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { buildQuote, type PricingConfig, type SeasonRate } from "@/lib/pricing/quote";
 import { DateRangeField } from "./DateRangeField";
 import { GuestStepper } from "./GuestStepper";
@@ -18,7 +19,7 @@ interface BookingCardProps {
 }
 
 export function BookingCard({
-  listingId: _listingId, // eslint-disable-line @typescript-eslint/no-unused-vars
+  listingId,
   bookingMode,
   maxGuests,
   pricingConfig,
@@ -26,6 +27,7 @@ export function BookingCard({
   holidayDates,
 }: BookingCardProps) {
   const t = useTranslations("BookingCard");
+  const router = useRouter();
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(Math.min(2, maxGuests));
@@ -68,6 +70,11 @@ export function BookingCard({
       <button
         type="button"
         disabled={!quote}
+        onClick={() => {
+          if (!isInstant) {
+            router.push(`/listings/${listingId}/request?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
+          }
+        }}
         className={`w-full rounded-button py-3 text-sm font-semibold transition ${
           isInstant
             ? "bg-coral-500 text-white hover:bg-coral-600 disabled:opacity-40"

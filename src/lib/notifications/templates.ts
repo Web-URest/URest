@@ -20,6 +20,30 @@ const templates: Record<string, NotificationTemplate> = {
     }),
     line: (p) => `🔔 คำขอจองใหม่: ${str(p.listingTitle)} จาก ${str(p.guestName)} — ตอบกลับภายใน 12 ชม.`,
   },
+  REQUEST_ACCEPTED: {
+    priority: true,
+    email: (p) => ({
+      subject: `โฮสต์ยืนยันแล้ว — ชำระเงินเพื่อยืนยันการจอง ${str(p.listingTitle)}`,
+      body: `โฮสต์ยืนยันคำขอจอง ${str(p.listingTitle)} แล้ว กรุณาชำระเงินภายใน 12 ชั่วโมงเพื่อยืนยันการจอง`,
+    }),
+    line: (p) => `✅ โฮสต์ยืนยัน ${str(p.listingTitle)} แล้ว — ชำระเงินภายใน 12 ชม. เพื่อยืนยันการจอง`,
+  },
+  REQUEST_DECLINED: {
+    priority: false,
+    email: (p) => ({
+      subject: `คำขอจอง ${str(p.listingTitle)} ไม่ได้รับการยืนยัน`,
+      body: `ขออภัย โฮสต์ไม่สามารถรับคำขอจอง ${str(p.listingTitle)} ได้ ลองค้นหาที่พักอื่นที่ว่างในช่วงเวลาเดียวกันได้เลย`,
+    }),
+    line: (p) => `คำขอจอง ${str(p.listingTitle)} ไม่ได้รับการยืนยัน — ลองดูที่พักอื่นที่ว่างนะคะ`,
+  },
+  REQUEST_EXPIRED: {
+    priority: false,
+    email: (p) => ({
+      subject: `คำขอจอง ${str(p.listingTitle)} หมดเวลา`,
+      body: `คำขอจอง ${str(p.listingTitle)} หมดเวลารอโฮสต์ยืนยัน (12 ชั่วโมง) ลองส่งคำขอใหม่หรือเลือกที่พักอื่นได้เลย`,
+    }),
+    line: (p) => `⏰ คำขอจอง ${str(p.listingTitle)} หมดเวลารอโฮสต์ — ลองส่งใหม่หรือดูที่พักอื่นนะคะ`,
+  },
 };
 
 export function getTemplate(key: string): NotificationTemplate | undefined {

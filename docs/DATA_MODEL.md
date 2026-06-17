@@ -70,6 +70,8 @@ erDiagram
 | `PayoutHold` | bookingId? XOR hostUserId? (constraint №4), reason, createdBy/releasedBy admin | due-list skips active holds (§2.3) |
 | `HostStrike` | hostUserId, bookingId?, reason (HOST_CANCELLED, STALE_CALENDAR_DOUBLE_BOOKING) | 3 strikes → suspension (lib/booking) |
 
+- `guestNoteToHost String?` — guest's free-text intro shown to the host on the request (PRODUCT_FLOWS §3.2 step 1). Snapshotted at request time; never edited after.
+
 ## Social domain 🔒 (Phase 3)
 
 | Model | Key fields | Notes |

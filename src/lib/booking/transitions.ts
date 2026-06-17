@@ -71,6 +71,7 @@ export interface BookingDraft {
   commissionSatang: number;
   cancellationTier: CancellationTier;
   houseRulesText?: string | null;
+  guestNoteToHost?: string | null;
 }
 
 function createData(draft: BookingDraft) {
@@ -84,6 +85,7 @@ function createData(draft: BookingDraft) {
     commissionSatang: draft.commissionSatang,
     cancellationTier: draft.cancellationTier,
     houseRulesText: draft.houseRulesText ?? null,
+    guestNoteToHost: draft.guestNoteToHost ?? null,
   };
 }
 

@@ -335,6 +335,24 @@
     "nights": "{count} nights",
     "perNight": "/ night"
   },
+  "Booking": {
+    "requestTitle": "Review your request",
+    "noteLabel": "Note to host (optional)",
+    "notePlaceholder": "How many of you, what's the occasion…",
+    "houseRules": "I accept the house rules",
+    "submit": "Send request",
+    "guests": "{count} guests",
+    "errorUnavailable": "This villa isn't accepting requests right now",
+    "errorDatesTaken": "Those dates are already booked — please pick others",
+    "errorPhoneUnverified": "Please verify your phone before sending a request",
+    "errorUnauthenticated": "Please sign in before sending a request",
+    "errorGeneric": "Something went wrong — please try again",
+    "statusTitle": "My booking",
+    "respondByNote": "Waiting for the host — the request expires automatically if the deadline passes",
+    "contactMasked": "Contact is shared after the booking is confirmed",
+    "withdraw": "Withdraw request",
+    "withdrawError": "Couldn't withdraw — please try again"
+  },
   "Concierge": {
     "pageTitle": "น้องเรสต์ (AI Concierge)",
     "headerSubtitle": "AI villa finder",
@@ -374,6 +392,16 @@
       "earnings": "Earnings",
       "messages": "Messages",
       "soon": "Soon"
+    },
+    "requests": {
+      "title": "Booking requests",
+      "empty": "No requests awaiting your response",
+      "guestNote": "Note from guest",
+      "contactMasked": "Contact is shared after the booking is confirmed",
+      "respondByNote": "Respond within 12h or the request expires",
+      "accept": "Accept",
+      "decline": "Decline",
+      "actionError": "Action failed — please try again"
     },
     "overviewTitle": "Overview",
     "kpiRevenue": "Revenue this month",

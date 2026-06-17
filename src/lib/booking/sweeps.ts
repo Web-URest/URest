@@ -7,6 +7,7 @@
 import { BookingStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import { notify } from "@/lib/notifications";
 
 import { checkIn, complete, expire } from "./transitions";
 
@@ -33,16 +34,23 @@ async function forEachRow(
   return done;
 }
 
-/** REQUESTED past respondBy → EXPIRED. */
+/** REQUESTED past respondBy → EXPIRED, then notify the guest (§6 matrix). */
 export async function sweepOverdueRequests(now: Date): Promise<number> {
   const rows = await prisma.booking.findMany({
     where: { status: BookingStatus.REQUESTED, respondBy: { lt: now } },
-    select: { id: true },
+    select: { id: true, userId: true, listing: { select: { title: true } } },
   });
-  return forEachRow(
-    rows.map((r) => r.id),
-    (id) => expire(id, now),
-  );
+  let done = 0;
+  for (const row of rows) {
+    try {
+      await expire(row.id, now);
+      await notify(row.userId, "REQUEST_EXPIRED", { listingTitle: row.listing.title, bookingId: row.id });
+      done++;
+    } catch (err) {
+      console.error(`[cron] expire request ${row.id} failed:`, err instanceof Error ? err.message : err);
+    }
+  }
+  return done;
 }
 
 /** AWAITING_PAYMENT past payBy → EXPIRED. */

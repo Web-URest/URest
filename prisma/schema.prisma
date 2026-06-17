@@ -662,6 +662,7 @@ model Booking {
   commissionSatang Int
   cancellationTier CancellationTier
   houseRulesText   String?
+  guestNoteToHost  String?
 
   // escrow cache — written ONLY by lib/ledger (ADR-003).
   escrowState       EscrowState @default(NONE)

@@ -12,9 +12,10 @@ import { Link, usePathname } from "@/i18n/navigation";
 const TABS = [
   { href: "/dashboard", key: "overview" as const },
   { href: "/calendar", key: "calendar" as const },
+  { href: "/requests", key: "requests" as const },
 ];
 
-const SOON_TABS = ["requests", "earnings", "messages"] as const;
+const SOON_TABS = ["earnings", "messages"] as const;
 
 export function HostNav() {
   const t = useTranslations("Host");
