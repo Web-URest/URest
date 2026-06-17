@@ -60,3 +60,18 @@ describe("payment lifecycle templates", () => {
     expect(t?.email({ listingTitle: "วิลล่า A" }).subject).toBeTruthy();
   });
 });
+
+describe("cancellation templates", () => {
+  it("BOOKING_CANCELLED_BY_GUEST notifies the host which listing was cancelled", () => {
+    const t = getTemplate("BOOKING_CANCELLED_BY_GUEST");
+    expect(t).toBeDefined();
+    expect(t?.line({ listingTitle: "วิลล่า A" })).toContain("วิลล่า A");
+  });
+  it("BOOKING_CANCELLED_BY_HOST is priority and shows the guest the refund amount", () => {
+    const t = getTemplate("BOOKING_CANCELLED_BY_HOST");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({ listingTitle: "วิลล่า A", refundSatang: 12_900_00 })).toContain("วิลล่า A");
+    // refund amount formatted at the display edge (฿12,900)
+    expect(t?.email({ listingTitle: "วิลล่า A", refundSatang: 12_900_00 }).body).toContain("12,900");
+  });
+});

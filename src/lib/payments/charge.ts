@@ -189,3 +189,32 @@ async function notifyPaymentRefunded(bookingId: string): Promise<void> {
   if (!b) return;
   await notify(b.userId, "PAYMENT_REFUNDED_GUEST", { listingTitle: b.listing.title, bookingId });
 }
+
+/**
+ * Move the guest's refund to Opn after a cancellation settled the ledger (§3.6). The
+ * Refund row (written inside `cancelByGuest`/`cancelByHost`) is the source of truth for
+ * the amount; this only touches the gateway. Idempotent: skips if already refunded
+ * (`opnRefundId` set) or nothing is refundable. Best-effort — on an Opn failure we log
+ * and leave `opnRefundId` null so admin reconciliation (§5.2) catches the owed money;
+ * we never throw, because the cancellation has already committed and must not be undone.
+ */
+export async function refundBookingToGuest(bookingId: string): Promise<void> {
+  const refund = await prisma.refund.findUnique({ where: { bookingId } });
+  if (!refund || refund.refundSatang <= 0 || refund.opnRefundId) return;
+
+  const payment = await prisma.payment.findFirst({
+    where: { bookingId, status: PaymentStatus.SUCCESSFUL },
+  });
+  if (!payment) {
+    console.error(`[refund] no successful payment found for booking ${bookingId} — owed ${refund.refundSatang} satang`);
+    return;
+  }
+
+  try {
+    const opnRefund = await refundCharge(payment.opnChargeId, refund.refundSatang);
+    await prisma.refund.update({ where: { bookingId }, data: { opnRefundId: opnRefund.id } });
+  } catch (err) {
+    console.error(`[refund] opn failed for booking ${bookingId}:`, err instanceof Error ? err.message : err);
+    // opnRefundId stays null → owed-but-not-moved, surfaced in §5.2 reconciliation.
+  }
+}

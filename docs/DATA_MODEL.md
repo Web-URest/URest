@@ -65,7 +65,7 @@ erDiagram
 | `Payment` | opnChargeId @unique, method (PROMPTPAY,CARD), amountSatang, status (PENDING, SUCCESSFUL, FAILED, EXPIRED, REFUNDED), qrExpiresAt? | one row per charge attempt — QR regeneration = new row; REFUNDED = paid-race auto-refund (#22, charge succeeded after the booking expired) |
 | `WebhookEvent` | opnEventId @unique, payload Json, processedAt? | idempotency before processing (rule 6) |
 | `LedgerEntry` | bookingId, amountSatang, fromState?→toState, cause enum, causeRef | **append-only** (ADR-003); invariant property-tested |
-| `Refund` | refundSatang, retainedHostSatang, retainedPlatformSatang | 90/10 split of retained (§3.6) |
+| `Refund` | refundSatang, retainedHostSatang, retainedPlatformSatang, opnRefundId? | 90/10 split of retained (§3.6); opnRefundId set when the Opn refund lands — NULL = owed-but-not-moved, the reconciliation signal (#23, §5.2) |
 | `Payout` | bookingId @unique, payoutAccountId, hostAmountSatang, slipRef, paidByAdminId | manual run v1 (§5.2) |
 | `PayoutHold` | bookingId? XOR hostUserId? (constraint №4), reason, createdBy/releasedBy admin | due-list skips active holds (§2.3) |
 | `HostStrike` | hostUserId, bookingId?, reason (HOST_CANCELLED, STALE_CALENDAR_DOUBLE_BOOKING) | 3 strikes → suspension (lib/booking) |

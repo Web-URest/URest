@@ -56,7 +56,7 @@ function addHours(at: Date, hours: number): Date {
 }
 
 /** Whole days between `now` and `checkIn` (clamped at 0) — drives the refund tier. */
-function daysUntil(checkIn: Date, now: Date): number {
+export function daysUntil(checkIn: Date, now: Date): number {
   return Math.max(0, Math.floor((checkIn.getTime() - now.getTime()) / MS_PER_DAY));
 }
 
