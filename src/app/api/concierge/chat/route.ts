@@ -6,6 +6,7 @@ import {
   getOrCreateSession,
   getSessionMessages,
   getSessionTokenCount,
+  logUnansweredQuestion,
   saveMessage,
 } from "@/lib/concierge";
 import { CONCIERGE_TOOLS, handleToolCall, type ToolInput } from "@/lib/concierge/tools";
@@ -124,6 +125,8 @@ export async function POST(request: Request): Promise<Response> {
       let inputTokens = 0;
       let outputTokens = 0;
       let cacheReadInputTokens = 0;
+      // Track the listing_id touched in this turn for UnansweredQuestion logging
+      let lastToolListingId: string | undefined;
 
       try {
         // Tool-use loop (max 5 iterations to prevent runaway)
@@ -180,11 +183,15 @@ export async function POST(request: Request): Promise<Response> {
             const toolResults: Anthropic.ToolResultBlockParam[] = [];
             for (const toolUse of toolUseBlocks) {
               send({ type: "tool_call", name: toolUse.name });
-              const result = await handleToolCall(
-                toolUse.name,
-                toolUse.input as ToolInput,
-                userId,
-              );
+              const toolInput = toolUse.input as ToolInput;
+              // Track which listing the model is querying (for UnansweredQuestion)
+              if (
+                typeof toolInput.listing_id === "string" &&
+                toolInput.listing_id
+              ) {
+                lastToolListingId = toolInput.listing_id;
+              }
+              const result = await handleToolCall(toolUse.name, toolInput, userId);
               toolResults.push({
                 type: "tool_result",
                 tool_use_id: toolUse.id,
@@ -205,6 +212,23 @@ export async function POST(request: Request): Promise<Response> {
         // Persist assistant message
         if (assistantText) {
           await saveMessage(resolvedSessionId, "assistant", assistantText);
+        }
+
+        // Refusal detection — if the model fired the closed-world refusal script,
+        // write an UnansweredQuestion row so the admin growth loop (§5.7) can surface
+        // it to the host as a FAQ suggestion. The listingId comes from the tool call
+        // that prompted the refusal, or from the session's scoped listing.
+        if (assistantText.includes("ไม่มีข้อมูลส่วนนี้ในประกาศ")) {
+          const listingIdForLog =
+            lastToolListingId ??
+            (scopedListingId ?? undefined);
+          await logUnansweredQuestion(
+            resolvedSessionId,
+            userMessage,
+            listingIdForLog,
+          ).catch(() => {
+            // Non-fatal — don't interrupt the SSE response if this fails
+          });
         }
 
         // Log usage
