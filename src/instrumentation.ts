@@ -21,5 +21,12 @@ export async function register() {
       console.error(err);
       process.exit(1);
     }
+
+    // Start the in-process cron scheduler (ADR-004). Skip under test so vitest
+    // never schedules a live tick.
+    if (process.env.NODE_ENV !== "test") {
+      const { startScheduler } = await import("@/lib/jobs/scheduler");
+      startScheduler();
+    }
   }
 }
