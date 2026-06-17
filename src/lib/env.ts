@@ -65,6 +65,12 @@ const schema = z.object({
   /** Opn secret key (`skey_…`) — server charge/source/retrieve + webhook re-fetch verification. */
   OPN_SECRET_KEY: z.string().startsWith("skey_"),
 
+  // --- Notifications: Resend email + LINE push (ADR-005) ---
+  /** Resend API key for transactional email. Optional — console driver in dev/test. */
+  RESEND_API_KEY: z.string().optional(),
+  /** LINE Messaging API channel access token for push. Optional — console/skip without it. */
+  LINE_CHANNEL_ACCESS_TOKEN: z.string().optional(),
+
   // --- Phase 4: AI concierge ---
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   CONCIERGE_MODEL: z.string().default("claude-haiku-4-5"),
