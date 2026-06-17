@@ -4,7 +4,7 @@
  * never write status directly (rule 2). Per-row failures are isolated so one
  * bad row never aborts the batch. Pure functions of `now` for testability.
  */
-import { BookingStatus } from "@prisma/client";
+import { BookingMode, BookingStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notifications";
@@ -53,16 +53,25 @@ export async function sweepOverdueRequests(now: Date): Promise<number> {
   return done;
 }
 
-/** AWAITING_PAYMENT past payBy → EXPIRED. */
+/** AWAITING_PAYMENT past payBy → EXPIRED; for REQUEST-mode, notify the host (instant hosts never saw it). */
 export async function sweepOverduePayments(now: Date): Promise<number> {
   const rows = await prisma.booking.findMany({
     where: { status: BookingStatus.AWAITING_PAYMENT, payBy: { lt: now } },
-    select: { id: true },
+    select: { id: true, bookingMode: true, listing: { select: { hostId: true, title: true } } },
   });
-  return forEachRow(
-    rows.map((r) => r.id),
-    (id) => expire(id, now),
-  );
+  let done = 0;
+  for (const row of rows) {
+    try {
+      await expire(row.id, now);
+      if (row.bookingMode === BookingMode.REQUEST) {
+        await notify(row.listing.hostId, "PAYMENT_EXPIRED_HOST", { listingTitle: row.listing.title, bookingId: row.id });
+      }
+      done++;
+    } catch (err) {
+      console.error(`[cron] expire payment ${row.id} failed:`, err instanceof Error ? err.message : err);
+    }
+  }
+  return done;
 }
 
 /** CONFIRMED whose check-in time (15:00 ICT) has arrived → CHECKED_IN. */

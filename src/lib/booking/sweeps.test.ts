@@ -81,15 +81,40 @@ describe("sweepOverdueRequests", () => {
 });
 
 describe("sweepOverduePayments", () => {
-  it("expires every AWAITING_PAYMENT booking past its pay-by", async () => {
-    findMany.mockResolvedValue([{ id: "p1" }]);
+  it("expires AWAITING_PAYMENT past pay-by and notifies the host for REQUEST-mode bookings", async () => {
+    findMany.mockResolvedValue([
+      { id: "p1", bookingMode: "REQUEST", listing: { hostId: "h1", title: "วิลล่า A" } },
+      { id: "p2", bookingMode: "INSTANT", listing: { hostId: "h2", title: "วิลล่า B" } },
+    ]);
+
     const n = await sweepOverduePayments(NOW);
+
     expect(findMany).toHaveBeenCalledWith({
       where: { status: BookingStatus.AWAITING_PAYMENT, payBy: { lt: NOW } },
-      select: { id: true },
+      select: { id: true, bookingMode: true, listing: { select: { hostId: true, title: true } } },
     });
     expect(expireMock).toHaveBeenCalledWith("p1", NOW);
+    expect(expireMock).toHaveBeenCalledWith("p2", NOW);
+    expect(notifyFn).toHaveBeenCalledTimes(1); // only the REQUEST-mode host
+    expect(notifyFn).toHaveBeenCalledWith("h1", "PAYMENT_EXPIRED_HOST", { listingTitle: "วิลล่า A", bookingId: "p1" });
+    expect(n).toBe(2);
+  });
+
+  it("isolates a per-row failure (no notify for the failed row)", async () => {
+    findMany.mockResolvedValue([
+      { id: "bad", bookingMode: "REQUEST", listing: { hostId: "h1", title: "วิลล่า A" } },
+      { id: "ok", bookingMode: "REQUEST", listing: { hostId: "h2", title: "วิลล่า B" } },
+    ]);
+    expireMock.mockReset();
+    expireMock.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce({});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const n = await sweepOverduePayments(NOW);
+
+    expect(notifyFn).toHaveBeenCalledTimes(1);
+    expect(notifyFn).toHaveBeenCalledWith("h2", "PAYMENT_EXPIRED_HOST", expect.anything());
     expect(n).toBe(1);
+    spy.mockRestore();
   });
 });
 
