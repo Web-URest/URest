@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vite
 vi.mock("@/lib/db", () => ({
   prisma: {
     booking: { findUnique: vi.fn() },
-    payment: { create: vi.fn(), updateMany: vi.fn() },
+    payment: { create: vi.fn(), updateMany: vi.fn(), findFirst: vi.fn() },
+    refund: { findUnique: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -27,12 +28,15 @@ import { BookingError, confirmFromWebhook } from "@/lib/booking/transitions";
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notifications";
 
-import { applyChargeEvent, createChargeForBooking, PaymentError } from "./charge";
+import { applyChargeEvent, createChargeForBooking, PaymentError, refundBookingToGuest } from "./charge";
 import { createCardCharge, createPromptPayCharge, refundCharge, retrieveCharge } from "./opn";
 
 const findBooking = prisma.booking.findUnique as unknown as Mock;
 const paymentCreate = prisma.payment.create as unknown as Mock;
 const paymentUpdateMany = prisma.payment.updateMany as unknown as Mock;
+const paymentFindFirst = prisma.payment.findFirst as unknown as Mock;
+const refundFindUnique = prisma.refund.findUnique as unknown as Mock;
+const refundUpdate = prisma.refund.update as unknown as Mock;
 const ppCharge = createPromptPayCharge as unknown as Mock;
 const cardCharge = createCardCharge as unknown as Mock;
 const fetchCharge = retrieveCharge as unknown as Mock;
@@ -257,5 +261,50 @@ describe("applyChargeEvent", () => {
     expect(confirm).not.toHaveBeenCalled();
     expect(paymentUpdateMany).not.toHaveBeenCalled();
     expect(result).toEqual({ kind: "ignored" });
+  });
+});
+
+describe("refundBookingToGuest", () => {
+  beforeEach(() => {
+    refundFindUnique.mockResolvedValue({ refundSatang: 6_000_00, opnRefundId: null });
+    paymentFindFirst.mockResolvedValue({ opnChargeId: "chrg_paid" });
+    refundFn.mockResolvedValue({ object: "refund", id: "rfnd_1", amount: 6_000_00, status: "closed" });
+    refundUpdate.mockResolvedValue({});
+  });
+
+  it("refunds the refundable portion at Opn and records opnRefundId", async () => {
+    await refundBookingToGuest("bk1");
+
+    expect(paymentFindFirst).toHaveBeenCalledWith({ where: { bookingId: "bk1", status: PaymentStatus.SUCCESSFUL } });
+    expect(refundFn).toHaveBeenCalledWith("chrg_paid", 6_000_00);
+    expect(refundUpdate).toHaveBeenCalledWith({ where: { bookingId: "bk1" }, data: { opnRefundId: "rfnd_1" } });
+  });
+
+  it("is a no-op when the refund was already sent to Opn (opnRefundId set)", async () => {
+    refundFindUnique.mockResolvedValue({ refundSatang: 6_000_00, opnRefundId: "rfnd_existing" });
+    await refundBookingToGuest("bk1");
+    expect(refundFn).not.toHaveBeenCalled();
+  });
+
+  it("is a no-op when nothing is refundable (refundSatang 0 — e.g. Strict <3d)", async () => {
+    refundFindUnique.mockResolvedValue({ refundSatang: 0, opnRefundId: null });
+    await refundBookingToGuest("bk1");
+    expect(refundFn).not.toHaveBeenCalled();
+  });
+
+  it("is a no-op when there is no Refund row", async () => {
+    refundFindUnique.mockResolvedValue(null);
+    await refundBookingToGuest("bk1");
+    expect(refundFn).not.toHaveBeenCalled();
+  });
+
+  it("best-effort: swallows an Opn failure, leaves opnRefundId null, does NOT throw", async () => {
+    refundFn.mockRejectedValue(new Error("opn 502"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(refundBookingToGuest("bk1")).resolves.toBeUndefined();
+
+    expect(refundUpdate).not.toHaveBeenCalled(); // opnRefundId stays null → reconciliation
+    spy.mockRestore();
   });
 });
