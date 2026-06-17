@@ -755,6 +755,7 @@ model Refund {
   retainedHostSatang     Int
   retainedPlatformSatang Int
   reason                 String?
+  opnRefundId            String?  // set when the Opn refund lands; NULL = owed-but-not-moved (reconciliation, #23)
   createdAt              DateTime @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
