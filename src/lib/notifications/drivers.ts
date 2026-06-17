@@ -33,7 +33,10 @@ export const resendEmailDriver: EmailDriver = {
         Authorization: `Bearer ${env.RESEND_API_KEY ?? ""}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from: EMAIL_FROM, to, subject, html: body }),
+      // Send as plain `text`, never `html`: template bodies interpolate
+      // user/host-controlled values (names, listing titles), so rendering them
+      // as HTML would be an injection vector. Plain text is not HTML-rendered.
+      body: JSON.stringify({ from: EMAIL_FROM, to, subject, text: body }),
     });
     if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
   },

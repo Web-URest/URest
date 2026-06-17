@@ -41,13 +41,17 @@ describe("selectLineDriver", () => {
 });
 
 describe("resendEmailDriver", () => {
-  it("POSTs to Resend with bearer auth", async () => {
+  it("POSTs to Resend as plain text (never html) with bearer auth", async () => {
     const m = stubFetch(200);
-    await resendEmailDriver.send("g@x.com", "subj", "<p>hi</p>");
+    await resendEmailDriver.send("g@x.com", "subj", "body <with> markup");
     const [url, init] = m.mock.calls[0] as unknown as [string, Init];
     expect(url).toBe("https://api.resend.com/emails");
     expect(init.headers.Authorization).toMatch(/^Bearer /);
-    expect(init.body).toContain("g@x.com");
+    const sent = JSON.parse(init.body) as { to?: string; text?: string; html?: string };
+    expect(sent.to).toBe("g@x.com");
+    // Sent as `text`, not `html` — interpolated user/host values can't inject markup.
+    expect(sent.text).toBe("body <with> markup");
+    expect(sent.html).toBeUndefined();
   });
   it("throws on a non-2xx response", async () => {
     stubFetch(500);
