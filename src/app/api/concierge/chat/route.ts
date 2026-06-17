@@ -68,9 +68,22 @@ export async function POST(request: Request): Promise<Response> {
     return sseError("INVALID_REQUEST");
   }
 
-  // --- Session ---
-  const resolvedSessionId =
-    sessionId ?? (await getOrCreateSession(userId, scopedListingId));
+  // --- Session ownership (IDOR guard) ---
+  // Anonymous users cannot supply a sessionId — no way to prove ownership without
+  // a signed cookie. Logged-in users must own the session they reference.
+  let resolvedSessionId: string;
+  if (sessionId) {
+    const existing = await prisma.conciergeSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, userId: true },
+    });
+    if (!existing || existing.userId !== userId) {
+      return sseError("FORBIDDEN");
+    }
+    resolvedSessionId = existing.id;
+  } else {
+    resolvedSessionId = await getOrCreateSession(userId, scopedListingId);
+  }
 
   // --- Token ceiling check ---
   const sessionTokens = await getSessionTokenCount(resolvedSessionId);
