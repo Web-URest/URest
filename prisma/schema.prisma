@@ -655,6 +655,7 @@ model Booking {
   // deadline timers — rows swept by cron (rule 3), never in-process setTimeout.
   respondBy DateTime? // host accept deadline (REQUESTED + 12h)
   payBy     DateTime? // payment deadline (12h request / 1h instant)
+  payReminderSentAt DateTime? // once-only "payment 2h left" reminder marker (#21)
 
   // snapshot block (ADR-011 №3) — frozen at request time.
   priceLines       Json
