@@ -8,7 +8,13 @@ import { BookingStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 
-import { expire } from "./transitions";
+import { checkIn, complete, expire } from "./transitions";
+
+const HOUR_MS = 60 * 60 * 1000;
+/** Auto check-in at 15:00 ICT = 08:00 UTC → due when checkIn ≤ now − 8h. */
+export const CHECKIN_OFFSET_MS = 8 * HOUR_MS;
+/** Auto checkout at 11:00 ICT = 04:00 UTC → due when checkOut ≤ now − 4h. */
+export const CHECKOUT_OFFSET_MS = 4 * HOUR_MS;
 
 /** Run `fn` for each id, isolating per-row failures; returns the count that succeeded. */
 async function forEachRow(
@@ -48,5 +54,31 @@ export async function sweepOverduePayments(now: Date): Promise<number> {
   return forEachRow(
     rows.map((r) => r.id),
     (id) => expire(id, now),
+  );
+}
+
+/** CONFIRMED whose check-in time (15:00 ICT) has arrived → CHECKED_IN. */
+export async function sweepDueCheckIns(now: Date): Promise<number> {
+  const threshold = new Date(now.getTime() - CHECKIN_OFFSET_MS);
+  const rows = await prisma.booking.findMany({
+    where: { status: BookingStatus.CONFIRMED, checkIn: { lte: threshold } },
+    select: { id: true },
+  });
+  return forEachRow(
+    rows.map((r) => r.id),
+    (id) => checkIn(id),
+  );
+}
+
+/** CHECKED_IN whose checkout time (11:00 ICT) has arrived → COMPLETED (releases escrow). */
+export async function sweepDueCheckouts(now: Date): Promise<number> {
+  const threshold = new Date(now.getTime() - CHECKOUT_OFFSET_MS);
+  const rows = await prisma.booking.findMany({
+    where: { status: BookingStatus.CHECKED_IN, checkOut: { lte: threshold } },
+    select: { id: true },
+  });
+  return forEachRow(
+    rows.map((r) => r.id),
+    (id) => complete(id),
   );
 }

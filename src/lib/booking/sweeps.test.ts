@@ -5,17 +5,28 @@ vi.mock("@/lib/db", () => ({ prisma: { booking: { findMany: vi.fn() } } }));
 vi.mock("./transitions", () => ({ expire: vi.fn(), checkIn: vi.fn(), complete: vi.fn() }));
 
 import { prisma } from "@/lib/db";
-import { expire } from "./transitions";
+import { checkIn, complete, expire } from "./transitions";
 
-import { sweepOverduePayments, sweepOverdueRequests } from "./sweeps";
+import {
+  CHECKIN_OFFSET_MS,
+  CHECKOUT_OFFSET_MS,
+  sweepDueCheckIns,
+  sweepDueCheckouts,
+  sweepOverduePayments,
+  sweepOverdueRequests,
+} from "./sweeps";
 
 const findMany = prisma.booking.findMany as unknown as Mock;
 const expireMock = expire as unknown as Mock;
+const checkInMock = checkIn as unknown as Mock;
+const completeMock = complete as unknown as Mock;
 
 const NOW = new Date("2026-06-20T03:00:00.000Z");
 
 beforeEach(() => {
   expireMock.mockResolvedValue({});
+  checkInMock.mockResolvedValue({});
+  completeMock.mockResolvedValue({});
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -66,4 +77,45 @@ describe("sweepOverduePayments", () => {
     expect(expireMock).toHaveBeenCalledWith("p1", NOW);
     expect(n).toBe(1);
   });
+});
+
+describe("sweepDueCheckIns", () => {
+  it("checks in CONFIRMED bookings once 15:00 ICT (now − 8h) has passed", async () => {
+    findMany.mockResolvedValue([{ id: "c1" }]);
+
+    const n = await sweepDueCheckIns(NOW);
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: {
+        status: BookingStatus.CONFIRMED,
+        checkIn: { lte: new Date(NOW.getTime() - CHECKIN_OFFSET_MS) },
+      },
+      select: { id: true },
+    });
+    expect(checkInMock).toHaveBeenCalledWith("c1");
+    expect(n).toBe(1);
+  });
+});
+
+describe("sweepDueCheckouts", () => {
+  it("completes CHECKED_IN bookings once 11:00 ICT (now − 4h) has passed", async () => {
+    findMany.mockResolvedValue([{ id: "d1" }]);
+
+    const n = await sweepDueCheckouts(NOW);
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: {
+        status: BookingStatus.CHECKED_IN,
+        checkOut: { lte: new Date(NOW.getTime() - CHECKOUT_OFFSET_MS) },
+      },
+      select: { id: true },
+    });
+    expect(completeMock).toHaveBeenCalledWith("d1");
+    expect(n).toBe(1);
+  });
+});
+
+it("CHECKIN/CHECKOUT offsets are 8h/4h (ICT = UTC+7)", () => {
+  expect(CHECKIN_OFFSET_MS).toBe(8 * 60 * 60 * 1000);
+  expect(CHECKOUT_OFFSET_MS).toBe(4 * 60 * 60 * 1000);
 });
