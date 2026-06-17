@@ -339,6 +339,9 @@ model User {
   guestRatingsReceived GuestRating[] @relation("GuestRatingsReceived")
   reportsSubmitted     Report[]      @relation("ReportsSubmitted")
   reportsReceived      Report[]      @relation("ReportsReceived")
+
+  // Phase 4 (AI concierge)
+  conciergesessions ConciergeSession[]
 }
 
 // Auth.js (Prisma adapter) — database sessions: revocable, so suspend/ban
@@ -921,4 +924,78 @@ model Report {
   triageBy     AdminUser? @relation(fields: [triageByAdminId], references: [id])
 
   @@index([status, createdAt])
+}
+
+// ───────────────────────── Concierge domain (Phase 4 — AI_CONCIERGE_SPEC §5) ──
+
+/// AI chat session. userId nullable for pre-login browsing; scopedListingId
+/// set when opened from a listing page ("ถามน้องเรสต์เกี่ยวกับที่พักนี้").
+model ConciergeSession {
+  id              String   @id @default(cuid())
+  userId          String?
+  scopedListingId String?
+  createdAt       DateTime @default(now())
+
+  user                User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages            ConciergeMessage[]
+  usage               ConciergeUsage[]
+  unansweredQuestions UnansweredQuestion[]
+
+  @@index([userId, createdAt])
+}
+
+/// One row per AI turn. 12-month purge by nightly cron (ADR-004 sweep pattern).
+model ConciergeMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  /// Anthropic SDK roles: "user" | "assistant" | "tool"
+  role      String
+  content   String
+  /// Raw tool call / result structure from the SDK (nullable)
+  toolCalls Json?
+  createdAt DateTime @default(now())
+
+  session ConciergeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([createdAt]) // 12-month purge sweep
+}
+
+/// Token + cost accounting per session. Feeds the monthly kill switch.
+/// Money rule: costSatang is Int satang (1 THB = 100 satang).
+model ConciergeUsage {
+  id                   String   @id @default(cuid())
+  sessionId            String
+  inputTokens          Int      @default(0)
+  outputTokens         Int      @default(0)
+  /// Anthropic usage.cache_read_input_tokens — logged for caching verification (§8)
+  cacheReadInputTokens Int      @default(0)
+  costSatang           Int      @default(0)
+  createdAt            DateTime @default(now())
+
+  session ConciergeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([createdAt]) // monthly budget kill-switch query
+}
+
+enum UnansweredQuestionStatus {
+  OPEN
+  CONVERTED
+  DISMISSED
+}
+
+/// Written whenever the refusal path fires (§5); feeds the §5.7 admin growth loop.
+model UnansweredQuestion {
+  id           String                   @id @default(cuid())
+  sessionId    String
+  listingId    String?
+  questionText String
+  status       UnansweredQuestionStatus @default(OPEN)
+  createdAt    DateTime                 @default(now())
+
+  session ConciergeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([listingId, status])
 }

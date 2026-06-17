@@ -317,6 +317,25 @@
     "nights": "{count} nights",
     "perNight": "/ night"
   },
+  "Concierge": {
+    "pageTitle": "น้องเรสต์ (AI Concierge)",
+    "headerSubtitle": "AI villa finder",
+    "inputPlaceholder": "Ask น้องเรสต์… e.g. villa for 10 near Jomtien Beach with karaoke",
+    "sendButton": "Send",
+    "typingIndicator": "Thinking…",
+    "greeting": "Hi! I'm น้องเรสต์, your AI villa finder. Tell me what you're looking for 🏖️",
+    "examplePrompt1": "Villa for 10 near Jomtien, with karaoke",
+    "examplePrompt2": "Pool villa under ฿5,000/night with a slide",
+    "examplePrompt3": "Family-friendly stay, pet allowed",
+    "restModeTitle": "น้องเรสต์ is resting 🌙",
+    "restModeSub": "Search villas the usual way",
+    "restModeSearch": "Search villas",
+    "errorGeneric": "น้องเรสต์ hit a snag — please try again.",
+    "errorDailyLimit": "You've reached today's {limit}-message limit. Come back tomorrow!",
+    "errorTokenCeiling": "This conversation got very long. Start a fresh chat below.",
+    "newChat": "Start new chat",
+    "loginPrompt": "Sign in to save your chat history and unlock all features"
+  },
   "SavedVillas": {
     "pageTitle": "Saved villas",
     "save": "Save",
