@@ -76,12 +76,20 @@ async function seedAndCharge(): Promise<void> {
     },
   });
 
-  // ฿100 test charge. Spread check-in by the minute so repeat runs don't collide
-  // with the double-booking exclusion constraint on the same listing.
+  // ฿100 test charge. Book the next free 2-night window AFTER the listing's
+  // latest booking, so repeat runs never collide with the double-booking
+  // exclusion constraint (a fixed/time-based offset can overlap a prior run).
   const totalSatang = 100_00;
-  const offsetDays = Math.floor(Date.now() / 60_000) % 1000;
-  const checkIn = new Date(Date.UTC(2027, 0, 1) + offsetDays * 86_400_000);
-  const checkOut = new Date(checkIn.getTime() + 2 * 86_400_000);
+  const lastBooking = await prisma.booking.findFirst({
+    where: { listingId: listing.id },
+    orderBy: { checkOut: "desc" },
+    select: { checkOut: true },
+  });
+  const startMs = lastBooking
+    ? lastBooking.checkOut.getTime() + 2 * 86_400_000
+    : Date.UTC(2027, 0, 1);
+  const checkIn = new Date(startMs);
+  const checkOut = new Date(startMs + 2 * 86_400_000);
 
   const booking = await prisma.booking.create({
     data: {
