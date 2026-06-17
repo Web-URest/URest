@@ -74,6 +74,39 @@ export async function sweepOverduePayments(now: Date): Promise<number> {
   return done;
 }
 
+const PAY_REMINDER_LEAD_MS = 2 * HOUR_MS;
+
+/**
+ * AWAITING_PAYMENT with payBy within the next 2h and not yet reminded → nudge the
+ * guest once (§6 "payment 2h left"). The CAS update on payReminderSentAt makes the
+ * send fire exactly once even if two ticks overlap (count 0 = already claimed).
+ */
+export async function sweepPaymentReminders(now: Date): Promise<number> {
+  const rows = await prisma.booking.findMany({
+    where: {
+      status: BookingStatus.AWAITING_PAYMENT,
+      payReminderSentAt: null,
+      payBy: { gt: now, lte: new Date(now.getTime() + PAY_REMINDER_LEAD_MS) },
+    },
+    select: { id: true, userId: true, listing: { select: { title: true } } },
+  });
+  let done = 0;
+  for (const row of rows) {
+    try {
+      const claim = await prisma.booking.updateMany({
+        where: { id: row.id, payReminderSentAt: null },
+        data: { payReminderSentAt: now },
+      });
+      if (claim.count === 0) continue; // another tick already sent it
+      await notify(row.userId, "PAYMENT_REMINDER_GUEST", { listingTitle: row.listing.title, bookingId: row.id });
+      done++;
+    } catch (err) {
+      console.error(`[cron] pay reminder ${row.id} failed:`, err instanceof Error ? err.message : err);
+    }
+  }
+  return done;
+}
+
 /** CONFIRMED whose check-in time (15:00 ICT) has arrived → CHECKED_IN. */
 export async function sweepDueCheckIns(now: Date): Promise<number> {
   const threshold = new Date(now.getTime() - CHECKIN_OFFSET_MS);

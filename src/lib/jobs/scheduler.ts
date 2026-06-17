@@ -10,6 +10,7 @@ import {
   sweepDueCheckouts,
   sweepOverduePayments,
   sweepOverdueRequests,
+  sweepPaymentReminders,
 } from "@/lib/booking/sweeps";
 import { sweepFailedNotifications } from "@/lib/notifications/retry";
 import { purgeDeadOtps } from "@/lib/otp/otp";
@@ -21,6 +22,7 @@ export async function runSweeps(now: Date): Promise<void> {
   const jobs: Array<readonly [string, () => Promise<number>]> = [
     ["overdue-requests", () => sweepOverdueRequests(now)],
     ["overdue-payments", () => sweepOverduePayments(now)],
+    ["payment-reminders", () => sweepPaymentReminders(now)],
     ["due-check-ins", () => sweepDueCheckIns(now)],
     ["due-checkouts", () => sweepDueCheckouts(now)],
     ["purge-otps", () => purgeDeadOtps()],
