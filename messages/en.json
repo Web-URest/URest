@@ -366,6 +366,7 @@
     "payCardName": "Name on card",
     "payCardSubmit": "Pay by card",
     "payProcessing": "Processing…",
+    "payWaiting": "Payment submitted — waiting for confirmation…",
     "payCta": "Pay now",
     "errorPaymentFailed": "Payment failed — please try again or switch method",
     "errorWrongState": "This booking is no longer in the payment step",

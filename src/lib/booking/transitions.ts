@@ -189,7 +189,10 @@ export function confirmFromWebhook(
     if (!booking) throw new BookingError("NOT_FOUND");
 
     const fresh = await claimWebhookEvent(tx, input.opnEventId, input.payload, now);
-    if (!fresh) return { booking, freshlyConfirmed: false }; // replay — already processed, no-op
+    // Replay: the event was already claimed on an earlier delivery, so no state changes
+    // here. Return the original booking (the caller only reads freshlyConfirmed to gate
+    // notifications) + freshlyConfirmed:false so a redelivered webhook never re-notifies.
+    if (!fresh) return { booking, freshlyConfirmed: false };
 
     if (booking.status !== BookingStatus.AWAITING_PAYMENT) throw new BookingError("WRONG_STATE");
 

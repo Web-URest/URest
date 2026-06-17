@@ -31,6 +31,7 @@ export function CardTab({ bookingId, publicKey }: { bookingId: string; publicKey
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [waiting, setWaiting] = useState(false); // charge submitted, awaiting webhook confirm (poller redirects)
 
   function tokenize(): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -57,11 +58,13 @@ export function CardTab({ bookingId, publicKey }: { bookingId: string; publicKey
     setError(null);
     try {
       const token = await tokenize();
+      // Same-origin pay-page path — origin + pathname are browser-derived, never
+      // attacker-controlled, so this is a safe return_uri (not an open-redirect vector).
       const returnUri = `${window.location.origin}${window.location.pathname}`;
       const res = await payWithCard(bookingId, token, returnUri);
       if (!res.ok) setError(t(res.error));
       else if (res.authorizeUri) window.location.href = res.authorizeUri; // 3DS — poller resumes on return
-      // non-3DS success: the poller advances on the webhook confirm
+      else setWaiting(true); // non-3DS success: keep a clear "waiting" state until the poller advances
     } catch {
       setError(t("errorPaymentFailed"));
     } finally {
@@ -101,8 +104,9 @@ export function CardTab({ bookingId, publicKey }: { bookingId: string; publicKey
         onChange={(e) => setName(e.target.value)}
       />
       {error && <p className="text-sm text-coral-600">{error}</p>}
-      <Button variant="primary" disabled={busy} onClick={() => void submit()}>
-        {busy ? t("payProcessing") : t("payCardSubmit")}
+      {waiting && <p className="text-sm text-ink-900/70">{t("payWaiting")}</p>}
+      <Button variant="primary" disabled={busy || waiting} onClick={() => void submit()}>
+        {busy || waiting ? t("payProcessing") : t("payCardSubmit")}
       </Button>
     </div>
   );
