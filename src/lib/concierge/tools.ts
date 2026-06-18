@@ -630,7 +630,6 @@ async function createBookingDraftHandler(
       nights: d.nights,
       guests: d.guests,
       total_thb: Math.round(d.totalSatang / 100),
-      note: "การ์ดยืนยันแสดงให้ผู้ใช้แล้ว เมื่อผู้ใช้กดยืนยัน ระบบจะแจ้งให้เรียก submit_booking_request",
     }),
     card: {
       kind: "booking_draft",
