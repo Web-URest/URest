@@ -36,6 +36,9 @@ jobs:
       - name: Enforce no bodyRaw reads outside lib/messaging
         run: pnpm gate:bodyraw
 
+      - name: Enforce lib-only Review / GuestRating writes
+        run: pnpm gate:reviews
+
       - name: Test
         run: pnpm test
 
