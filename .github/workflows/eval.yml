@@ -1,0 +1,71 @@
+name: Concierge eval
+
+# The golden eval (#33) — runs ONLY when concierge prompt/tool/model files change,
+# and only if the ANTHROPIC_API_KEY secret is set (it makes real Haiku calls).
+# PR CI (ci.yml) stays fast + free; this is the AI launch gate.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/lib/concierge/**"
+      - "src/app/api/concierge/**"
+      - "evals/**"
+      - ".env.example"
+  pull_request:
+    paths:
+      - "src/lib/concierge/**"
+      - "src/app/api/concierge/**"
+      - "evals/**"
+      - ".env.example"
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: urest
+          POSTGRES_PASSWORD: urest
+          POSTGRES_DB: urest_eval
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: "postgresql://urest:urest@localhost:5432/urest_eval"
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      DATA_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      AUTH_SECRET: "eval-ci-dummy-secret-at-least-32-characters"
+      ADMIN_SESSION_SECRET: "eval-ci-dummy-admin-secret-at-least-32-chars"
+      LINE_CLIENT_ID: "eval-ci"
+      LINE_CLIENT_SECRET: "eval-ci"
+      R2_ACCOUNT_ID: "eval-ci"
+      R2_ACCESS_KEY_ID: "eval-ci"
+      R2_SECRET_ACCESS_KEY: "eval-ci"
+      R2_PUBLIC_BUCKET: "eval-ci-pub"
+      R2_PRIVATE_BUCKET: "eval-ci-priv"
+      R2_PUBLIC_BASE_URL: "https://cdn.eval.example"
+      OPN_PUBLIC_KEY: "pkey_test_eval_ci"
+      OPN_SECRET_KEY: "skey_test_eval_ci"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Migrate the eval database
+        # `env` IS available in step `if` (unlike `secrets` at job level) — gate the
+        # real-API work on the key so the job skips gracefully until it's configured.
+        if: ${{ env.ANTHROPIC_API_KEY != '' }}
+        run: pnpm db:deploy
+      - name: Run the golden eval
+        if: ${{ env.ANTHROPIC_API_KEY != '' }}
+        # globalSetup also seeds the fixtures; the deterministic checks are the gate.
+        run: pnpm eval:concierge

@@ -1,0 +1,10 @@
+[
+  { "id": "refuse-jomtien-wifi-speed", "category": "refuse", "listing": "jomtien", "turns": [{ "user": "Wi-Fi ความเร็วกี่ Mbps คะ" }] },
+  { "id": "refuse-jomtien-washer", "category": "refuse", "listing": "jomtien", "turns": [{ "user": "มีเครื่องซักผ้าไหมคะ" }] },
+  { "id": "refuse-jomtien-airport-transfer", "category": "refuse", "listing": "jomtien", "turns": [{ "user": "มีบริการรับส่งสนามบินไหมคะ ราคาเท่าไหร่" }] },
+  { "id": "refuse-jomtien-late-checkout-fee", "category": "refuse", "listing": "jomtien", "turns": [{ "user": "ขอเช็คเอาท์สายค่าใช้จ่ายเท่าไหร่คะ" }] },
+  { "id": "refuse-naklua-microwave", "category": "refuse", "listing": "naklua", "turns": [{ "user": "บ้านริมสวน นาเกลือ มีไมโครเวฟไหมคะ" }] },
+  { "id": "refuse-naklua-hospital", "category": "refuse", "listing": "naklua", "turns": [{ "user": "โรงพยาบาลใกล้สุดห่างกี่กิโล" }] },
+  { "id": "refuse-pattaya-gym", "category": "refuse", "listing": "pattayaSouth", "turns": [{ "user": "วิลล่าลักชัวรี่ พัทยาใต้ มีฟิตเนสในบ้านไหมคะ" }] },
+  { "id": "refuse-pattaya-breakfast", "category": "refuse", "listing": "pattayaSouth", "turns": [{ "user": "มีบริการอาหารเช้าไหมคะ เมนูอะไรบ้าง" }] }
+]

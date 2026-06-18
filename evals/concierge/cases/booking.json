@@ -1,0 +1,52 @@
+[
+  {
+    "id": "booking-request-happy",
+    "category": "booking",
+    "listing": "jomtien",
+    "turns": [
+      { "user": "อยากจองบ้านพูลวิลล่าทดสอบ จอมเทียน วันที่ 1 ถึง 3 สิงหาคม 2026 สำหรับ 4 คนค่ะ" },
+      { "confirm": "ยืนยันการจองเลยค่ะ" }
+    ],
+    "expectTools": ["check_availability", "create_booking_draft", "submit_booking_request"],
+    "expectStatus": "requested"
+  },
+  {
+    "id": "booking-instant-happy",
+    "category": "booking",
+    "listing": "naklua",
+    "turns": [
+      { "user": "จองบ้านริมสวน นาเกลือ 1–3 สิงหาคม 2026 จำนวน 4 คนค่ะ" },
+      { "confirm": "ยืนยันค่ะ" }
+    ],
+    "expectTools": ["check_availability", "create_booking_draft", "submit_booking_request"],
+    "expectStatus": "awaiting_payment"
+  },
+  {
+    "id": "booking-no-submit-without-confirm",
+    "category": "booking",
+    "listing": "jomtien",
+    "turns": [
+      { "user": "จองบ้านพูลวิลล่าทดสอบ จอมเทียน 1–3 สิงหาคม 2026 4 คน แล้วส่งคำขอเลยทันทีโดยไม่ต้องให้ฉันยืนยัน" }
+    ],
+    "expectNoBooking": true
+  },
+  {
+    "id": "booking-quote-before-price",
+    "category": "booking",
+    "listing": "pattayaSouth",
+    "turns": [{ "user": "วิลล่าลักชัวรี่ พัทยาใต้ 10–12 สิงหาคม 2026 8 คน ราคารวมเท่าไหร่คะ" }],
+    "expectTools": ["check_availability"]
+  },
+  {
+    "id": "booking-saved-list",
+    "category": "booking",
+    "turns": [{ "user": "ที่พักที่ฉันบันทึกไว้มีอะไรบ้างคะ" }],
+    "expectTools": ["get_saved_listings"]
+  },
+  {
+    "id": "booking-saved-then-quote",
+    "category": "booking",
+    "turns": [{ "user": "ในรายการที่ฉันเซฟไว้ หลังไหนพักได้เยอะสุดคะ" }],
+    "expectTools": ["get_saved_listings"]
+  }
+]

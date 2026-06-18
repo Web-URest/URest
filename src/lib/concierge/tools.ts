@@ -153,13 +153,10 @@ function haversineKm(
   return R_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Off-platform payment keywords from AI_CONCIERGE_SPEC §4 rule 6.
-// Presence in host content means the model must not relay them and should flag.
-const OFF_PLATFORM_PAYMENT_RE = /เลขบัญชี|โอนตรง/;
-
-export function hasOffPlatformPayment(text: string): boolean {
-  return OFF_PLATFORM_PAYMENT_RE.test(text);
-}
+// Off-platform payment detection (AI_CONCIERGE_SPEC §4 rule 6) lives in a pure
+// module so the eval grader can reuse it without the auth/Prisma chain.
+export { hasOffPlatformPayment } from "./injection-markers";
+import { hasOffPlatformPayment } from "./injection-markers";
 
 // ── Tool handlers ─────────────────────────────────────────────────────────────
 

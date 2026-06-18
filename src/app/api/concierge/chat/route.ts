@@ -9,8 +9,7 @@ import {
   logUnansweredQuestion,
   saveMessage,
 } from "@/lib/concierge";
-import { CONCIERGE_TOOLS, handleToolCall, type ToolInput } from "@/lib/concierge/tools";
-import { SYSTEM_PROMPT } from "@/lib/concierge/system-prompt";
+import { runConciergeTurn } from "@/lib/concierge/agent";
 import {
   isDailyLimitReached,
   isKillSwitchActive,
@@ -138,134 +137,46 @@ export async function POST(request: Request): Promise<Response> {
       // Emit sessionId so the client can track it
       send({ type: "session_id", sessionId: resolvedSessionId });
 
-      let assistantText = "";
-      let inputTokens = 0;
-      let outputTokens = 0;
-      let cacheReadInputTokens = 0;
-      // Track the listing_id touched in this turn for UnansweredQuestion logging
-      let lastToolListingId: string | undefined;
-
       try {
-        // Tool-use loop (max 5 iterations to prevent runaway)
-        for (let iteration = 0; iteration < 5; iteration++) {
-          const response = await client.messages.create({
-            model: env.CONCIERGE_MODEL,
-            max_tokens: 1024,
-            system: [
-              {
-                type: "text",
-                text: SYSTEM_PROMPT,
-                // Cache the frozen system prompt (§8)
-                cache_control: { type: "ephemeral" },
-              },
-            ],
-            tools: CONCIERGE_TOOLS,
+        // The model + tool loop (extracted to lib/concierge/agent so the eval
+        // harness drives the same path, #33). SSE events flow through `send`;
+        // persistence + the cost gates are this route's job, below.
+        const turn = await runConciergeTurn(
+          {
             messages: anthropicMessages,
-            stream: false, // tool loop; we stream text separately below
-          });
+            userId,
+            sessionId: resolvedSessionId,
+            client,
+          },
+          (e) => send(e),
+        );
 
-          inputTokens += response.usage.input_tokens;
-          outputTokens += response.usage.output_tokens;
-          cacheReadInputTokens +=
-            (
-              response.usage as Anthropic.Usage & {
-                cache_read_input_tokens?: number;
-              }
-            ).cache_read_input_tokens ?? 0;
-
-          if (response.stop_reason === "end_turn") {
-            // Collect text blocks
-            for (const block of response.content) {
-              if (block.type === "text") {
-                assistantText += block.text;
-                send({ type: "text_delta", delta: block.text });
-              }
-            }
-            break;
-          }
-
-          if (response.stop_reason === "tool_use") {
-            // Process all tool calls
-            const toolUseBlocks = response.content.filter(
-              (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
-            );
-
-            // Add assistant turn with tool calls to history
-            anthropicMessages.push({
-              role: "assistant",
-              content: response.content,
-            });
-
-            // Execute tools and collect results
-            const toolResults: Anthropic.ToolResultBlockParam[] = [];
-            for (const toolUse of toolUseBlocks) {
-              send({ type: "tool_call", name: toolUse.name });
-              const toolInput = toolUse.input as ToolInput;
-              // Track which listing the model is querying (for UnansweredQuestion)
-              if (
-                typeof toolInput.listing_id === "string" &&
-                toolInput.listing_id
-              ) {
-                lastToolListingId = toolInput.listing_id;
-              }
-              const result = await handleToolCall(
-                toolUse.name,
-                toolInput,
-                userId,
-                resolvedSessionId,
-              );
-              // A UI card (booking draft / payment QR) is emitted to the browser
-              // + persisted, but ONLY result.content goes back to the model — the
-              // QR url / token never enter the model transcript (AC#4).
-              if (result.card) {
-                send({ type: "card", card: result.card });
-                await saveMessage(resolvedSessionId, "card", JSON.stringify(result.card));
-              }
-              toolResults.push({
-                type: "tool_result",
-                tool_use_id: toolUse.id,
-                content: result.content,
-                is_error: result.is_error,
-              });
-            }
-
-            // Add tool results turn
-            anthropicMessages.push({ role: "user", content: toolResults });
-            continue;
-          }
-
-          // Unexpected stop reason
-          break;
+        // Persist the assistant reply + any card side-effects (cards are persisted
+        // for the transcript but were never put in the model history — AC#4).
+        if (turn.assistantText) {
+          await saveMessage(resolvedSessionId, "assistant", turn.assistantText);
         }
-
-        // Persist assistant message
-        if (assistantText) {
-          await saveMessage(resolvedSessionId, "assistant", assistantText);
+        for (const call of turn.toolCalls) {
+          if (call.card) {
+            await saveMessage(resolvedSessionId, "card", JSON.stringify(call.card));
+          }
         }
 
         // Refusal detection — if the model fired the closed-world refusal script,
         // write an UnansweredQuestion row so the admin growth loop (§5.7) can surface
-        // it to the host as a FAQ suggestion. The listingId comes from the tool call
-        // that prompted the refusal, or from the session's scoped listing.
-        if (assistantText.includes("ไม่มีข้อมูลส่วนนี้ในประกาศ")) {
-          const listingIdForLog =
-            lastToolListingId ??
-            (scopedListingId ?? undefined);
-          await logUnansweredQuestion(
-            resolvedSessionId,
-            userMessage,
-            listingIdForLog,
-          ).catch(() => {
+        // it to the host as a FAQ suggestion.
+        if (turn.assistantText.includes("ไม่มีข้อมูลส่วนนี้ในประกาศ")) {
+          const listingIdForLog = turn.lastToolListingId ?? (scopedListingId ?? undefined);
+          await logUnansweredQuestion(resolvedSessionId, userMessage, listingIdForLog).catch(() => {
             // Non-fatal — don't interrupt the SSE response if this fails
           });
         }
 
-        // Log usage
         await logUsage(
           resolvedSessionId,
-          inputTokens,
-          outputTokens,
-          cacheReadInputTokens,
+          turn.usage.inputTokens,
+          turn.usage.outputTokens,
+          turn.usage.cacheReadInputTokens,
         );
 
         send({ type: "done" });
