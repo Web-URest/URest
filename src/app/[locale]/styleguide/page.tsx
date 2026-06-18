@@ -23,6 +23,7 @@ import { ListingSwitcher } from "@/components/ui/ListingSwitcher";
 import { CalendarGrid } from "@/components/ui/CalendarGrid";
 import { SeasonEditor } from "@/components/ui/SeasonEditor";
 import { BookingModeToggle } from "@/components/ui/BookingModeToggle";
+import { StarRating } from "@/components/ui/StarRating";
 import type { Quote } from "@/lib/pricing/quote";
 
 /**
@@ -373,6 +374,15 @@ export default function StyleguidePage() {
             ack={false}
             onAckChange={() => {}}
           />
+        </div>
+      </Section>
+
+      <Section title="StarRating — review display (fractional fill + count)">
+        <div className="flex flex-col gap-2">
+          <StarRating value={4.8} count={23} />
+          <StarRating value={3.5} count={4} />
+          <StarRating value={5} showValue={false} />
+          <StarRating value={0} count={0} />
         </div>
       </Section>
     </main>
