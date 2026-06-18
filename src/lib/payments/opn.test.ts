@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createCardCharge, createPromptPayCharge, OpnError, refundCharge, retrieveCharge } from "./opn";
+import { createCardCharge, createPromptPayCharge, getBalance, OpnError, refundCharge, retrieveCharge } from "./opn";
 
 /** A representative Opn charge object (PromptPay, still pending). */
 const CHARGE = {
@@ -116,6 +116,21 @@ describe("refundCharge", () => {
     expect(init.body).toContain("amount=50000");
     expect(refund.id).toBe("rfnd_1");
     expect(refund.status).toBe("closed");
+  });
+});
+
+describe("getBalance", () => {
+  it("GETs /balance with auth and returns total + available (satang)", async () => {
+    const fetchMock = stubFetch(200, { object: "balance", total: 5_000_00, available: 4_200_00, currency: "thb" });
+
+    const bal = await getBalance();
+
+    const [url, init] = lastCall(fetchMock);
+    expect(url).toBe("https://api.omise.co/balance");
+    expect(init.method).toBe("GET");
+    expect(init.headers.Authorization).toMatch(/^Basic /);
+    expect(bal.total).toBe(5_000_00);
+    expect(bal.available).toBe(4_200_00);
   });
 });
 
