@@ -16,9 +16,19 @@ vi.mock("@/lib/listing/queries", () => ({
   searchListings: vi.fn(),
 }));
 
+vi.mock("./booking", () => ({ createDraft: vi.fn(), submitDraft: vi.fn() }));
+vi.mock("@/lib/auth/guards", () => ({ requirePhoneVerified: vi.fn() }));
+
+import { requirePhoneVerified } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { searchListings } from "@/lib/listing/queries";
+
+import { createDraft, submitDraft } from "./booking";
 import { handleToolCall, hasOffPlatformPayment } from "./tools";
+
+const createDraftMock = createDraft as unknown as Mock;
+const submitDraftMock = submitDraft as unknown as Mock;
+const requirePhoneVerifiedMock = requirePhoneVerified as unknown as Mock;
 
 const listingFindUnique = prisma.listing.findUnique as unknown as Mock;
 const calendarFindFirst = prisma.calendarBlock.findFirst as unknown as Mock;
@@ -344,24 +354,92 @@ describe("search_listings", () => {
   });
 });
 
-// ── create_booking_draft / submit_booking_request stubs ──────────────────────
+// ── create_booking_draft / submit_booking_request (issue #32) ─────────────────
 
-describe("booking tool stubs (issue #32)", () => {
-  it("create_booking_draft returns is_error", async () => {
+describe("create_booking_draft", () => {
+  it("requires a logged-in user (no draft minted)", async () => {
+    const result = await handleToolCall(
+      "create_booking_draft",
+      { listing_id: "l1", check_in: "2026-08-01", check_out: "2026-08-03", guests: 4 },
+      null,
+      null,
+    );
+    expect(result.is_error).toBe(true);
+    expect(createDraftMock).not.toHaveBeenCalled();
+  });
+
+  it("returns a booking_draft card; the model-facing content carries no token", async () => {
+    createDraftMock.mockResolvedValue({
+      ok: true,
+      draft: {
+        draftId: "d1",
+        listingId: "l1",
+        title: "วิลล่า A",
+        checkIn: "2026-08-01",
+        checkOut: "2026-08-03",
+        nights: 2,
+        guests: 4,
+        totalSatang: 2_000_000,
+        priceLines: [{ date: "2026-08-01", rule: "BASE", priceSatang: 1_000_000 }],
+      },
+    });
+
     const result = await handleToolCall(
       "create_booking_draft",
       { listing_id: "l1", check_in: "2026-08-01", check_out: "2026-08-03", guests: 4 },
       "user-1",
+      "sess-1",
     );
+
+    expect(result.is_error).toBe(false);
+    expect(result.card?.kind).toBe("booking_draft");
+    expect(result.card).toMatchObject({ draftId: "d1", totalThb: 20000 });
+    // model-facing content has the THB summary but no token/secret
+    expect(result.content).toContain("draft_id");
+    expect(result.content.toLowerCase()).not.toContain("token");
+  });
+
+  it("relays a Thai error when the dates are unavailable", async () => {
+    createDraftMock.mockResolvedValue({ ok: false, reason: "UNAVAILABLE" });
+    const result = await handleToolCall(
+      "create_booking_draft",
+      { listing_id: "l1", check_in: "2026-08-01", check_out: "2026-08-03", guests: 4 },
+      "user-1",
+      "sess-1",
+    );
+    expect(result.is_error).toBe(true);
+    expect(result.card).toBeUndefined();
+  });
+});
+
+describe("submit_booking_request", () => {
+  it("INSTANT mode → payment_qr card; the QR url is never in model-facing content", async () => {
+    requirePhoneVerifiedMock.mockResolvedValue({ id: "user-1" });
+    submitDraftMock.mockResolvedValue({ ok: true, bookingId: "bk2", code: null, mode: "INSTANT", qrUrl: "https://cdn/qr.png" });
+    const result = await handleToolCall("submit_booking_request", { draft_id: "d1" }, "user-1", "sess-1");
+    expect(result.is_error).toBe(false);
+    expect(result.card).toMatchObject({ kind: "payment_qr", qrUrl: "https://cdn/qr.png", payUrl: "/trips/bk2/pay" });
+    expect(result.content).not.toContain("https://cdn/qr.png");
+  });
+
+  it("REQUEST mode → request_sent card", async () => {
+    requirePhoneVerifiedMock.mockResolvedValue({ id: "user-1" });
+    submitDraftMock.mockResolvedValue({ ok: true, bookingId: "bk1", code: "UR-2608-0001", mode: "REQUEST" });
+    const result = await handleToolCall("submit_booking_request", { draft_id: "d1" }, "user-1", "sess-1");
+    expect(result.card).toMatchObject({ kind: "request_sent", tripUrl: "/trips/bk1" });
+  });
+
+  it("relays a Thai error when the gate fails", async () => {
+    requirePhoneVerifiedMock.mockResolvedValue({ id: "user-1" });
+    submitDraftMock.mockResolvedValue({ ok: false, reason: "NEEDS_CONFIRM" });
+    const result = await handleToolCall("submit_booking_request", { draft_id: "d1" }, "user-1", "sess-1");
     expect(result.is_error).toBe(true);
   });
 
-  it("submit_booking_request returns is_error", async () => {
-    const result = await handleToolCall(
-      "submit_booking_request",
-      { draft_id: "d1", confirmation_token: "tok" },
-      "user-1",
-    );
+  it("refuses when the phone is unverified", async () => {
+    requirePhoneVerifiedMock.mockRejectedValue(new Error("PHONE_UNVERIFIED"));
+    const result = await handleToolCall("submit_booking_request", { draft_id: "d1" }, "user-1", "sess-1");
     expect(result.is_error).toBe(true);
+    expect(submitDraftMock).not.toHaveBeenCalled();
   });
 });

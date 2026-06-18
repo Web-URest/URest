@@ -950,8 +950,38 @@ model ConciergeSession {
   messages            ConciergeMessage[]
   usage               ConciergeUsage[]
   unansweredQuestions UnansweredQuestion[]
+  bookingDrafts       ConciergeBookingDraft[]
 
   @@index([userId, createdAt])
+}
+
+/// In-chat booking draft + its server-side confirmation token (#32, AI_CONCIERGE_SPEC §3).
+/// The model is handed only `id` (draft_id); the token fields are minted on the
+/// guest's tap and are NEVER seen by the model. `consumedBookingId` makes submit
+/// single-use. The price snapshot mirrors the Booking it creates (ADR-011 №3).
+model ConciergeBookingDraft {
+  id                    String           @id @default(cuid())
+  sessionId             String
+  userId                String
+  listingId             String
+  checkIn               DateTime         @db.Date
+  checkOut              DateTime         @db.Date
+  guests                Int
+  priceLines            Json
+  totalSatang           Int
+  commissionSatang      Int
+  cancellationTier      CancellationTier
+  guestNoteToHost       String?
+  createdAt             DateTime         @default(now())
+  expiresAt             DateTime
+  confirmedAt           DateTime?
+  confirmTokenHash      String?
+  confirmTokenExpiresAt DateTime?
+  consumedBookingId     String?
+
+  session ConciergeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 /// One row per AI turn. 12-month purge by nightly cron (ADR-004 sweep pattern).
