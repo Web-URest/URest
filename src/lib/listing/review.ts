@@ -46,6 +46,14 @@ export function resubmitListingOp(listingId: string): Prisma.PrismaPromise<Listi
   });
 }
 
+/** PUBLISHED → UNLISTED (admin unlists pending investigation, §5.6 / issue #27). */
+export function unlistListingOp(listingId: string): Prisma.PrismaPromise<Listing> {
+  return prisma.listing.update({
+    where: { id: listingId },
+    data: { status: ListingStatus.UNLISTED },
+  });
+}
+
 /** Grant the ถูกต้องตามกฎหมาย badge (independent of approval, §5.1 / AC#3). */
 export function grantLegalBadgeOp(listingId: string, at: Date): Prisma.PrismaPromise<Listing> {
   return prisma.listing.update({

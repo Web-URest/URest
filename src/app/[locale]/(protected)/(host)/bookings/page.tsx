@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { requireHostEligible } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { formatSatang } from "@/lib/money";
+import { ReportForm } from "@/components/ui/ReportForm";
+import { submitBookingReportAction } from "@/app/[locale]/(protected)/reports/actions";
 
 import { HostCancelButton } from "./cancel-button";
 
@@ -12,7 +14,11 @@ import { HostCancelButton } from "./cancel-button";
  * is a 100% guest refund + a strike (ADR-012 §2).
  */
 export default async function HostBookingsPage() {
-  const [host, t] = await Promise.all([requireHostEligible(), getTranslations("Host.bookings")]);
+  const [host, t, tr] = await Promise.all([
+    requireHostEligible(),
+    getTranslations("Host.bookings"),
+    getTranslations("Reports"),
+  ]);
 
   const bookings = await prisma.booking.findMany({
     where: { status: { in: ["CONFIRMED", "CHECKED_IN"] }, listing: { hostId: host.id } },
@@ -37,6 +43,12 @@ export default async function HostBookingsPage() {
             </p>
             {b.code && <p className="text-xs text-ink-900/50">{b.code}</p>}
             <HostCancelButton bookingId={b.id} />
+            <details className="text-sm text-ink-900/50">
+              <summary className="cursor-pointer underline hover:text-ink-700">
+                {tr("reportBooking")}
+              </summary>
+              <ReportForm action={submitBookingReportAction.bind(null, b.id)} />
+            </details>
           </div>
         ))
       )}

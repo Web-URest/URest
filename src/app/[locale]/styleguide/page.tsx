@@ -7,6 +7,8 @@ import {
   type PayoutStatus,
 } from "@/components/ui/StatusPill";
 import { EscrowStrip } from "@/components/ui/EscrowStrip";
+import { ReportStatusTrail } from "@/components/ui/ReportStatusTrail";
+import { ReportForm } from "@/components/ui/ReportForm";
 import { Button } from "@/components/ui/Button";
 import { VillaCard, type Villa } from "@/components/ui/VillaCard";
 import { TileStrip } from "@/components/ui/TileStrip";
@@ -31,6 +33,11 @@ import type { Quote } from "@/lib/pricing/quote";
  * and i18n. Never shipped to users. Add new/changed components here (with all states)
  * before merging — this is where design review happens.
  */
+
+/** No-op server action so the dev-only ReportForm can render in the styleguide. */
+async function noopReportAction(): Promise<void> {
+  "use server";
+}
 
 const BOOKING_STATES: BookingStatus[] = [
   "REQUESTED",
@@ -356,6 +363,21 @@ export default function StyleguidePage() {
             ]}
             onChange={() => {}}
           />
+        </div>
+      </Section>
+
+      <Section title="ReportStatusTrail — received → in-review → decision (+ dismissed)">
+        <div className="flex max-w-md flex-col gap-6">
+          <ReportStatusTrail status="RECEIVED" />
+          <ReportStatusTrail status="IN_REVIEW" />
+          <ReportStatusTrail status="RESOLVED" />
+          <ReportStatusTrail status="DISMISSED" />
+        </div>
+      </Section>
+
+      <Section title="ReportForm (category + free text)">
+        <div className="max-w-md">
+          <ReportForm action={noopReportAction} />
         </div>
       </Section>
 

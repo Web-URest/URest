@@ -68,7 +68,7 @@ erDiagram
 | `Refund` | refundSatang, retainedHostSatang, retainedPlatformSatang, opnRefundId? | 90/10 split of retained (§3.6); opnRefundId set when the Opn refund lands — NULL = owed-but-not-moved, the reconciliation signal (#23, §5.2) |
 | `Payout` | bookingId @unique, payoutAccountId, hostAmountSatang, slipRef, paidByAdminId | manual run v1 (§5.2) |
 | `PayoutHold` | bookingId? XOR hostUserId? (constraint №4), reason, createdBy/releasedBy admin | due-list skips active holds (§2.3) |
-| `HostStrike` | hostUserId, bookingId?, reason (HOST_CANCELLED, STALE_CALENDAR_DOUBLE_BOOKING) | 3 strikes → suspension (lib/booking) |
+| `HostStrike` | hostUserId, bookingId?, reason (HOST_CANCELLED, STALE_CALENDAR_DOUBLE_BOOKING, ADMIN_MANUAL) | 3 strikes → suspension (lib/booking); ADMIN_MANUAL = admin strike from report triage (§5.6, #27) |
 
 - `guestNoteToHost String?` — guest's free-text intro shown to the host on the request (PRODUCT_FLOWS §3.2 step 1). Snapshotted at request time; never edited after.
 

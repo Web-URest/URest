@@ -107,6 +107,62 @@
         "MORE_PHOTOS": "รูปที่พักเพิ่มเติม",
         "BANK_NAME_MISMATCH": "ชื่อบัญชีธนาคารไม่ตรงกับบัตร"
       }
+    },
+    "ReportsQueue": {
+      "title": "ศูนย์รับเรื่อง",
+      "subtitle": "เรื่องที่ผู้ใช้แจ้งเข้ามา — เรียงตามเงินที่เสี่ยงก่อน แล้วตามเวลา (SLA 24 ชม.)",
+      "empty": "ไม่มีเรื่องที่รอตรวจสอบ",
+      "colCategory": "ประเภท",
+      "colReporter": "ผู้แจ้ง",
+      "colTarget": "เป้าหมาย",
+      "colAge": "แจ้งเมื่อ",
+      "colRisk": "เงินเสี่ยง",
+      "moneyAtRisk": "เงินค้างจ่าย",
+      "reviewCta": "ตรวจสอบ",
+      "anonymous": "(ไม่ระบุตัวตน)",
+      "targetBooking": "การจอง",
+      "targetListing": "ที่พัก",
+      "targetReview": "รีวิว",
+      "targetUser": "ผู้ใช้",
+      "backToQueue": "← กลับไปที่คิว",
+      "reportText": "รายละเอียดที่แจ้ง",
+      "decisionTitle": "ดำเนินการ",
+      "accept": "รับเรื่องเข้าตรวจสอบ",
+      "acceptHint": "การจองที่ยังไม่จ่าย: ระงับการโอนอัตโนมัติ",
+      "resolve": "ปิดเรื่อง (มีผล)",
+      "dismiss": "ปิดเรื่อง (นอกประเด็น)",
+      "unlist": "ซ่อนประกาศระหว่างตรวจสอบ",
+      "escalate": "ยกระดับเป็นข้อพิพาท",
+      "strike": "ออกสไตรค์ให้โฮสต์",
+      "reasonLabel": "เหตุผล (จำเป็น)",
+      "reasonRequired": "กรุณาระบุเหตุผล"
+    }
+  },
+  "Reports": {
+    "title": "เรื่องที่ฉันแจ้ง",
+    "empty": "ยังไม่มีเรื่องที่แจ้ง",
+    "reportListing": "รายงานที่พักนี้",
+    "reportBooking": "รายงานปัญหาการจอง",
+    "formTitle": "แจ้งปัญหา",
+    "categoryLabel": "ประเภทปัญหา",
+    "detailLabel": "รายละเอียด",
+    "detailPlaceholder": "อธิบายปัญหาที่พบ",
+    "submit": "ส่งเรื่อง",
+    "submitted": "ส่งเรื่องแล้ว ทีมงานจะตรวจสอบและแจ้งผล",
+    "loginToReport": "เข้าสู่ระบบเพื่อแจ้งปัญหาการจอง",
+    "trail": {
+      "received": "รับเรื่อง",
+      "inReview": "กำลังตรวจสอบ",
+      "resolved": "ผลการตัดสิน",
+      "dismissed": "ปิดเรื่อง"
+    },
+    "categories": {
+      "DOESNT_MATCH_LISTING": "ไม่ตรงตามประกาศ",
+      "CLEANLINESS": "ความสะอาด",
+      "SAFETY": "ความปลอดภัย",
+      "HOST_BEHAVIOR": "พฤติกรรมโฮสต์",
+      "SUSPECTED_FRAUD": "สงสัยมิจฉาชีพ",
+      "OTHER": "อื่น ๆ"
     }
   },
   "Status": {

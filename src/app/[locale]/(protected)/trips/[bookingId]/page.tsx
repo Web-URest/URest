@@ -2,6 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { StatusPill } from "@/components/ui/StatusPill";
+import { ReportForm } from "@/components/ui/ReportForm";
+import { submitBookingReportAction } from "@/app/[locale]/(protected)/reports/actions";
 import { Link } from "@/i18n/navigation";
 import { requireUser } from "@/lib/auth/guards";
 import { maskedContact } from "@/lib/booking/contact";
@@ -19,10 +21,11 @@ import { WithdrawButton } from "./withdraw-button";
  * withdraw action while the request is pre-payment.
  */
 export default async function TripPage({ params }: { params: Promise<{ bookingId: string }> }) {
-  const [{ bookingId }, user, t] = await Promise.all([
+  const [{ bookingId }, user, t, tr] = await Promise.all([
     params,
     requireUser(),
     getTranslations("Booking"),
+    getTranslations("Reports"),
   ]);
 
   const booking = await prisma.booking.findUnique({
@@ -36,6 +39,9 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
     phone: booking.listing.host.phone,
   });
   const canWithdraw = booking.status === "REQUESTED" || booking.status === "AWAITING_PAYMENT";
+  const reportable = !["DECLINED", "EXPIRED", "CANCELLED_BY_GUEST", "CANCELLED_BY_HOST"].includes(
+    booking.status,
+  );
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-6 bg-sand-50 px-4 py-8 md:px-6">
@@ -75,6 +81,14 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
           />
         )}
       </div>
+      {reportable && (
+        <details className="text-sm text-ink-900/50">
+          <summary className="cursor-pointer underline hover:text-ink-700">
+            {tr("reportBooking")}
+          </summary>
+          <ReportForm action={submitBookingReportAction.bind(null, booking.id)} />
+        </details>
+      )}
     </main>
   );
 }

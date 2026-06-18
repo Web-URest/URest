@@ -635,6 +635,7 @@ enum ReportStatus {
 enum HostStrikeReason {
   HOST_CANCELLED // host cancelled a CONFIRMED booking (ADR-012 §2)
   STALE_CALENDAR_DOUBLE_BOOKING // stale calendar double-booked a paid guest
+  ADMIN_MANUAL // admin-issued from a report triage (§5.6, issue #27)
 }
 
 /// A booking. Status moves only through lib/booking; escrowState only through

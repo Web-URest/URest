@@ -30,6 +30,18 @@ const NEEDS_INFO_LABELS_TH: Record<string, string> = {
   BANK_NAME_MISMATCH: "ชื่อบัญชีธนาคารไม่ตรงกับบัตร",
 };
 
+/** Thai labels for ReportCategory — notifications are a Thai-only channel of record. */
+const REPORT_CATEGORY_LABELS_TH: Record<string, string> = {
+  DOESNT_MATCH_LISTING: "ไม่ตรงตามประกาศ",
+  CLEANLINESS: "ความสะอาด",
+  SAFETY: "ความปลอดภัย",
+  HOST_BEHAVIOR: "พฤติกรรมโฮสต์",
+  SUSPECTED_FRAUD: "สงสัยมิจฉาชีพ",
+  OTHER: "อื่น ๆ",
+};
+const reportCategory = (v: unknown): string =>
+  (typeof v === "string" && REPORT_CATEGORY_LABELS_TH[v]) || "เรื่องที่แจ้ง";
+
 /** Render the NEEDS_INFO checklist payload as a Thai bullet list (defensive). */
 const needsInfoList = (v: unknown): string => {
   if (!Array.isArray(v)) return "";
@@ -157,6 +169,30 @@ const templates: Record<string, NotificationTemplate> = {
       body: `ขออภัย ที่พัก "${str(p.listingTitle)}" ไม่ผ่านการตรวจสอบ\nเหตุผล: ${str(p.reason)}`,
     }),
     line: (p) => `❌ "${str(p.listingTitle)}" ไม่ผ่านการอนุมัติ — ${str(p.reason)}`,
+  },
+  REPORT_RECEIVED: {
+    priority: true,
+    email: (p) => ({
+      subject: `รับเรื่องแล้ว — ${reportCategory(p.category)}`,
+      body: `เราได้รับเรื่องที่คุณแจ้ง (${reportCategory(p.category)}) เกี่ยวกับ ${str(p.targetLabel)} แล้ว ทีมงานจะตรวจสอบและแจ้งผลให้ทราบ ติดตามสถานะได้ในแอป`,
+    }),
+    line: (p) => `📩 รับเรื่องแล้ว: ${reportCategory(p.category)} — ทีมงานกำลังตรวจสอบ ติดตามสถานะได้ในแอป`,
+  },
+  REPORT_RESOLVED: {
+    priority: true,
+    email: (p) => ({
+      subject: `ผลการตรวจสอบเรื่องที่แจ้ง — ${reportCategory(p.category)}`,
+      body: `ทีมงานตรวจสอบเรื่องที่คุณแจ้ง (${reportCategory(p.category)}) เรียบร้อยแล้ว\nผลการตัดสิน: ${str(p.reason)}`,
+    }),
+    line: (p) => `✅ ผลการตรวจสอบ (${reportCategory(p.category)}): ${str(p.reason)}`,
+  },
+  REPORT_DISMISSED: {
+    priority: false,
+    email: (p) => ({
+      subject: `ปิดเรื่องที่แจ้ง — ${reportCategory(p.category)}`,
+      body: `เรื่องที่คุณแจ้ง (${reportCategory(p.category)}) ถูกปิดแล้ว\nเหตุผล: ${str(p.reason)}`,
+    }),
+    line: (p) => `เรื่องที่แจ้ง (${reportCategory(p.category)}) ถูกปิดแล้ว — ${str(p.reason)}`,
   },
 };
 
