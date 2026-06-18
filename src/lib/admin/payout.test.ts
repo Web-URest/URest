@@ -9,7 +9,7 @@ vi.mock("@/lib/db", () => ({
     payoutAccount: { findUnique: vi.fn(), findFirst: vi.fn() },
     auditLog: { create: vi.fn() },
     booking: { findUnique: vi.fn(), findMany: vi.fn() },
-    payoutHold: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
+    payoutHold: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
     payout: { create: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -21,7 +21,7 @@ import { ledgerTotals, payout } from "@/lib/ledger/apply";
 import { notify } from "@/lib/notifications";
 import { getBalance } from "@/lib/payments/opn";
 
-import { markPaid, PayoutError, reconcile, revealAccountNumber } from "./payout";
+import { markPaid, PayoutError, placeHold, reconcile, releaseHold, revealAccountNumber } from "./payout";
 
 const balance = getBalance as unknown as Mock;
 const totals = ledgerTotals as unknown as Mock;
@@ -32,7 +32,7 @@ const db = prisma as unknown as {
   payoutAccount: { findUnique: Mock; findFirst: Mock };
   auditLog: { create: Mock };
   booking: { findUnique: Mock; findMany: Mock };
-  payoutHold: { findFirst: Mock; findMany: Mock; create: Mock; update: Mock };
+  payoutHold: { findUnique: Mock; findFirst: Mock; findMany: Mock; create: Mock; update: Mock };
   payout: { create: Mock };
   $transaction: Mock;
 };
@@ -189,5 +189,81 @@ describe("markPaid", () => {
     await expect(markPaid(ADMIN, "bk1", "SLIP")).rejects.toBeInstanceOf(PayoutError);
     expect(payoutOp).not.toHaveBeenCalled();
     expect(db.$transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe("placeHold", () => {
+  // Array-form $transaction: the ops are built by prisma.X.create(...) then passed as a list.
+  const arm = () => db.$transaction.mockImplementation(async (ops: unknown) => ops);
+
+  it("booking-scope: creates a PayoutHold + audit and notifies the booking's host", async () => {
+    arm();
+    db.booking.findUnique.mockResolvedValue({ listing: { hostId: "host1" } });
+
+    await placeHold(ADMIN, { bookingId: "bk1" }, "รอตรวจสลิปโอน");
+
+    expect(db.payoutHold.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ bookingId: "bk1", reason: "รอตรวจสลิปโอน", createdByAdminId: "adm1" }),
+    });
+    expect(db.$transaction).toHaveBeenCalledOnce();
+    expect(notifyFn).toHaveBeenCalledWith(
+      "host1",
+      "PAYOUT_HOLD_CREATED",
+      expect.objectContaining({ reason: "รอตรวจสลิปโอน" }),
+    );
+  });
+
+  it("host-scope: creates a whole-host PayoutHold and notifies that host (no booking lookup)", async () => {
+    arm();
+
+    await placeHold(ADMIN, { hostUserId: "host9" }, "บัญชีน่าสงสัย");
+
+    expect(db.payoutHold.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ hostUserId: "host9", reason: "บัญชีน่าสงสัย", createdByAdminId: "adm1" }),
+    });
+    expect(notifyFn).toHaveBeenCalledWith("host9", "PAYOUT_HOLD_CREATED", expect.objectContaining({ reason: "บัญชีน่าสงสัย" }));
+    expect(db.booking.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty reason without writing", async () => {
+    arm();
+    await expect(placeHold(ADMIN, { bookingId: "bk1" }, "   ")).rejects.toBeInstanceOf(PayoutError);
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects an ambiguous target (neither or both scopes)", async () => {
+    arm();
+    await expect(placeHold(ADMIN, {} as { bookingId: string }, "reason")).rejects.toBeInstanceOf(PayoutError);
+    await expect(
+      placeHold(ADMIN, { bookingId: "b", hostUserId: "h" } as { bookingId: string }, "reason"),
+    ).rejects.toBeInstanceOf(PayoutError);
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe("releaseHold", () => {
+  it("clears the hold (releasedAt + admin) + audit, then notifies the host", async () => {
+    db.$transaction.mockImplementation(async (ops: unknown) => ops);
+    db.payoutHold.findUnique.mockResolvedValue({
+      id: "h1",
+      bookingId: null,
+      hostUserId: "host3",
+      releasedAt: null,
+    });
+
+    await releaseHold(ADMIN, "h1");
+
+    expect(db.payoutHold.update).toHaveBeenCalledWith({
+      where: { id: "h1" },
+      data: expect.objectContaining({ releasedByAdminId: "adm1" }),
+    });
+    const data = db.payoutHold.update.mock.calls[0]?.[0]?.data;
+    expect(data.releasedAt).toBeInstanceOf(Date);
+    expect(notifyFn).toHaveBeenCalledWith("host3", "PAYOUT_HOLD_RELEASED", expect.anything());
+  });
+
+  it("throws when the hold does not exist or is already released", async () => {
+    db.payoutHold.findUnique.mockResolvedValue(null);
+    await expect(releaseHold(ADMIN, "nope")).rejects.toBeInstanceOf(PayoutError);
   });
 });

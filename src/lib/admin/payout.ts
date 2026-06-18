@@ -159,3 +159,85 @@ export async function markPaid(admin: AdminPrincipal, bookingId: string, slipRef
     });
   }
 }
+
+/** A manual payout hold is scoped to exactly one booking OR one whole host (§5.2 / CHECK №4). */
+export type HoldTarget = { bookingId: string } | { hostUserId: string };
+
+/**
+ * Place a manual payout hold — administrative, NOT an escrow freeze (escrowState
+ * stays put; the due list simply skips held items, §5.2 / #27). Hold row + audit
+ * commit together; the affected host is notified.
+ */
+export async function placeHold(admin: AdminPrincipal, target: HoldTarget, reason: string): Promise<void> {
+  const trimmed = reason.trim();
+  const bookingId = "bookingId" in target ? target.bookingId : undefined;
+  const hostUserId = "hostUserId" in target ? target.hostUserId : undefined;
+  if ((bookingId ? 1 : 0) + (hostUserId ? 1 : 0) !== 1) throw new PayoutError("TARGET_REQUIRED");
+  if (!trimmed) throw new PayoutError("REASON_REQUIRED");
+
+  // Resolve whom to notify: the booking's host, or the named host.
+  let notifyHostId = hostUserId;
+  if (bookingId) {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { listing: { select: { hostId: true } } },
+    });
+    if (!booking) throw new PayoutError("NOT_FOUND");
+    notifyHostId = booking.listing.hostId;
+  }
+
+  await prisma.$transaction([
+    prisma.payoutHold.create({
+      data: {
+        bookingId: bookingId ?? null,
+        hostUserId: hostUserId ?? null,
+        reason: trimmed,
+        createdByAdminId: admin.id,
+      },
+    }),
+    prisma.auditLog.create({
+      data: {
+        adminId: admin.id,
+        action: "PAYOUT_HOLD_CREATED",
+        targetType: bookingId ? "Booking" : "User",
+        targetId: (bookingId ?? hostUserId)!,
+        after: { reason: trimmed },
+      },
+    }),
+  ]);
+
+  if (notifyHostId) await notify(notifyHostId, "PAYOUT_HOLD_CREATED", { reason: trimmed });
+}
+
+/** Lift a hold (reversible, audited): set `releasedAt`/`releasedByAdminId`, notify the host. */
+export async function releaseHold(admin: AdminPrincipal, holdId: string): Promise<void> {
+  const hold = await prisma.payoutHold.findUnique({
+    where: { id: holdId },
+    select: {
+      id: true,
+      bookingId: true,
+      hostUserId: true,
+      releasedAt: true,
+      booking: { select: { listing: { select: { hostId: true } } } },
+    },
+  });
+  if (!hold || hold.releasedAt) throw new PayoutError("NOT_FOUND");
+
+  await prisma.$transaction([
+    prisma.payoutHold.update({
+      where: { id: holdId },
+      data: { releasedAt: new Date(), releasedByAdminId: admin.id },
+    }),
+    prisma.auditLog.create({
+      data: {
+        adminId: admin.id,
+        action: "PAYOUT_HOLD_RELEASED",
+        targetType: hold.bookingId ? "Booking" : "User",
+        targetId: (hold.bookingId ?? hold.hostUserId)!,
+      },
+    }),
+  ]);
+
+  const notifyHostId = hold.hostUserId ?? hold.booking?.listing.hostId;
+  if (notifyHostId) await notify(notifyHostId, "PAYOUT_HOLD_RELEASED", {});
+}
