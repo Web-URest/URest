@@ -14,9 +14,10 @@ const TABS = [
   { href: "/calendar", key: "calendar" as const },
   { href: "/requests", key: "requests" as const },
   { href: "/bookings", key: "bookings" as const },
+  { href: "/messages", key: "messages" as const },
 ];
 
-const SOON_TABS = ["earnings", "messages"] as const;
+const SOON_TABS = ["earnings"] as const;
 
 export function HostNav() {
   const t = useTranslations("Host");

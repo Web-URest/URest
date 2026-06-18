@@ -19,10 +19,11 @@ import { WithdrawButton } from "./withdraw-button";
  * withdraw action while the request is pre-payment.
  */
 export default async function TripPage({ params }: { params: Promise<{ bookingId: string }> }) {
-  const [{ bookingId }, user, t] = await Promise.all([
+  const [{ bookingId }, user, t, tMsg] = await Promise.all([
     params,
     requireUser(),
     getTranslations("Booking"),
+    getTranslations("Thread"),
   ]);
 
   const booking = await prisma.booking.findUnique({
@@ -36,6 +37,7 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
     phone: booking.listing.host.phone,
   });
   const canWithdraw = booking.status === "REQUESTED" || booking.status === "AWAITING_PAYMENT";
+  const canMessage = ["REQUESTED", "AWAITING_PAYMENT", "CONFIRMED", "CHECKED_IN", "DISPUTED"].includes(booking.status);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-6 bg-sand-50 px-4 py-8 md:px-6">
@@ -59,6 +61,14 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
             className="rounded-card bg-coral-500 px-4 py-2 text-center text-sm font-semibold text-white shadow-card transition hover:brightness-95"
           >
             {t("payCta")}
+          </Link>
+        )}
+        {canMessage && (
+          <Link
+            href={`/messages/${booking.id}`}
+            className="rounded-card border border-line px-4 py-2 text-center text-sm font-semibold text-ink-900 transition hover:bg-sand-50"
+          >
+            {tMsg("messageHost")}
           </Link>
         )}
         {canWithdraw && <WithdrawButton bookingId={booking.id} />}

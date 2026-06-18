@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
+import { Link } from "@/i18n/navigation";
 import { requireHostEligible } from "@/lib/auth/guards";
 import { maskedContact } from "@/lib/booking/contact";
 import { prisma } from "@/lib/db";
@@ -13,7 +14,11 @@ import { RequestActions } from "./request-actions";
  * contact and accept/decline. The (host) layout supplies the chrome + nav.
  */
 export default async function HostRequestsPage() {
-  const [host, t] = await Promise.all([requireHostEligible(), getTranslations("Host.requests")]);
+  const [host, t, tMsg] = await Promise.all([
+    requireHostEligible(),
+    getTranslations("Host.requests"),
+    getTranslations("Thread"),
+  ]);
 
   const requests = await prisma.booking.findMany({
     where: { status: "REQUESTED", listing: { hostId: host.id } },
@@ -53,6 +58,9 @@ export default async function HostRequestsPage() {
                   : t("contactMasked")}
               </p>
               <p className="text-xs text-coral-600">{t("respondByNote")}</p>
+              <Link href={`/messages/${b.id}`} className="text-sm font-semibold text-teal-600 hover:underline">
+                {tMsg("messageGuest")}
+              </Link>
               <RequestActions bookingId={b.id} />
             </div>
           );
