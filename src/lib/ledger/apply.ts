@@ -10,10 +10,13 @@
 
 import { EscrowState, LedgerCause, type Prisma } from "@prisma/client";
 
+import { prisma } from "@/lib/db";
+
 import {
   EMPTY_BUCKETS,
   foldMove,
   reduce,
+  type Buckets,
   type EscrowEvent,
   type FreezeCause,
   type Position,
@@ -26,6 +29,30 @@ interface MoveMeta {
   /** Opn event id, AdminUser id, Dispute id, … — what authorized the move. */
   causeRef?: string | null;
   actor?: string | null;
+}
+
+/**
+ * Global escrow totals — fold the ENTIRE `LedgerEntry` log into the running
+ * buckets. The reconciliation reference for the payout admin (#25): the in-escrow
+ * obligation we must be solvent against. O(entries) is fine at pilot volume; uses
+ * the non-tx client (read-only, outside any booking transaction).
+ */
+export async function ledgerTotals(): Promise<Buckets> {
+  const entries = await prisma.ledgerEntry.findMany({
+    select: { fromState: true, toState: true, amountSatang: true },
+  });
+
+  let buckets = EMPTY_BUCKETS;
+  for (const e of entries) {
+    buckets = foldMove(buckets, {
+      fromState: e.fromState ?? EscrowState.NONE,
+      toState: e.toState,
+      amountSatang: e.amountSatang,
+      cause: LedgerCause.CHARGE_WEBHOOK, // cause is irrelevant to the money fold
+    });
+  }
+
+  return buckets;
 }
 
 /** Derive a booking's current escrow position from its append-only ledger log. */

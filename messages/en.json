@@ -107,6 +107,38 @@
         "MORE_PHOTOS": "More listing photos",
         "BANK_NAME_MISMATCH": "Bank account name mismatch"
       }
+    },
+    "nav": {
+      "approvalQueue": "Approval queue",
+      "payouts": "Payouts",
+      "unanswered": "Unanswered Q&A"
+    },
+    "Payouts": {
+      "title": "Host payouts",
+      "subtitle": "Bookings ready to pay out, grouped by host account — reconcile against the Opn balance before every transfer.",
+      "empty": "Nothing awaiting payout.",
+      "reconcileOk": "Reconciled — Opn balance {balance} covers the ledger obligation {obligation}. Clear to pay.",
+      "reconcileBlocked": "Mismatch — Opn balance {balance} does not cover the ledger obligation {obligation}. All payouts blocked until resolved.",
+      "reconcileError": "Could not reconcile against Opn — payouts blocked as a precaution.",
+      "account": "Account",
+      "noAccount": "No payout account yet",
+      "revealAccount": "Reveal account number",
+      "revealHint": "Revealing the account number is recorded in the audit log.",
+      "colBooking": "Booking",
+      "colCheckout": "Checkout",
+      "colAmount": "Payout (host)",
+      "groupTotal": "Payable total {amount}",
+      "slipRefPlaceholder": "Transfer slip reference",
+      "markPaid": "Mark paid",
+      "markPaidConfirm": "Confirm the transfer to the host has been made?",
+      "holdReasonPlaceholder": "Hold reason",
+      "placeHold": "Hold",
+      "holdHostTitle": "Hold all payouts for this host",
+      "holdHostReasonPlaceholder": "Whole-host hold reason",
+      "heldBadge": "On hold",
+      "heldHostBadge": "Host on hold",
+      "release": "Release hold",
+      "releaseConfirm": "Release this payout hold?"
     }
   },
   "Status": {

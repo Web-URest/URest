@@ -107,6 +107,38 @@
         "MORE_PHOTOS": "รูปที่พักเพิ่มเติม",
         "BANK_NAME_MISMATCH": "ชื่อบัญชีธนาคารไม่ตรงกับบัตร"
       }
+    },
+    "nav": {
+      "approvalQueue": "คิวตรวจสอบ",
+      "payouts": "การโอนเงิน",
+      "unanswered": "คำถามที่ตอบไม่ได้"
+    },
+    "Payouts": {
+      "title": "การโอนเงินโฮสต์",
+      "subtitle": "การจองที่พร้อมโอน จัดกลุ่มตามบัญชีโฮสต์ — ตรวจยอดคงเหลือ Opn ก่อนโอนทุกครั้ง",
+      "empty": "ไม่มีรายการรอโอน",
+      "reconcileOk": "ยอดตรงกัน — ยอดคงเหลือ Opn {balance} ครอบคลุมภาระในระบบ {obligation} โอนได้",
+      "reconcileBlocked": "ยอดไม่ตรง — ยอดคงเหลือ Opn {balance} ไม่ครอบคลุมภาระในระบบ {obligation} ระงับการโอนทั้งหมดจนกว่าจะแก้ไข",
+      "reconcileError": "ตรวจยอดกับ Opn ไม่สำเร็จ — ระงับการโอนไว้ก่อนเพื่อความปลอดภัย",
+      "account": "บัญชี",
+      "noAccount": "ยังไม่มีบัญชีรับเงิน",
+      "revealAccount": "แสดงเลขบัญชี",
+      "revealHint": "การแสดงเลขบัญชีจะถูกบันทึกในระบบตรวจสอบ",
+      "colBooking": "การจอง",
+      "colCheckout": "เช็คเอาท์",
+      "colAmount": "ยอดโอน (โฮสต์)",
+      "groupTotal": "รวมที่พร้อมโอน {amount}",
+      "slipRefPlaceholder": "อ้างอิงสลิปโอน",
+      "markPaid": "ทำเครื่องหมายว่าโอนแล้ว",
+      "markPaidConfirm": "ยืนยันว่าได้โอนเงินให้โฮสต์เรียบร้อยแล้ว?",
+      "holdReasonPlaceholder": "เหตุผลการระงับ",
+      "placeHold": "ระงับ",
+      "holdHostTitle": "ระงับการโอนทั้งโฮสต์",
+      "holdHostReasonPlaceholder": "เหตุผลการระงับทั้งโฮสต์",
+      "heldBadge": "ระงับอยู่",
+      "heldHostBadge": "ระงับทั้งโฮสต์",
+      "release": "ยกเลิกการระงับ",
+      "releaseConfirm": "ยกเลิกการระงับการโอนนี้?"
     }
   },
   "Status": {

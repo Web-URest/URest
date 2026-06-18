@@ -117,3 +117,31 @@ describe("messaging template (#24)", () => {
     expect(t?.email(p).subject).toContain("สมชาย");
   });
 });
+
+describe("payout templates (#25)", () => {
+  it("PAYOUT_PAID_HOST is priority and shows the formatted amount, slip ref, and code", () => {
+    const t = getTemplate("PAYOUT_PAID_HOST");
+    expect(t?.priority).toBe(true);
+    const p = { amountSatang: 9_000_00, slipRef: "SLIP-001", code: "UR-2606-0001" };
+    // ฿9,000 formatted at the display edge
+    expect(t?.email(p).body).toContain("9,000");
+    expect(t?.email(p).body).toContain("SLIP-001");
+    expect(t?.email(p).subject).toContain("UR-2606-0001");
+    expect(t?.line(p)).toContain("9,000");
+    expect(t?.line(p)).toContain("UR-2606-0001");
+  });
+
+  it("PAYOUT_HOLD_CREATED is priority and carries the hold reason", () => {
+    const t = getTemplate("PAYOUT_HOLD_CREATED");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({ reason: "รอตรวจสลิป" })).toContain("รอตรวจสลิป");
+    expect(t?.email({ reason: "รอตรวจสลิป" }).body).toContain("รอตรวจสลิป");
+  });
+
+  it("PAYOUT_HOLD_RELEASED tells the host the hold is lifted", () => {
+    const t = getTemplate("PAYOUT_HOLD_RELEASED");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({})).toBeTruthy();
+    expect(t?.email({}).subject).toBeTruthy();
+  });
+});

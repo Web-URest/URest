@@ -37,6 +37,14 @@ export interface OpnRefund {
   status: string;
 }
 
+/** The subset of the Opn balance object U-Rest reads (satang). The payout reconciliation reference (§5.2). */
+export interface OpnBalance {
+  object: "balance";
+  total: number; // satang held by the gateway on our behalf
+  available: number; // satang available to transfer out
+  currency: string;
+}
+
 export class OpnError extends Error {
   constructor(
     public readonly status: number,
@@ -136,4 +144,9 @@ export function retrieveCharge(chargeId: string): Promise<OpnCharge> {
 /** Refund a charge (integer satang). Used for the instant-book paid-race fallback (§3.2). */
 export function refundCharge(chargeId: string, amountSatang: number): Promise<OpnRefund> {
   return opnRequest<OpnRefund>("POST", `/charges/${chargeId}/refunds`, { amount: amountSatang });
+}
+
+/** Live gateway balance — the reconciliation reference for the payout admin (§5.2). */
+export function getBalance(): Promise<OpnBalance> {
+  return opnRequest<OpnBalance>("GET", "/balance");
 }
