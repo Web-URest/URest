@@ -238,6 +238,8 @@ export async function releaseHold(admin: AdminPrincipal, holdId: string): Promis
     }),
   ]);
 
+  // The host to notify: the named host (host-scope) or the booking's host. The
+  // `booking` relation is populated iff `bookingId` is set (CHECK №4: exactly one).
   const notifyHostId = hold.hostUserId ?? hold.booking?.listing.hostId;
   if (notifyHostId) await notify(notifyHostId, "PAYOUT_HOLD_RELEASED", {});
 }
