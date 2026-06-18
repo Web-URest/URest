@@ -13,6 +13,8 @@ import { EscrowStrip } from "@/components/ui/EscrowStrip";
 import { StarRating } from "@/components/ui/StarRating";
 import { Link } from "@/i18n/navigation";
 
+import { FlagReviewButton } from "./flag-review-button";
+
 interface ListingPageProps {
   params: Promise<{ id: string; locale: string }>;
 }
@@ -292,6 +294,9 @@ export default async function ListingPage({ params }: ListingPageProps) {
                           ))}
                         </div>
                       )}
+                      <div className="mt-3">
+                        <FlagReviewButton reviewId={r.id} />
+                      </div>
                     </div>
                   ))}
                 </div>

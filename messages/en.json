@@ -111,7 +111,18 @@
     "nav": {
       "approvalQueue": "Approval queue",
       "payouts": "Payouts",
+      "reviews": "Reviews",
       "unanswered": "Unanswered Q&A"
+    },
+    "Reviews": {
+      "title": "Review moderation",
+      "subtitle": "Flagged reviews — remove only for policy violations (doxxing, hate, extortion, spam), never because a host disagrees.",
+      "empty": "No flagged reviews",
+      "flagReason": "Flag reason",
+      "alreadyRemoved": "This review has been removed",
+      "keep": "Keep",
+      "remove": "Remove review",
+      "removeReasonPlaceholder": "Removal reason (recorded in the audit log)"
     },
     "Payouts": {
       "title": "Host payouts",
@@ -488,7 +499,12 @@
     "errorGeneric": "Couldn't submit your review — please try again",
     "alreadyReviewed": "You've already reviewed this booking",
     "ineligible": "This booking can't be reviewed yet",
-    "viewListing": "View listing"
+    "viewListing": "View listing",
+    "flag": "Report review",
+    "flagReason": "Reason (e.g. doxxing, hate speech, extortion, spam)",
+    "flagSubmit": "Submit report",
+    "flagCancel": "Cancel",
+    "flagged": "Reported — thank you"
   },
   "Messages": {
     "title": "Messages",
