@@ -106,3 +106,14 @@ describe("cancellation templates", () => {
     expect(t?.email({ listingTitle: "วิลล่า A", refundSatang: 12_900_00 }).body).toContain("12,900");
   });
 });
+
+describe("messaging template (#24)", () => {
+  it("MESSAGE_NEW is priority, names sender + listing, and never includes message content", () => {
+    const t = getTemplate("MESSAGE_NEW");
+    expect(t?.priority).toBe(true);
+    const p = { senderName: "สมชาย", listingTitle: "วิลล่า A", bookingId: "bk1" };
+    expect(t?.line(p)).toContain("สมชาย");
+    expect(t?.line(p)).toContain("วิลล่า A");
+    expect(t?.email(p).subject).toContain("สมชาย");
+  });
+});

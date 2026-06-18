@@ -818,9 +818,10 @@ model HostStrike {
 
 /// Per-booking thread, opens at REQUESTED (§3.5).
 model MessageThread {
-  id        String   @id @default(cuid())
-  bookingId String   @unique
-  createdAt DateTime @default(now())
+  id             String    @id @default(cuid())
+  bookingId      String    @unique
+  lastNotifiedAt DateTime? // 1/thread/10min LINE-push throttle, CAS-claimed (#24)
+  createdAt      DateTime  @default(now())
 
   booking  Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   messages Message[]

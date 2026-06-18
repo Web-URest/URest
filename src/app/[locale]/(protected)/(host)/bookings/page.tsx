@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
+import { Link } from "@/i18n/navigation";
 import { requireHostEligible } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { formatSatang } from "@/lib/money";
@@ -12,7 +13,11 @@ import { HostCancelButton } from "./cancel-button";
  * is a 100% guest refund + a strike (ADR-012 §2).
  */
 export default async function HostBookingsPage() {
-  const [host, t] = await Promise.all([requireHostEligible(), getTranslations("Host.bookings")]);
+  const [host, t, tMsg] = await Promise.all([
+    requireHostEligible(),
+    getTranslations("Host.bookings"),
+    getTranslations("Thread"),
+  ]);
 
   const bookings = await prisma.booking.findMany({
     where: { status: { in: ["CONFIRMED", "CHECKED_IN"] }, listing: { hostId: host.id } },
@@ -36,6 +41,9 @@ export default async function HostBookingsPage() {
               {b.user.displayName} · {b.checkIn.toISOString().slice(0, 10)} – {b.checkOut.toISOString().slice(0, 10)}
             </p>
             {b.code && <p className="text-xs text-ink-900/50">{b.code}</p>}
+            <Link href={`/messages/${b.id}`} className="text-sm font-semibold text-teal-600 hover:underline">
+              {tMsg("messageGuest")}
+            </Link>
             <HostCancelButton bookingId={b.id} />
           </div>
         ))

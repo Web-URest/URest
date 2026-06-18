@@ -437,6 +437,24 @@
     "errorWrongState": "This booking is no longer in the payment step",
     "errorNotFound": "Booking not found"
   },
+  "Messages": {
+    "title": "Messages",
+    "empty": "No conversations yet",
+    "noPreview": "No messages yet"
+  },
+  "Thread": {
+    "messageHost": "Message host",
+    "messageGuest": "Message guest",
+    "back": "← Back to messages",
+    "composerPlaceholder": "Type a message…",
+    "send": "Send",
+    "empty": "No messages yet — start the conversation",
+    "maskingNotice": "Phone numbers, LINE IDs, links and account numbers are hidden until the booking is confirmed — book and pay through U-Rest only, for your safety.",
+    "unmaskedNote": "Booking confirmed — you can now share contact details and check-in info.",
+    "errorNotOwner": "You don't have access to this conversation",
+    "errorEmpty": "Please type a message",
+    "errorGeneric": "Couldn't send — please try again"
+  },
   "Concierge": {
     "pageTitle": "น้องเรสต์ (AI Concierge)",
     "headerSubtitle": "AI villa finder",
