@@ -158,6 +158,14 @@ const templates: Record<string, NotificationTemplate> = {
     }),
     line: (p) => `❌ "${str(p.listingTitle)}" ไม่ผ่านการอนุมัติ — ${str(p.reason)}`,
   },
+  MESSAGE_NEW: {
+    priority: true,
+    email: (p) => ({
+      subject: `ข้อความใหม่จาก ${str(p.senderName)} — ${str(p.listingTitle)}`,
+      body: `${str(p.senderName)} ส่งข้อความถึงคุณเกี่ยวกับการจอง "${str(p.listingTitle)}" เปิดแอปเพื่ออ่านและตอบกลับ`,
+    }),
+    line: (p) => `💬 ข้อความใหม่จาก ${str(p.senderName)} — ${str(p.listingTitle)} เปิดแอปเพื่อตอบกลับ`,
+  },
 };
 
 export function getTemplate(key: string): NotificationTemplate | undefined {
