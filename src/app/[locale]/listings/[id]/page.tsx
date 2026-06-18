@@ -10,6 +10,8 @@ import { FaqSection } from "@/components/ui/FaqSection";
 import { HeartButton } from "@/components/ui/HeartButton";
 import { PriceCalendar } from "@/components/ui/PriceCalendar";
 import { EscrowStrip } from "@/components/ui/EscrowStrip";
+import { ReportForm } from "@/components/ui/ReportForm";
+import { submitListingReportAction } from "@/app/[locale]/(protected)/reports/actions";
 import { StarRating } from "@/components/ui/StarRating";
 import { Link } from "@/i18n/navigation";
 
@@ -326,12 +328,13 @@ export default async function ListingPage({ params }: ListingPageProps) {
               💬 {t("conciergeChip")}
             </button>
 
-            {/* Report link */}
-            <p className="text-xs text-ink-900/40">
-              <button type="button" className="underline hover:text-ink-700">
+            {/* Report this listing (§3.8 — any user, incl. logged-out) */}
+            <details className="text-xs text-ink-900/40">
+              <summary className="cursor-pointer underline hover:text-ink-700">
                 {t("reportLink")}
-              </button>
-            </p>
+              </summary>
+              <ReportForm action={submitListingReportAction.bind(null, listing.id)} />
+            </details>
           </div>
 
           {/* Desktop booking card — sticky right column */}

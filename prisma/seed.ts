@@ -522,6 +522,81 @@ async function main() {
       ],
     });
     console.log("Seeded 3 approval-queue fixtures (pending, overdue, needs-info)");
+
+    // Reports-queue fixtures (#27): a booking report on a HELD booking (drives
+    // accept → ledger freeze) + a listing report (drives unlist). Idempotent.
+    const villa1 = await prisma.listing.findFirst({
+      where: { title: "บ้านพูลวิลล่าทดสอบ จอมเทียน" },
+      select: { id: true },
+    });
+    if (villa1) {
+      const guest = await prisma.user.upsert({
+        where: { email: "dev-guest@urest.local" },
+        update: {},
+        create: {
+          email: "dev-guest@urest.local",
+          displayName: "ผู้เข้าพักทดสอบ",
+          phone: "0899999999",
+          phoneVerifiedAt: new Date(),
+        },
+      });
+
+      const existingBooking = await prisma.booking.findUnique({ where: { code: "UR-2606-9001" } });
+      if (!existingBooking) {
+        const total = 25_800 * 100;
+        const booking = await prisma.booking.create({
+          data: {
+            code: "UR-2606-9001",
+            listingId: villa1.id,
+            userId: guest.id,
+            status: "CHECKED_IN",
+            bookingMode: "REQUEST",
+            checkIn: new Date("2026-06-16T00:00:00.000Z"),
+            checkOut: new Date("2026-06-18T00:00:00.000Z"),
+            priceLines: [{ label: "2 คืน", amountSatang: total }],
+            totalSatang: total,
+            commissionSatang: total / 10,
+            cancellationTier: "MODERATE",
+            escrowState: "HELD",
+          },
+        });
+        // Ledger NONE → HELD so currentPosition derives a freezable position.
+        await prisma.ledgerEntry.create({
+          data: {
+            bookingId: booking.id,
+            amountSatang: total,
+            fromState: "NONE",
+            toState: "HELD",
+            cause: "CHARGE_WEBHOOK",
+            causeRef: "seed",
+          },
+        });
+        await prisma.report.create({
+          data: {
+            reporterId: guest.id,
+            bookingId: booking.id,
+            category: "SAFETY",
+            text: "เครื่องทำน้ำอุ่นชำรุด ใช้งานไม่ได้ตลอดการเข้าพัก",
+            photoKeys: [],
+          },
+        });
+      }
+
+      const existingListingReport = await prisma.report.findFirst({
+        where: { listingId: villa1.id, category: "SUSPECTED_FRAUD" },
+      });
+      if (!existingListingReport) {
+        await prisma.report.create({
+          data: {
+            listingId: villa1.id,
+            category: "SUSPECTED_FRAUD",
+            text: "สงสัยรูปภาพไม่ใช่ของจริง — เหมือนนำมาจากเว็บอื่น",
+            photoKeys: [],
+          },
+        });
+      }
+      console.log("Seeded reports-queue fixtures (booking report on HELD booking + listing report)");
+    }
   }
 }
 

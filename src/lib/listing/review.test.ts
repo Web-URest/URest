@@ -14,6 +14,7 @@ import {
   refuseLegalBadgeOp,
   rejectListingOp,
   resubmitListingOp,
+  unlistListingOp,
 } from "./review";
 
 const update = prisma.listing.update as unknown as Mock;
@@ -52,6 +53,14 @@ describe("listing review op builders", () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: "l1" },
       data: { status: "PENDING_REVIEW" },
+    });
+  });
+
+  it("unlistListingOp → UNLISTED", () => {
+    unlistListingOp("l1");
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "l1" },
+      data: { status: "UNLISTED" },
     });
   });
 
