@@ -26,7 +26,9 @@ export default async function AdminReviewsPage() {
   const t = await getTranslations("Admin.Reviews");
 
   const flags = await prisma.report.findMany({
-    where: { reviewId: { not: null }, status: { in: ["RECEIVED", "IN_REVIEW"] } },
+    // `review: { isNot: null }` excludes any flag orphaned by the reviewId SetNull
+    // (a cascade-deleted review) so the render below always has its review.
+    where: { reviewId: { not: null }, review: { isNot: null }, status: { in: ["RECEIVED", "IN_REVIEW"] } },
     orderBy: { createdAt: "asc" },
     include: {
       review: {
@@ -62,7 +64,7 @@ export default async function AdminReviewsPage() {
               </p>
 
               {f.review && (
-                <blockquote className="mt-3 rounded bg-ink-900 p-3 text-sm text-sand-100">
+                <blockquote className="mt-3 rounded bg-ink-700 p-3 text-sm text-sand-100">
                   <span className="text-gold-400">{"★".repeat(f.review.overall)}</span>{" "}
                   <span className="text-sand-300">— {f.review.author.displayName}</span>
                   {f.review.text && <p className="mt-1">{f.review.text}</p>}

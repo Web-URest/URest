@@ -76,6 +76,9 @@ async function assertReviewable(client: Tx | typeof prisma, bookingId: string, u
   if (!booking) throw new ReviewError("NOT_FOUND");
   if (booking.userId !== userId) throw new ReviewError("NOT_GUEST");
   if (booking.status !== BookingStatus.COMPLETED) throw new ReviewError("NOT_COMPLETED");
+  // The window is tied to the checkout DATE — a sound proxy for "COMPLETED + 14d"
+  // because a booking transitions to COMPLETED at checkout (the cron sweep). If
+  // auto-completion ever moves off the checkout instant, revisit this.
   if (now.getTime() > booking.checkOut.getTime() + REVIEW_WINDOW_DAYS * MS_PER_DAY) {
     throw new ReviewError("WINDOW_CLOSED");
   }
