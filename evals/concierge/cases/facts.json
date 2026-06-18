@@ -1,0 +1,16 @@
+[
+  { "id": "fact-jomtien-checkin", "category": "fact", "listing": "jomtien", "turns": [{ "user": "บ้านพูลวิลล่าทดสอบ จอมเทียน เช็คอินกี่โมงคะ" }], "fact": "14:00" },
+  { "id": "fact-jomtien-checkout", "category": "fact", "listing": "jomtien", "turns": [{ "user": "เช็คเอาท์กี่โมงคะ" }], "fact": "12:00" },
+  { "id": "fact-jomtien-quiet", "category": "fact", "listing": "jomtien", "turns": [{ "user": "ช่วงเวลาเงียบของวิลล่าจอมเทียนคือกี่โมง" }], "fact": "23:00" },
+  { "id": "fact-jomtien-pool-depth", "category": "fact", "listing": "jomtien", "turns": [{ "user": "สระว่ายน้ำลึกเท่าไหร่คะ" }], "fact": "1.5" },
+  { "id": "fact-jomtien-netflix", "category": "fact", "listing": "jomtien", "turns": [{ "user": "ที่พักมี Netflix ไหมคะ" }], "fact": "HDMI", "judge": { "question": "มี Netflix ไหม", "expected": "ไม่มี Netflix แต่มี HDMI ต่อทีวีได้" } },
+  { "id": "fact-jomtien-parking", "category": "fact", "listing": "jomtien", "turns": [{ "user": "จอดรถได้กี่คันคะ" }], "fact": "3", "judge": { "question": "จอดรถได้กี่คัน", "expected": "จอดได้ 3 คัน" } },
+  { "id": "fact-jomtien-rooms", "category": "fact", "listing": "jomtien", "turns": [{ "user": "มีกี่ห้องนอนกี่ห้องน้ำคะ" }], "judge": { "question": "กี่ห้องนอนกี่ห้องน้ำ", "expected": "4 ห้องนอน 3 ห้องน้ำ" } },
+  { "id": "fact-jomtien-cancellation", "category": "fact", "listing": "jomtien", "turns": [{ "user": "นโยบายยกเลิกเป็นแบบไหนคะ" }], "judge": { "question": "นโยบายการยกเลิก", "expected": "ระดับ MODERATE (ปานกลาง)" } },
+  { "id": "fact-naklua-checkin", "category": "fact", "listing": "naklua", "turns": [{ "user": "บ้านริมสวน นาเกลือ เช็คอินกี่โมง" }], "fact": "15:00" },
+  { "id": "fact-naklua-pets", "category": "fact", "listing": "naklua", "turns": [{ "user": "พาสัตว์เลี้ยงไปได้ไหมคะ" }], "fact": "15", "judge": { "question": "รับสัตว์เลี้ยงไหม", "expected": "รับสัตว์เลี้ยงเล็ก-กลางไม่เกิน 15 กก." } },
+  { "id": "fact-naklua-store", "category": "fact", "listing": "naklua", "turns": [{ "user": "ใกล้ร้านสะดวกซื้อไหม" }], "fact": "7-Eleven" },
+  { "id": "fact-pattaya-slide-age", "category": "fact", "listing": "pattayaSouth", "turns": [{ "user": "วิลล่าลักชัวรี่ พัทยาใต้ สไลเดอร์เล่นได้อายุเท่าไหร่" }], "fact": "110" },
+  { "id": "fact-pattaya-party", "category": "fact", "listing": "pattayaSouth", "turns": [{ "user": "จัดปาร์ตี้ได้ถึงกี่โมง" }], "fact": "01:00" },
+  { "id": "fact-pattaya-dj", "category": "fact", "listing": "pattayaSouth", "turns": [{ "user": "มีเครื่องเล่น DJ ไหมคะ" }], "judge": { "question": "มี DJ equipment ไหม", "expected": "ไม่มี DJ equipment แต่มีลำโพง JBL" } }
+]
