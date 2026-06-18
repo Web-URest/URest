@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
+import { Link } from "@/i18n/navigation";
 import { requireHostEligible } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { formatSatang } from "@/lib/money";
@@ -7,6 +8,7 @@ import { ReportForm } from "@/components/ui/ReportForm";
 import { submitBookingReportAction } from "@/app/[locale]/(protected)/reports/actions";
 
 import { HostCancelButton } from "./cancel-button";
+import { RateGuestForm } from "./rate-guest-form";
 
 /**
  * Host bookings (PRODUCT_FLOWS §3.3 host side). Lists the host's confirmed/checked-in
@@ -14,17 +16,29 @@ import { HostCancelButton } from "./cancel-button";
  * is a 100% guest refund + a strike (ADR-012 §2).
  */
 export default async function HostBookingsPage() {
-  const [host, t, tr] = await Promise.all([
+  const [host, t, tr, tMsg] = await Promise.all([
     requireHostEligible(),
     getTranslations("Host.bookings"),
     getTranslations("Reports"),
+    getTranslations("Thread"),
   ]);
 
-  const bookings = await prisma.booking.findMany({
-    where: { status: { in: ["CONFIRMED", "CHECKED_IN"] }, listing: { hostId: host.id } },
-    include: { listing: { select: { title: true } }, user: { select: { displayName: true } } },
-    orderBy: { checkIn: "asc" },
-  });
+  const [bookings, completed] = await Promise.all([
+    prisma.booking.findMany({
+      where: { status: { in: ["CONFIRMED", "CHECKED_IN"] }, listing: { hostId: host.id } },
+      include: { listing: { select: { title: true } }, user: { select: { displayName: true } } },
+      orderBy: { checkIn: "asc" },
+    }),
+    prisma.booking.findMany({
+      where: { status: "COMPLETED", listing: { hostId: host.id } },
+      include: {
+        listing: { select: { title: true } },
+        user: { select: { displayName: true } },
+        guestRating: { select: { id: true } },
+      },
+      orderBy: { checkOut: "desc" },
+    }),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -42,6 +56,9 @@ export default async function HostBookingsPage() {
               {b.user.displayName} · {b.checkIn.toISOString().slice(0, 10)} – {b.checkOut.toISOString().slice(0, 10)}
             </p>
             {b.code && <p className="text-xs text-ink-900/50">{b.code}</p>}
+            <Link href={`/messages/${b.id}`} className="text-sm font-semibold text-teal-600 hover:underline">
+              {tMsg("messageGuest")}
+            </Link>
             <HostCancelButton bookingId={b.id} />
             <details className="text-sm text-ink-900/50">
               <summary className="cursor-pointer underline hover:text-ink-700">
@@ -51,6 +68,28 @@ export default async function HostBookingsPage() {
             </details>
           </div>
         ))
+      )}
+
+      {completed.length > 0 && (
+        <>
+          <h2 className="mt-4 font-display text-xl text-ink-900">{t("completedTitle")}</h2>
+          {completed.map((b) => (
+            <div key={b.id} className="flex flex-col gap-2 rounded-card border border-line bg-white p-5 shadow-card">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-display text-lg text-ink-900">{b.listing.title}</h3>
+                <span className="text-sm font-semibold text-ink-900">{formatSatang(b.totalSatang)}</span>
+              </div>
+              <p className="text-sm text-ink-900/70">
+                {b.user.displayName} · {b.checkIn.toISOString().slice(0, 10)} – {b.checkOut.toISOString().slice(0, 10)}
+              </p>
+              {b.guestRating ? (
+                <p className="text-sm text-ink-900/50">{t("guestRated")}</p>
+              ) : (
+                <RateGuestForm bookingId={b.id} />
+              )}
+            </div>
+          ))}
+        </>
       )}
     </div>
   );

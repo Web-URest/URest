@@ -33,6 +33,12 @@ jobs:
       - name: Enforce lib-only Booking state writes
         run: pnpm gate:status
 
+      - name: Enforce no bodyRaw reads outside lib/messaging
+        run: pnpm gate:bodyraw
+
+      - name: Enforce lib-only Review / GuestRating writes
+        run: pnpm gate:reviews
+
       - name: Test
         run: pnpm test
 

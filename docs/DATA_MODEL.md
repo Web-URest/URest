@@ -46,7 +46,7 @@ erDiagram
 | Model | Purpose | Notable |
 |---|---|---|
 | `Region` | Lookup table (NOT enum) | `isActive` gates GTM expansion — launching เขาใหญ่ is an INSERT |
-| `Listing` | The villa | `ListingStatus` per §2.2; amenities `Amenity[]`; pricing = base weekday/weekend + `holidaySatang?`; `instantAckAt` = §4.1 strike acknowledgment; `legalBadgeAt` = ถูกต้องตามกฎหมาย; live source for NEW quotes only (bookings snapshot) |
+| `Listing` | The villa | `ListingStatus` per §2.2; amenities `Amenity[]`; pricing = base weekday/weekend + `holidaySatang?`; `instantAckAt` = §4.1 strike acknowledgment; `legalBadgeAt` = ถูกต้องตามกฎหมาย; `avgRating?`/`reviewCount` = denormalized §3.4 review aggregate (maintained by lib/reviews, #28); live source for NEW quotes only (bookings snapshot) |
 | `ListingPhoto` | Public-bucket images | `isCover`, sortOrder; min-5 in lib/listing |
 | `Season` | Named host season + rates | **DB-level overlap ban** (constraint №2 below) |
 | `ThaiHoliday` | System holiday calendar | night is holiday-priced if `date ∈ table` or `date+1 ∈ table` (eves); lunar dates need official verification before Phase 3 launch |
@@ -76,8 +76,8 @@ erDiagram
 
 | Model | Key fields | Notes |
 |---|---|---|
-| `MessageThread` | bookingId @unique | opens at REQUESTED (§3.5) |
-| `Message` | threadId, senderId, **bodyRaw + bodyMasked + wasMasked** (ADR-011 №5), readAt? | masking frozen at write; raw readable ONLY in admin dispute view; LINE-push throttle via NotificationLog timestamps |
+| `MessageThread` | bookingId @unique, lastNotifiedAt? | opens at REQUESTED (§3.5); lastNotifiedAt = the 1/thread/10min LINE-push throttle (CAS-claimed, #24) |
+| `Message` | threadId, senderId, **bodyRaw + bodyMasked + wasMasked** (ADR-011 №5), readAt? | masking frozen at write; raw readable ONLY in admin dispute view |
 | `Review` | bookingId @unique, overall + 4 sub-scores (ความสะอาด/ตรงตามรูป/การติดต่อโฮสต์/ความคุ้มค่า §3.4), photoKeys[], removedByAdminId?/removedAt? | one per booking, no edits; soft moderation removal (reason in AuditLog) |
 | `GuestRating` | bookingId @unique, score 1–5 | host→guest, shown to future hosts |
 | `Dispute` | bookingId @unique, status (OPEN, RESOLVED_RELEASED, RESOLVED_PARTIAL, RESOLVED_REFUNDED), partialRefundPct?, guestAppealedAt?/hostAppealedAt? | dispute window = check-in → checkout + one-appeal-each in lib/booking (§5.3) |

@@ -12,7 +12,10 @@ import { PriceCalendar } from "@/components/ui/PriceCalendar";
 import { EscrowStrip } from "@/components/ui/EscrowStrip";
 import { ReportForm } from "@/components/ui/ReportForm";
 import { submitListingReportAction } from "@/app/[locale]/(protected)/reports/actions";
+import { StarRating } from "@/components/ui/StarRating";
 import { Link } from "@/i18n/navigation";
+
+import { FlagReviewButton } from "./flag-review-button";
 
 interface ListingPageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -36,6 +39,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
   const { id } = await params;
   const t = await getTranslations("ListingDetail");
   const tBook = await getTranslations("BookingCard");
+  const tReviews = await getTranslations("Reviews");
 
   const [session, data] = await Promise.all([auth(), getListingDetail(id)]);
   if (!data) notFound();
@@ -45,7 +49,8 @@ export default async function ListingPage({ params }: ListingPageProps) {
     : new Set<string>();
   const isSaved = savedIds.has(id);
 
-  const { listing, holidaySet, attractions } = data;
+  const { listing, holidaySet, attractions, reviews } = data;
+  const reviewSummary = reviews.summary;
 
   const pricingConfig = {
     baseWeekdaySatang: listing.baseWeekdaySatang,
@@ -129,6 +134,10 @@ export default async function ListingPage({ params }: ListingPageProps) {
                   </>
                 ) : null}
               </p>
+
+              {listing.reviewCount > 0 && listing.avgRating !== null && (
+                <StarRating value={listing.avgRating} count={listing.reviewCount} />
+              )}
 
               <p className="text-sm leading-relaxed text-ink-700">{listing.description}</p>
             </div>
@@ -226,12 +235,74 @@ export default async function ListingPage({ params }: ListingPageProps) {
               </section>
             )}
 
-            {/* Reviews shell */}
+            {/* Reviews */}
             <section aria-label={t("sectionReviews")}>
               <h2 className="mb-3 font-display text-xl text-ink-900">{t("sectionReviews")}</h2>
-              <div className="rounded-card border border-line bg-white px-5 py-8 text-center text-sm text-ink-900/50">
-                {t("reviewsEmpty")}
-              </div>
+              {reviews.reviews.length === 0 ? (
+                <div className="rounded-card border border-line bg-white px-5 py-8 text-center text-sm text-ink-900/50">
+                  {t("reviewsEmpty")}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {/* Summary: overall + sub-score averages */}
+                  <div className="rounded-card border border-line bg-white p-5">
+                    <div className="flex items-center gap-3">
+                      <span className="font-display text-3xl text-ink-900">
+                        {(reviewSummary.avgRating ?? 0).toFixed(1)}
+                      </span>
+                      <StarRating value={reviewSummary.avgRating ?? 0} count={reviewSummary.reviewCount} showValue={false} />
+                    </div>
+                    {reviewSummary.subScores && (
+                      <dl className="mt-4 grid gap-2 sm:grid-cols-2">
+                        {(
+                          [
+                            ["cleanliness", reviewSummary.subScores.cleanliness],
+                            ["accuracyToPhotos", reviewSummary.subScores.accuracyToPhotos],
+                            ["hostResponsiveness", reviewSummary.subScores.hostResponsiveness],
+                            ["valueForMoney", reviewSummary.subScores.valueForMoney],
+                          ] as const
+                        ).map(([key, val]) => (
+                          <div key={key} className="flex items-center justify-between gap-3">
+                            <dt className="text-sm text-ink-900/70">{tReviews(key)}</dt>
+                            <dd>
+                              <StarRating value={val} showValue={false} />
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                  </div>
+
+                  {/* Individual reviews */}
+                  {reviews.reviews.map((r) => (
+                    <div key={r.id} className="rounded-card border border-line bg-white p-5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-ink-900">{r.authorName}</span>
+                        {r.verified && (
+                          <span className="rounded-full bg-jade-500/10 px-2 py-0.5 text-xs font-semibold text-jade-500">
+                            {t("verifiedGuest")} ✓
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1">
+                        <StarRating value={r.overall} showValue={false} />
+                      </div>
+                      {r.text && <p className="mt-2 text-sm text-ink-900/80">{r.text}</p>}
+                      {r.photoUrls.length > 0 && (
+                        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {r.photoUrls.map((u) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={u} src={u} alt="" className="aspect-square w-full rounded-photo object-cover" />
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-3">
+                        <FlagReviewButton reviewId={r.id} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* Cancellation policy */}

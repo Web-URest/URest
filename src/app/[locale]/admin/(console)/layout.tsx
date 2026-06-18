@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { getAdmin } from "@/lib/admin/auth";
-import { redirect } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 
 import { AdminLogoutButton } from "./logout-button";
 
@@ -35,6 +35,20 @@ export default async function AdminConsoleLayout({
           <AdminLogoutButton />
         </div>
       </header>
+      <nav className="flex gap-5 border-b border-ink-700 px-6 py-2 text-sm">
+        <Link href="/admin/approval-queue" className="text-sand-300 hover:text-sand-50">
+          {t("nav.approvalQueue")}
+        </Link>
+        <Link href="/admin/payouts" className="text-sand-300 hover:text-sand-50">
+          {t("nav.payouts")}
+        </Link>
+        <Link href="/admin/reviews" className="text-sand-300 hover:text-sand-50">
+          {t("nav.reviews")}
+        </Link>
+        <Link href="/admin/unanswered-questions" className="text-sand-300 hover:text-sand-50">
+          {t("nav.unanswered")}
+        </Link>
+      </nav>
       <main className="px-6 py-8">{children}</main>
     </div>
   );

@@ -21,7 +21,11 @@ export default async function TripsPage({ searchParams }: { searchParams: Promis
 
   const bookings = await prisma.booking.findMany({
     where: { userId: user.id, status: { in: [...TABS[active]] } },
-    include: { listing: { select: { title: true } }, refund: { select: { refundSatang: true } } },
+    include: {
+      listing: { select: { title: true } },
+      refund: { select: { refundSatang: true } },
+      review: { select: { id: true } },
+    },
     orderBy: { checkIn: active === "past" ? "desc" : "asc" },
   });
 

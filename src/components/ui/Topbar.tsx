@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Heart, User, Menu } from "lucide-react";
+import { Heart, User, Menu, MessageSquare } from "lucide-react";
 
 import { auth } from "@/lib/auth/auth";
 import { isKillSwitchActive } from "@/lib/concierge/cost";
@@ -76,6 +76,13 @@ export async function TopbarShell({
 
           {user ? (
             <>
+              <Link
+                href="/messages"
+                aria-label={t("messages")}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-ink-700 transition duration-150 ease-out hover:bg-sand-100"
+              >
+                <MessageSquare size={20} />
+              </Link>
               <Link
                 href="/saved"
                 aria-label={t("saved")}
