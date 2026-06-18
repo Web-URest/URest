@@ -11,6 +11,7 @@ import {
   type DraftFailReason,
   type SubmitFailReason,
 } from "./booking";
+import type { ConciergeCard } from "./cards";
 
 // Tool definitions (strict: true) — schemas from AI_CONCIERGE_SPEC §2.
 export const CONCIERGE_TOOLS: Anthropic.Tool[] = [
@@ -128,25 +129,10 @@ export const CONCIERGE_TOOLS: Anthropic.Tool[] = [
 export type ToolInput = Record<string, unknown>;
 
 /**
- * A UI card the server attaches to the chat thread as a side-effect of a tool
- * call. It is emitted to the browser over SSE + persisted, but NEVER placed in
- * the model's message history — so the QR URL never reaches the model (AC#4).
+ * Tool result. `card` is a UI side-effect emitted to the browser + persisted, but
+ * NEVER placed in the model's message history — so the QR URL / token never reach
+ * the model (AC#4). The card shape lives in `./cards` (pure types, client-safe).
  */
-export type ConciergeCard =
-  | {
-      kind: "booking_draft";
-      draftId: string;
-      title: string;
-      checkIn: string;
-      checkOut: string;
-      nights: number;
-      guests: number;
-      totalThb: number;
-      priceLines: { date: string; rule: string; season?: string; priceThb: number }[];
-    }
-  | { kind: "payment_qr"; bookingId: string; code: string | null; qrUrl?: string; payUrl: string }
-  | { kind: "request_sent"; bookingId: string; code: string | null; tripUrl: string };
-
 export type ToolResult = { is_error: boolean; content: string; card?: ConciergeCard };
 
 // Haversine for attraction distance

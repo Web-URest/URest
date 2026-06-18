@@ -541,7 +541,20 @@
     "errorDailyLimit": "You've reached today's {limit}-message limit. Come back tomorrow!",
     "errorTokenCeiling": "This conversation got very long. Start a fresh chat below.",
     "newChat": "Start new chat",
-    "loginPrompt": "Sign in to save your chat history and unlock all features"
+    "loginPrompt": "Sign in to save your chat history and unlock all features",
+    "cardGuests": "{count} guests",
+    "cardNights": "{count} nights",
+    "cardTotal": "Total",
+    "cardConfirm": "Confirm & send request",
+    "cardConfirming": "Sending…",
+    "cardConfirmed": "Confirmed ✓",
+    "cardConfirmMessage": "Confirm the booking",
+    "cardPhoneNeeded": "Please verify your phone number before booking",
+    "cardConfirmError": "Couldn't confirm — please try again",
+    "cardPayTitle": "Scan to pay (PromptPay)",
+    "cardPayLink": "Open payment page",
+    "cardRequestSent": "Request sent — awaiting host confirmation",
+    "cardViewTrip": "View booking status"
   },
   "SavedVillas": {
     "pageTitle": "Saved villas",

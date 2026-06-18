@@ -10,6 +10,7 @@ import { StarRatingInput } from "@/components/ui/StarRatingInput";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { WizardStepper } from "@/components/ui/WizardStepper";
+import { BookingDraftCard } from "@/app/[locale]/(protected)/concierge/BookingDraftCard";
 
 /**
  * Interactive showcase of the wizard form primitives for /styleguide. Lives as a
@@ -102,6 +103,24 @@ export function FormPrimitivesDemo() {
       />
 
       <StarRatingInput value={stars} onChange={setStars} label="ให้คะแนนรีวิว" />
+
+      <BookingDraftCard
+        card={{
+          kind: "booking_draft",
+          draftId: "demo",
+          title: "บ้านพูลวิลล่าทดสอบ จอมเทียน",
+          checkIn: "2026-08-01",
+          checkOut: "2026-08-03",
+          nights: 2,
+          guests: 6,
+          totalThb: 25800,
+          priceLines: [
+            { date: "2026-08-01", rule: "WEEKEND", priceThb: 12900 },
+            { date: "2026-08-02", rule: "WEEKDAY", priceThb: 12900 },
+          ],
+        }}
+        onConfirm={() => {}}
+      />
     </div>
   );
 }
