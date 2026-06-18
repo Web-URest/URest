@@ -12,7 +12,7 @@ vi.mock("@/lib/notifications", () => ({ notify: vi.fn() }));
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notifications";
 
-import { loadThreadForViewer, MessagingError, sendMessage } from "./thread";
+import { listThreadsForUser, loadThreadForViewer, MessagingError, sendMessage } from "./thread";
 
 const findBooking = prisma.booking.findUnique as unknown as Mock;
 const threadUpsert = prisma.messageThread.upsert as unknown as Mock;
@@ -114,5 +114,31 @@ describe("loadThreadForViewer", () => {
 
   it("rejects a non-participant viewer", async () => {
     await expect(loadThreadForViewer("bk1", "stranger")).rejects.toBeInstanceOf(MessagingError);
+  });
+});
+
+describe("listThreadsForUser", () => {
+  it("maps threads to a preview + unread, picking the counterparty by the viewer's role", async () => {
+    (prisma.messageThread.findMany as unknown as Mock).mockResolvedValue([
+      {
+        bookingId: "bk1",
+        booking: {
+          userId: "guest1",
+          user: { displayName: "สมชาย" },
+          listing: { title: "วิลล่า A", host: { displayName: "โฮสต์" } },
+        },
+        messages: [{ bodyMasked: "สวัสดี", createdAt: NOW }],
+        _count: { messages: 2 },
+      },
+    ]);
+    // viewer is the guest → counterparty is the host
+    const rows = await listThreadsForUser("guest1");
+    expect(rows[0]).toMatchObject({
+      bookingId: "bk1",
+      listingTitle: "วิลล่า A",
+      otherPartyName: "โฮสต์",
+      lastMessage: "สวัสดี",
+      unread: 2,
+    });
   });
 });

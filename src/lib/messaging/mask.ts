@@ -15,7 +15,7 @@ export function maskBody(raw: string): { masked: string; wasMasked: boolean } {
 
   // URLs — explicit scheme / www, then bare common-TLD domains.
   s = s.replace(/(?:https?:\/\/|www\.)\S+/gi, MARK);
-  s = s.replace(/\b[a-z0-9-]+\.(?:com|net|org|co|io|app|me|biz|info|xyz)(?:\/\S*)?\b/gi, MARK);
+  s = s.replace(/\b[a-z0-9-]+\.(?:com|net|org|co(?:\.th)?|io|app|me|biz|info|xyz|tv|th)(?:\/\S*)?\b/gi, MARK);
 
   // LINE — @handles, then Thai/English "LINE id" markers + the following token.
   // The Thai negative lookbehind keeps "ออนไลน์" (online) from tripping "ไลน์".
@@ -23,9 +23,9 @@ export function maskBody(raw: string): { masked: string; wasMasked: boolean } {
   s = s.replace(/(?<![ก-๛])(?:ไอดีไลน์|ไลน์ไอดี|ไลน์|ไอดี)\s*[:：]?\s*[\w.\-]+/g, MARK);
   s = s.replace(/\bline(?:\s*id)?\s*[:：]?\s*[\w.\-]+/gi, MARK);
 
-  // Phone / bank account — digit runs (spaces/dashes allowed) totalling ≥9 digits.
-  // The threshold protects small numbers: guest counts, nights, times, 8-digit dates.
-  s = s.replace(/\+?\d[\d\s-]*\d/g, (m) => ((m.match(/\d/g)?.length ?? 0) >= 9 ? MARK : m));
+  // Phone / bank account — digit runs (spaces/dashes/dots allowed) totalling ≥9 digits.
+  // The threshold protects small numbers: guest counts, nights, times, 8-digit dates, prices.
+  s = s.replace(/\+?\d[\d\s.\-]*\d/g, (m) => ((m.match(/\d/g)?.length ?? 0) >= 9 ? MARK : m));
 
   return { masked: s, wasMasked: s !== raw };
 }

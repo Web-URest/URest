@@ -9,6 +9,7 @@ describe("maskBody — Thai phone numbers", () => {
     "0812345678",
     "081-234-5678",
     "08 1234 5678",
+    "081.234.5678",
     "+66812345678",
     "โทรมาที่ 099 111 2222 นะคะ",
   ])("redacts %s", (input) => {
@@ -38,12 +39,17 @@ describe("maskBody — LINE IDs", () => {
 });
 
 describe("maskBody — URLs", () => {
-  it.each(["http://evil.example", "https://scam.co/pay", "www.pay-here.com", "go to example.com/x"])(
-    "redacts %s",
-    (input) => {
-      expect(maskBody(input).masked).toContain(MARK);
-    },
-  );
+  it.each([
+    "http://evil.example",
+    "https://scam.co/pay",
+    "www.pay-here.com",
+    "go to example.com/x",
+    "pay.co.th",
+    "scam.th/pay",
+    "watch.tv",
+  ])("redacts %s", (input) => {
+    expect(maskBody(input).masked).toContain(MARK);
+  });
 });
 
 describe("maskBody — negatives (must NOT redact)", () => {
@@ -57,6 +63,9 @@ describe("maskBody — negatives (must NOT redact)", () => {
   });
   it("leaves an 8-digit date alone", () => {
     expect(maskBody("วันที่ 2026-08-03").wasMasked).toBe(false);
+  });
+  it("leaves a price with a decimal alone (dot separator, <9 digits)", () => {
+    expect(maskBody("ราคา 12,500.50 บาท").wasMasked).toBe(false);
   });
   it("leaves a clean message alone", () => {
     const clean = "สวัสดีค่ะ บ้านสวยมาก อยากทราบว่ามีที่จอดรถไหมคะ";
