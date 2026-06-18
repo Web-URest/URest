@@ -15,6 +15,7 @@
     "lint": "eslint .",
     "gate:status": "node scripts/check-status-writes.mjs",
     "gate:bodyraw": "node scripts/check-bodyraw-reads.mjs",
+    "gate:reviews": "node scripts/check-review-writes.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

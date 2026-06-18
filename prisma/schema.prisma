@@ -132,6 +132,11 @@ model Listing {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  /// Denormalized review aggregate (§3.4 display) — recomputed by lib/reviews on
+  /// publish/removal; null avgRating until the first published review.
+  avgRating   Float?
+  reviewCount Int    @default(0)
+
   host           User              @relation(fields: [hostId], references: [id])
   region         Region            @relation(fields: [regionId], references: [id])
   photos         ListingPhoto[]

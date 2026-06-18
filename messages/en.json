@@ -111,7 +111,18 @@
     "nav": {
       "approvalQueue": "Approval queue",
       "payouts": "Payouts",
+      "reviews": "Reviews",
       "unanswered": "Unanswered Q&A"
+    },
+    "Reviews": {
+      "title": "Review moderation",
+      "subtitle": "Flagged reviews — remove only for policy violations (doxxing, hate, extortion, spam), never because a host disagrees.",
+      "empty": "No flagged reviews",
+      "flagReason": "Flag reason",
+      "alreadyRemoved": "This review has been removed",
+      "keep": "Keep",
+      "remove": "Remove review",
+      "removeReasonPlaceholder": "Removal reason (recorded in the audit log)"
     },
     "Payouts": {
       "title": "Host payouts",
@@ -389,6 +400,7 @@
     "cancellationModerate": "Free cancellation up to 5 days before check-in",
     "cancellationStrict": "Free cancellation up to 14 days before check-in",
     "reviewsEmpty": "No reviews yet — be the first to stay",
+    "verifiedGuest": "Verified guest",
     "reportLink": "Report this listing",
     "conciergeChip": "Ask น้องเรสต์ about this villa",
     "distanceKm": "{km} km",
@@ -439,6 +451,8 @@
     "tab_pending": "Pending",
     "tab_past": "Past",
     "viewStatus": "View status",
+    "writeReview": "⭐ Write a review",
+    "reviewed": "★ Reviewed",
     "refundedPill": "Refunded {amount}",
     "cancelCta": "Cancel booking",
     "cancelWillRefund": "Cancel this booking — you'll be refunded {amount}",
@@ -468,6 +482,29 @@
     "errorPaymentFailed": "Payment failed — please try again or switch method",
     "errorWrongState": "This booking is no longer in the payment step",
     "errorNotFound": "Booking not found"
+  },
+  "Reviews": {
+    "title": "Write a review",
+    "overall": "Overall",
+    "cleanliness": "Cleanliness",
+    "accuracyToPhotos": "Matches photos",
+    "hostResponsiveness": "Host responsiveness",
+    "valueForMoney": "Value for money",
+    "textLabel": "Tell us about your stay (optional)",
+    "textPlaceholder": "How was the villa? Anything future guests should know?",
+    "photosLabel": "Photos (optional)",
+    "addPhoto": "Add photo",
+    "submit": "Submit review",
+    "submitting": "Submitting…",
+    "errorGeneric": "Couldn't submit your review — please try again",
+    "alreadyReviewed": "You've already reviewed this booking",
+    "ineligible": "This booking can't be reviewed yet",
+    "viewListing": "View listing",
+    "flag": "Report review",
+    "flagReason": "Reason (e.g. doxxing, hate speech, extortion, spam)",
+    "flagSubmit": "Submit report",
+    "flagCancel": "Cancel",
+    "flagged": "Reported — thank you"
   },
   "Messages": {
     "title": "Messages",
@@ -552,7 +589,9 @@
       "respondByNote": "Respond within 12h or the request expires",
       "accept": "Accept",
       "decline": "Decline",
-      "actionError": "Action failed — please try again"
+      "actionError": "Action failed — please try again",
+      "guestStays": "{count} stays",
+      "newGuest": "New guest (no rating yet)"
     },
     "bookings": {
       "title": "Confirmed bookings",
@@ -561,7 +600,14 @@
       "cancelWarn": "A host cancellation refunds the guest 100% and records a strike (3 strikes = suspension).",
       "cancelBack": "Back",
       "cancelConfirm": "Confirm cancellation",
-      "cancelError": "Couldn't cancel — please try again"
+      "cancelError": "Couldn't cancel — please try again",
+      "completedTitle": "Past stays",
+      "guestRated": "You've rated this guest",
+      "rateGuest": "Rate this guest",
+      "rateReasonLabel": "Note (optional, not shown to the guest)",
+      "rateReasonPlaceholder": "Looked after the villa / easy to reach, etc.",
+      "rateSubmit": "Save rating",
+      "rateError": "Couldn't save the rating — please try again"
     },
     "overviewTitle": "Overview",
     "kpiRevenue": "Revenue this month",

@@ -145,3 +145,13 @@ describe("payout templates (#25)", () => {
     expect(t?.email({}).subject).toBeTruthy();
   });
 });
+
+describe("review template (#28)", () => {
+  it("REVIEW_RECEIVED_HOST is priority and names the listing + booking code", () => {
+    const t = getTemplate("REVIEW_RECEIVED_HOST");
+    expect(t?.priority).toBe(true);
+    const p = { listingTitle: "วิลล่า A", code: "UR-2606-0001" };
+    expect(t?.line(p)).toContain("วิลล่า A");
+    expect(t?.email(p).subject).toContain("UR-2606-0001");
+  });
+});

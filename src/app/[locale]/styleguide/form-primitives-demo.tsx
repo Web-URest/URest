@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { NumberInput } from "@/components/ui/NumberInput";
 import { RadioGroup } from "@/components/ui/RadioGroup";
 import { Select } from "@/components/ui/Select";
+import { StarRatingInput } from "@/components/ui/StarRatingInput";
 import { TextInput } from "@/components/ui/TextInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { WizardStepper } from "@/components/ui/WizardStepper";
@@ -24,6 +25,7 @@ export function FormPrimitivesDemo() {
   const [mode, setMode] = useState("REQUEST");
   const [ack, setAck] = useState(false);
   const [step, setStep] = useState(2);
+  const [stars, setStars] = useState(0);
 
   return (
     <div className="flex max-w-md flex-col gap-5">
@@ -98,6 +100,8 @@ export function FormPrimitivesDemo() {
         onCheckedChange={setAck}
         label="ปฏิทินของฉันเป็นปัจจุบันเสมอ"
       />
+
+      <StarRatingInput value={stars} onChange={setStars} label="ให้คะแนนรีวิว" />
     </div>
   );
 }

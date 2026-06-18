@@ -1,10 +1,12 @@
 import { getTranslations } from "next-intl/server";
 
+import { StarRating } from "@/components/ui/StarRating";
 import { Link } from "@/i18n/navigation";
 import { requireHostEligible } from "@/lib/auth/guards";
 import { maskedContact } from "@/lib/booking/contact";
 import { prisma } from "@/lib/db";
 import { formatSatang } from "@/lib/money";
+import { loadGuestRatingSummary } from "@/lib/reviews/ratings";
 
 import { RequestActions } from "./request-actions";
 
@@ -29,14 +31,18 @@ export default async function HostRequestsPage() {
     orderBy: { respondBy: "asc" },
   });
 
+  // The guest's host-given rating (§4.2 accept-confidence) — host-to-host only.
+  const summaries = await Promise.all(requests.map((b) => loadGuestRatingSummary(b.userId)));
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-display text-2xl text-ink-900">{t("title")}</h1>
       {requests.length === 0 ? (
         <p className="text-sm text-ink-900/60">{t("empty")}</p>
       ) : (
-        requests.map((b) => {
+        requests.map((b, i) => {
           const contact = maskedContact(b.contactUnmaskedAt, { email: b.user.email, phone: b.user.phone });
+          const rating = summaries[i] ?? { avgScore: null, count: 0 };
           return (
             <div key={b.id} className="flex flex-col gap-2 rounded-card border border-line bg-white p-5 shadow-card">
               <div className="flex items-center justify-between gap-2">
@@ -45,6 +51,16 @@ export default async function HostRequestsPage() {
               </div>
               <p className="text-sm text-ink-900/70">
                 {b.user.displayName} · {b.checkIn.toISOString().slice(0, 10)} – {b.checkOut.toISOString().slice(0, 10)}
+              </p>
+              <p className="text-xs text-ink-900/60">
+                {rating.avgScore !== null ? (
+                  <span className="inline-flex items-center gap-1">
+                    <StarRating value={rating.avgScore} showValue />
+                    <span>{t("guestStays", { count: rating.count })}</span>
+                  </span>
+                ) : (
+                  t("newGuest")
+                )}
               </p>
               {b.guestNoteToHost && (
                 <p className="text-sm text-ink-900/80">
