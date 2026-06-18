@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "eval:concierge": "vitest run --config vitest.eval.config.ts",
     "e2e": "playwright test",
     "e2e:install": "playwright install --with-deps chromium",
     "postinstall": "prisma generate",

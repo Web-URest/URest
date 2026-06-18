@@ -2,6 +2,11 @@ import { execSync } from "node:child_process";
 
 import { PrismaClient } from "@prisma/client";
 
+// Apply the eval env defaults (DATABASE_URL→urest_eval + dummy non-secrets) in
+// THIS process so the migrate/seed subprocesses inherit them. (setupFiles run in
+// workers, not here.) ANTHROPIC_API_KEY is intentionally left to the real env.
+import "./setup";
+
 /**
  * Ensure `urest_eval` exists + is migrated + core-seeded before the eval runs
  * (#33). Mirrors e2e/global-setup.ts. The eval-only fixtures (test guest + saved
