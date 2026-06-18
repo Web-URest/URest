@@ -166,6 +166,30 @@ const templates: Record<string, NotificationTemplate> = {
     }),
     line: (p) => `💬 ข้อความใหม่จาก ${str(p.senderName)} — ${str(p.listingTitle)} เปิดแอปเพื่อตอบกลับ`,
   },
+  PAYOUT_PAID_HOST: {
+    priority: true,
+    email: (p) => ({
+      subject: `โอนเงินให้แล้ว — การจอง ${str(p.code)}`,
+      body: `เราได้โอนเงิน ${satang(p.amountSatang)} สำหรับการจอง ${str(p.code)} ให้คุณเรียบร้อยแล้ว (อ้างอิงสลิป ${str(p.slipRef)}) อาจใช้เวลา 1–2 วันทำการกว่าจะเห็นในบัญชี`,
+    }),
+    line: (p) => `💸 โอนเงิน ${satang(p.amountSatang)} แล้ว — การจอง ${str(p.code)} (สลิป ${str(p.slipRef)})`,
+  },
+  PAYOUT_HOLD_CREATED: {
+    priority: true,
+    email: (p) => ({
+      subject: "การโอนเงินถูกระงับชั่วคราว",
+      body: `การโอนเงินของคุณถูกระงับชั่วคราวเพื่อตรวจสอบ: ${str(p.reason)} ทีมงานจะติดต่อกลับโดยเร็ว`,
+    }),
+    line: (p) => `⏸️ การโอนเงินถูกระงับชั่วคราว — ${str(p.reason)}`,
+  },
+  PAYOUT_HOLD_RELEASED: {
+    priority: true,
+    email: () => ({
+      subject: "การโอนเงินกลับมาดำเนินการแล้ว",
+      body: "การระงับการโอนเงินถูกยกเลิกแล้ว เงินของคุณจะถูกโอนในรอบถัดไป",
+    }),
+    line: () => "▶️ การระงับการโอนเงินถูกยกเลิกแล้ว — เงินจะถูกโอนในรอบถัดไป",
+  },
 };
 
 export function getTemplate(key: string): NotificationTemplate | undefined {
