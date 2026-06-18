@@ -439,6 +439,8 @@
     "tab_pending": "รอดำเนินการ",
     "tab_past": "ที่ผ่านมา",
     "viewStatus": "ดูสถานะ",
+    "writeReview": "⭐ เขียนรีวิว",
+    "reviewed": "★ รีวิวแล้ว",
     "refundedPill": "คืนเงินแล้ว {amount}",
     "cancelCta": "ยกเลิกการจอง",
     "cancelWillRefund": "ยกเลิกการจองนี้ — คุณจะได้รับคืน {amount}",
@@ -468,6 +470,24 @@
     "errorPaymentFailed": "การชำระเงินล้มเหลว กรุณาลองใหม่หรือเปลี่ยนวิธีชำระเงิน",
     "errorWrongState": "การจองนี้ไม่อยู่ในขั้นตอนชำระเงินแล้ว",
     "errorNotFound": "ไม่พบการจอง"
+  },
+  "Reviews": {
+    "title": "เขียนรีวิว",
+    "overall": "คะแนนรวม",
+    "cleanliness": "ความสะอาด",
+    "accuracyToPhotos": "ตรงตามรูป",
+    "hostResponsiveness": "การติดต่อโฮสต์",
+    "valueForMoney": "ความคุ้มค่า",
+    "textLabel": "เล่าประสบการณ์ (ไม่บังคับ)",
+    "textPlaceholder": "ที่พักเป็นอย่างไรบ้าง? มีอะไรอยากบอกผู้เข้าพักคนอื่นไหม",
+    "photosLabel": "รูปภาพ (ไม่บังคับ)",
+    "addPhoto": "เพิ่มรูป",
+    "submit": "ส่งรีวิว",
+    "submitting": "กำลังส่ง…",
+    "errorGeneric": "ส่งรีวิวไม่สำเร็จ กรุณาลองใหม่",
+    "alreadyReviewed": "คุณรีวิวการจองนี้ไปแล้ว",
+    "ineligible": "ยังไม่สามารถรีวิวการจองนี้ได้",
+    "viewListing": "ดูที่พัก"
   },
   "Messages": {
     "title": "ข้อความ",

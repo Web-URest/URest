@@ -14,6 +14,8 @@ export interface TripCardBooking {
   totalSatang: number;
   listing: { title: string };
   refund: { refundSatang: number } | null;
+  /** Present once the guest has reviewed this stay (#28). */
+  review: { id: string } | null;
 }
 
 /** One booking in the trips list (PRODUCT_FLOWS §3.3) — status pill + per-state action. */
@@ -56,6 +58,19 @@ export async function TripCard({ booking }: { booking: TripCardBooking }) {
           </Link>
         )}
         {pending && <WithdrawButton bookingId={booking.id} />}
+        {booking.status === "COMPLETED" &&
+          (booking.review ? (
+            <span className="rounded-card px-4 py-2 text-sm font-semibold text-ink-900/50">
+              {t("reviewed")}
+            </span>
+          ) : (
+            <Link
+              href={`/trips/${booking.id}/review`}
+              className="rounded-card border border-line px-4 py-2 text-center text-sm font-semibold text-ink-900 transition hover:bg-sand-50"
+            >
+              {t("writeReview")}
+            </Link>
+          ))}
       </div>
     </div>
   );

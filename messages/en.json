@@ -439,6 +439,8 @@
     "tab_pending": "Pending",
     "tab_past": "Past",
     "viewStatus": "View status",
+    "writeReview": "⭐ Write a review",
+    "reviewed": "★ Reviewed",
     "refundedPill": "Refunded {amount}",
     "cancelCta": "Cancel booking",
     "cancelWillRefund": "Cancel this booking — you'll be refunded {amount}",
@@ -468,6 +470,24 @@
     "errorPaymentFailed": "Payment failed — please try again or switch method",
     "errorWrongState": "This booking is no longer in the payment step",
     "errorNotFound": "Booking not found"
+  },
+  "Reviews": {
+    "title": "Write a review",
+    "overall": "Overall",
+    "cleanliness": "Cleanliness",
+    "accuracyToPhotos": "Matches photos",
+    "hostResponsiveness": "Host responsiveness",
+    "valueForMoney": "Value for money",
+    "textLabel": "Tell us about your stay (optional)",
+    "textPlaceholder": "How was the villa? Anything future guests should know?",
+    "photosLabel": "Photos (optional)",
+    "addPhoto": "Add photo",
+    "submit": "Submit review",
+    "submitting": "Submitting…",
+    "errorGeneric": "Couldn't submit your review — please try again",
+    "alreadyReviewed": "You've already reviewed this booking",
+    "ineligible": "This booking can't be reviewed yet",
+    "viewListing": "View listing"
   },
   "Messages": {
     "title": "Messages",
