@@ -241,3 +241,90 @@ export async function releaseHold(admin: AdminPrincipal, holdId: string): Promis
   const notifyHostId = hold.hostUserId ?? hold.booking?.listing.hostId;
   if (notifyHostId) await notify(notifyHostId, "PAYOUT_HOLD_RELEASED", {});
 }
+
+/** One RELEASABLE booking awaiting payout. `heldReason` is set when an active hold covers it. */
+export interface DuePayoutBooking {
+  id: string;
+  code: string | null;
+  checkOut: Date;
+  hostAmountSatang: number;
+  heldReason: string | null;
+}
+
+/** RELEASABLE bookings for one host, with their payout account and the payable (non-held) total. */
+export interface PayoutGroup {
+  hostId: string;
+  hostName: string;
+  payoutAccount: { id: string; bankCode: string; accountName: string } | null;
+  bookings: DuePayoutBooking[];
+  totalSatang: number;
+}
+
+/**
+ * §5.2 due list: every RELEASABLE booking grouped by host, with the host's payout
+ * account, the 90% amount per booking, and the payable group total. Bookings
+ * covered by an active hold (booking- OR host-scope) are annotated with
+ * `heldReason` and excluded from the total — never silently dropped. Groups are
+ * ordered by earliest checkout (the bookings query is checkOut-asc; the group
+ * Map preserves first-seen order).
+ */
+export async function loadPayoutDueList(): Promise<PayoutGroup[]> {
+  const bookings = await prisma.booking.findMany({
+    where: { escrowState: EscrowState.RELEASABLE },
+    select: {
+      id: true,
+      code: true,
+      checkOut: true,
+      totalSatang: true,
+      commissionSatang: true,
+      listing: { select: { hostId: true, host: { select: { displayName: true } } } },
+    },
+    orderBy: { checkOut: "asc" },
+  });
+
+  const holds = await prisma.payoutHold.findMany({
+    where: { releasedAt: null },
+    select: { bookingId: true, hostUserId: true, reason: true },
+  });
+  const bookingHold = new Map<string, string>();
+  const hostHold = new Map<string, string>();
+  for (const h of holds) {
+    if (h.bookingId) bookingHold.set(h.bookingId, h.reason);
+    else if (h.hostUserId) hostHold.set(h.hostUserId, h.reason);
+  }
+
+  const hostIds = [...new Set(bookings.map((b) => b.listing.hostId))];
+  const accounts = await prisma.payoutAccount.findMany({
+    where: { userId: { in: hostIds } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, userId: true, bankCode: true, accountName: true },
+  });
+  const accountByHost = new Map<string, { id: string; bankCode: string; accountName: string }>();
+  for (const a of accounts) {
+    if (!accountByHost.has(a.userId)) {
+      accountByHost.set(a.userId, { id: a.id, bankCode: a.bankCode, accountName: a.accountName });
+    }
+  }
+
+  const groups = new Map<string, PayoutGroup>();
+  for (const b of bookings) {
+    const hostId = b.listing.hostId;
+    let group = groups.get(hostId);
+    if (!group) {
+      group = {
+        hostId,
+        hostName: b.listing.host.displayName,
+        payoutAccount: accountByHost.get(hostId) ?? null,
+        bookings: [],
+        totalSatang: 0,
+      };
+      groups.set(hostId, group);
+    }
+    const heldReason = bookingHold.get(b.id) ?? hostHold.get(hostId) ?? null;
+    const hostAmountSatang = b.totalSatang - b.commissionSatang;
+    group.bookings.push({ id: b.id, code: b.code, checkOut: b.checkOut, hostAmountSatang, heldReason });
+    if (!heldReason) group.totalSatang += hostAmountSatang;
+  }
+
+  return [...groups.values()];
+}

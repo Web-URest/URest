@@ -6,7 +6,7 @@ vi.mock("@/lib/crypto", () => ({ decryptField: vi.fn() }));
 vi.mock("@/lib/notifications", () => ({ notify: vi.fn() }));
 vi.mock("@/lib/db", () => ({
   prisma: {
-    payoutAccount: { findUnique: vi.fn(), findFirst: vi.fn() },
+    payoutAccount: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
     auditLog: { create: vi.fn() },
     booking: { findUnique: vi.fn(), findMany: vi.fn() },
     payoutHold: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
@@ -21,7 +21,15 @@ import { ledgerTotals, payout } from "@/lib/ledger/apply";
 import { notify } from "@/lib/notifications";
 import { getBalance } from "@/lib/payments/opn";
 
-import { markPaid, PayoutError, placeHold, reconcile, releaseHold, revealAccountNumber } from "./payout";
+import {
+  loadPayoutDueList,
+  markPaid,
+  PayoutError,
+  placeHold,
+  reconcile,
+  releaseHold,
+  revealAccountNumber,
+} from "./payout";
 
 const balance = getBalance as unknown as Mock;
 const totals = ledgerTotals as unknown as Mock;
@@ -29,7 +37,7 @@ const payoutOp = payout as unknown as Mock;
 const notifyFn = notify as unknown as Mock;
 const decryptFieldMock = decryptField as unknown as Mock;
 const db = prisma as unknown as {
-  payoutAccount: { findUnique: Mock; findFirst: Mock };
+  payoutAccount: { findUnique: Mock; findFirst: Mock; findMany: Mock };
   auditLog: { create: Mock };
   booking: { findUnique: Mock; findMany: Mock };
   payoutHold: { findUnique: Mock; findFirst: Mock; findMany: Mock; create: Mock; update: Mock };
@@ -265,5 +273,67 @@ describe("releaseHold", () => {
   it("throws when the hold does not exist or is already released", async () => {
     db.payoutHold.findUnique.mockResolvedValue(null);
     await expect(releaseHold(ADMIN, "nope")).rejects.toBeInstanceOf(PayoutError);
+  });
+});
+
+describe("loadPayoutDueList", () => {
+  it("groups RELEASABLE bookings by host, computes 90% amounts, and annotates held items without dropping them", async () => {
+    db.booking.findMany.mockResolvedValue([
+      {
+        id: "bk1",
+        code: "UR-2606-0001",
+        checkOut: new Date("2026-07-01"),
+        totalSatang: 10_000_00,
+        commissionSatang: 1_000_00,
+        listing: { hostId: "host1", host: { displayName: "โฮสต์ หนึ่ง" } },
+      },
+      {
+        id: "bk2",
+        code: "UR-2606-0002",
+        checkOut: new Date("2026-07-02"),
+        totalSatang: 5_000_00,
+        commissionSatang: 500_00,
+        listing: { hostId: "host1", host: { displayName: "โฮสต์ หนึ่ง" } },
+      },
+      {
+        id: "bk3",
+        code: "UR-2606-0003",
+        checkOut: new Date("2026-07-03"),
+        totalSatang: 8_000_00,
+        commissionSatang: 800_00,
+        listing: { hostId: "host2", host: { displayName: "โฮสต์ สอง" } },
+      },
+    ]);
+    db.payoutHold.findMany.mockResolvedValue([
+      { bookingId: "bk2", hostUserId: null, reason: "รอตรวจสลิป" }, // booking-scope
+      { bookingId: null, hostUserId: "host2", reason: "บัญชีถูกระงับ" }, // whole-host scope
+    ]);
+    db.payoutAccount.findMany.mockResolvedValue([
+      { id: "pa1", userId: "host1", bankCode: "014", accountName: "H1" }, // host2 has no account
+    ]);
+
+    const groups = await loadPayoutDueList();
+
+    expect(groups).toHaveLength(2);
+
+    const g1 = groups.find((g) => g.hostId === "host1")!;
+    expect(g1.payoutAccount).toEqual({ id: "pa1", bankCode: "014", accountName: "H1" });
+    expect(g1.bookings).toHaveLength(2);
+    expect(g1.bookings.find((b) => b.id === "bk1")).toMatchObject({ hostAmountSatang: 9_000_00, heldReason: null });
+    expect(g1.bookings.find((b) => b.id === "bk2")).toMatchObject({ hostAmountSatang: 4_500_00, heldReason: "รอตรวจสลิป" });
+    expect(g1.totalSatang).toBe(9_000_00); // excludes the held bk2
+
+    const g2 = groups.find((g) => g.hostId === "host2")!;
+    expect(g2.payoutAccount).toBeNull();
+    expect(g2.hostName).toBe("โฮสต์ สอง");
+    expect(g2.bookings[0]).toMatchObject({ id: "bk3", hostAmountSatang: 7_200_00, heldReason: "บัญชีถูกระงับ" });
+    expect(g2.totalSatang).toBe(0); // its only booking is host-held
+  });
+
+  it("returns an empty list when nothing is RELEASABLE", async () => {
+    db.booking.findMany.mockResolvedValue([]);
+    db.payoutHold.findMany.mockResolvedValue([]);
+    db.payoutAccount.findMany.mockResolvedValue([]);
+    expect(await loadPayoutDueList()).toEqual([]);
   });
 });
