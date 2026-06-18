@@ -26,6 +26,7 @@ import { CalendarGrid } from "@/components/ui/CalendarGrid";
 import { SeasonEditor } from "@/components/ui/SeasonEditor";
 import { BookingModeToggle } from "@/components/ui/BookingModeToggle";
 import { StarRating } from "@/components/ui/StarRating";
+import { BookingResultCard } from "@/app/[locale]/(protected)/concierge/BookingResultCard";
 import type { Quote } from "@/lib/pricing/quote";
 
 /**
@@ -405,6 +406,15 @@ export default function StyleguidePage() {
           <StarRating value={3.5} count={4} />
           <StarRating value={5} showValue={false} />
           <StarRating value={0} count={0} />
+        </div>
+      </Section>
+
+      <Section title="Concierge booking result cards (#32)">
+        <div className="flex max-w-sm flex-col gap-4">
+          <BookingResultCard
+            card={{ kind: "payment_qr", bookingId: "bk1", code: "UR-2608-0001", qrUrl: undefined, payUrl: "/trips/bk1/pay" }}
+          />
+          <BookingResultCard card={{ kind: "request_sent", bookingId: "bk2", code: "UR-2608-0002", tripUrl: "/trips/bk2" }} />
         </div>
       </Section>
     </main>

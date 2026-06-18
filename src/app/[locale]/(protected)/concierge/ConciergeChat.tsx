@@ -3,17 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChatBubble, TypingIndicator } from "@/components/ui/ChatBubble";
+import type { ConciergeCard } from "@/lib/concierge/cards";
 
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  isStreaming?: boolean;
-};
+import { BookingDraftCard } from "./BookingDraftCard";
+import { BookingResultCard } from "./BookingResultCard";
+
+type Message =
+  | { role: "user" | "assistant"; content: string; isStreaming?: boolean }
+  | { role: "card"; card: ConciergeCard };
 
 type SSEEvent =
   | { type: "session_id"; sessionId: string }
   | { type: "text_delta"; delta: string }
   | { type: "tool_call"; name: string }
+  | { type: "card"; card: ConciergeCard }
   | { type: "done" }
   | { type: "error"; message: string };
 
@@ -46,7 +49,7 @@ export function ConciergeChat({ scopedListingId }: Props) {
     setMessages([{ role: "assistant", content: t("greeting") }]);
   }, [t]);
 
-  async function sendMessage(text: string) {
+  async function sendMessage(text: string, confirmedDraftId?: string) {
     const trimmed = text.trim();
     if (!trimmed || isLoading) return;
 
@@ -67,7 +70,7 @@ export function ConciergeChat({ scopedListingId }: Props) {
       const res = await fetch("/api/concierge/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed, sessionId, scopedListingId }),
+        body: JSON.stringify({ message: trimmed, sessionId, scopedListingId, confirmedDraftId }),
         signal: abortRef.current.signal,
       });
 
@@ -100,6 +103,15 @@ export function ConciergeChat({ scopedListingId }: Props) {
 
           if (event.type === "session_id") {
             setSessionId(event.sessionId);
+          } else if (event.type === "card") {
+            const { card } = event;
+            // Insert the card just before the trailing streaming-assistant bubble.
+            setMessages((prev) => {
+              const next = [...prev];
+              const idx = Math.max(0, next.length - 1);
+              next.splice(idx, 0, { role: "card", card });
+              return next;
+            });
           } else if (event.type === "text_delta") {
             streamText += event.delta;
             setMessages((prev) => {
@@ -152,6 +164,12 @@ export function ConciergeChat({ scopedListingId }: Props) {
     }
   }
 
+  // The guest tapped Confirm on a draft card → re-invoke the chat so the model
+  // submits this draft (the confirm endpoint already minted the server-side token).
+  function sendConfirm(draftId: string) {
+    void sendMessage(t("cardConfirmMessage"), draftId);
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -166,16 +184,19 @@ export function ConciergeChat({ scopedListingId }: Props) {
       {/* Message list */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <div className="mx-auto flex max-w-2xl flex-col gap-3">
-          {messages.map((msg, i) => (
-            <ChatBubble
-              key={i}
-              role={msg.role}
-              content={msg.content}
-              isStreaming={msg.isStreaming}
-            />
-          ))}
+          {messages.map((msg, i) =>
+            msg.role === "card" ? (
+              msg.card.kind === "booking_draft" ? (
+                <BookingDraftCard key={i} card={msg.card} onConfirm={sendConfirm} />
+              ) : (
+                <BookingResultCard key={i} card={msg.card} />
+              )
+            ) : (
+              <ChatBubble key={i} role={msg.role} content={msg.content} isStreaming={msg.isStreaming} />
+            ),
+          )}
 
-          {isLoading && !messages.some((m) => m.isStreaming) && (
+          {isLoading && !messages.some((m) => m.role !== "card" && m.isStreaming) && (
             <TypingIndicator />
           )}
 

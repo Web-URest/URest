@@ -85,7 +85,7 @@ erDiagram
 
 ## Concierge domain 🤖 (Phase 4 — AI_CONCIERGE_SPEC §5)
 
-`ConciergeSession` (userId?, scopedListingId?) · `ConciergeMessage` (role, content, toolCalls Json; 12-month purge) · `ConciergeUsage` (tokens, costSatang) · `UnansweredQuestion` (listingId, questionText, status OPEN/CONVERTED/DISMISSED → §5.7 admin view). Phase 4 also adds `embedding vector(<dim>)` columns to `Listing` + `Attraction` once the embedding model (and thus dimension) is chosen.
+`ConciergeSession` (userId?, scopedListingId?) · `ConciergeMessage` (role, content, toolCalls Json; 12-month purge) · `ConciergeUsage` (tokens, costSatang) · `UnansweredQuestion` (listingId, questionText, status OPEN/CONVERTED/DISMISSED → §5.7 admin view) · `ConciergeBookingDraft` (#32 — in-chat booking draft + price snapshot; `confirmTokenHash`/`confirmTokenExpiresAt`/`confirmedAt` minted on the guest tap and NEVER seen by the model; `consumedBookingId` = single-use; `expiresAt` = draft TTL). Phase 4 also adds `embedding vector(<dim>)` columns to `Listing` + `Attraction` once the embedding model (and thus dimension) is chosen.
 
 ## Raw-SQL constraint inventory
 

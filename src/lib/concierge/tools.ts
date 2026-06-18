@@ -1,8 +1,17 @@
 import type Anthropic from "@anthropic-ai/sdk";
+import { requirePhoneVerified } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { searchListings } from "@/lib/listing/queries";
 import { buildQuote } from "@/lib/pricing/quote";
 import type { SeasonRate } from "@/lib/pricing/quote";
+
+import {
+  createDraft,
+  submitDraft,
+  type DraftFailReason,
+  type SubmitFailReason,
+} from "./booking";
+import type { ConciergeCard } from "./cards";
 
 // Tool definitions (strict: true) — schemas from AI_CONCIERGE_SPEC §2.
 export const CONCIERGE_TOOLS: Anthropic.Tool[] = [
@@ -105,21 +114,26 @@ export const CONCIERGE_TOOLS: Anthropic.Tool[] = [
   {
     name: "submit_booking_request",
     description:
-      "Create the real booking request (REQUESTED state). Only callable after the guest tapped the confirmation card — requires the confirmation_token from that tap.",
+      "Create the real booking. Call ONLY after the system tells you the guest tapped Confirm for a specific draft — pass that draft_id. The guest's tap is the authorization (handled server-side); you never see or pass a token.",
     input_schema: {
       type: "object",
       properties: {
         draft_id: { type: "string" },
-        confirmation_token: { type: "string" },
       },
-      required: ["draft_id", "confirmation_token"],
+      required: ["draft_id"],
       additionalProperties: false,
     },
   },
 ];
 
 export type ToolInput = Record<string, unknown>;
-type ToolResult = { is_error: boolean; content: string };
+
+/**
+ * Tool result. `card` is a UI side-effect emitted to the browser + persisted, but
+ * NEVER placed in the model's message history — so the QR URL / token never reach
+ * the model (AC#4). The card shape lives in `./cards` (pure types, client-safe).
+ */
+export type ToolResult = { is_error: boolean; content: string; card?: ConciergeCard };
 
 // Haversine for attraction distance
 const R_KM = 6371;
@@ -547,13 +561,136 @@ async function getSavedListingsHandler(
   }
 }
 
+// ── Booking tools (#32) ───────────────────────────────────────────────────────
+
+function draftReasonTh(reason: DraftFailReason): string {
+  switch (reason) {
+    case "LISTING_NOT_FOUND":
+      return "ไม่พบที่พักนี้ค่ะ";
+    case "OVER_CAPACITY":
+      return "จำนวนผู้เข้าพักเกินที่ที่พักรองรับค่ะ";
+    case "UNAVAILABLE":
+      return "วันที่เลือกไม่ว่างแล้วค่ะ ลองวันอื่นได้ไหมคะ";
+  }
+}
+
+function submitReasonTh(reason: SubmitFailReason): string {
+  switch (reason) {
+    case "NOT_FOUND":
+      return "ไม่พบรายการจองค่ะ";
+    case "NEEDS_CONFIRM":
+      return "กรุณากดยืนยันการจองในการ์ดก่อนค่ะ";
+    case "EXPIRED":
+      return "การยืนยันหมดอายุแล้ว กรุณาเริ่มทำรายการใหม่อีกครั้งค่ะ";
+    case "ALREADY_SUBMITTED":
+      return "รายการนี้ส่งคำขอจองไปแล้วค่ะ";
+    case "DATES_TAKEN":
+      return "ขออภัยค่ะ วันที่เลือกเพิ่งถูกจองไป ลองวันอื่นนะคะ";
+  }
+}
+
+async function createBookingDraftHandler(
+  input: ToolInput,
+  userId: string | null,
+  sessionId: string | null,
+): Promise<ToolResult> {
+  if (!userId || !sessionId) {
+    return { is_error: true, content: "กรุณาเข้าสู่ระบบเพื่อทำการจองค่ะ" };
+  }
+
+  const res = await createDraft(
+    {
+      sessionId,
+      userId,
+      listingId: input.listing_id as string,
+      checkIn: input.check_in as string,
+      checkOut: input.check_out as string,
+      guests: input.guests as number,
+      noteToHost: input.note_to_host as string | undefined,
+    },
+    new Date(),
+  );
+  if (!res.ok) return { is_error: true, content: draftReasonTh(res.reason) };
+
+  const d = res.draft;
+  const priceLinesThb = d.priceLines.map((p) => ({
+    date: p.date,
+    rule: p.rule,
+    ...(p.season ? { season: p.season } : {}),
+    priceThb: Math.round(p.priceSatang / 100),
+  }));
+
+  return {
+    is_error: false,
+    content: JSON.stringify({
+      draft_id: d.draftId,
+      title: d.title,
+      check_in: d.checkIn,
+      check_out: d.checkOut,
+      nights: d.nights,
+      guests: d.guests,
+      total_thb: Math.round(d.totalSatang / 100),
+    }),
+    card: {
+      kind: "booking_draft",
+      draftId: d.draftId,
+      title: d.title,
+      checkIn: d.checkIn,
+      checkOut: d.checkOut,
+      nights: d.nights,
+      guests: d.guests,
+      totalThb: Math.round(d.totalSatang / 100),
+      priceLines: priceLinesThb,
+    },
+  };
+}
+
+async function submitBookingRequestHandler(
+  input: ToolInput,
+  userId: string | null,
+  sessionId: string | null,
+): Promise<ToolResult> {
+  if (!userId || !sessionId) {
+    return { is_error: true, content: "กรุณาเข้าสู่ระบบเพื่อทำการจองค่ะ" };
+  }
+  try {
+    await requirePhoneVerified();
+  } catch {
+    return { is_error: true, content: "กรุณายืนยันเบอร์โทรศัพท์ก่อนทำการจองค่ะ" };
+  }
+
+  const res = await submitDraft(input.draft_id as string, userId, new Date());
+  if (!res.ok) return { is_error: true, content: submitReasonTh(res.reason) };
+
+  if (res.mode === "INSTANT") {
+    return {
+      is_error: false,
+      content: JSON.stringify({ success: true, booking_code: res.code, status: "awaiting_payment" }),
+      card: {
+        kind: "payment_qr",
+        bookingId: res.bookingId,
+        code: res.code,
+        qrUrl: res.qrUrl,
+        payUrl: `/trips/${res.bookingId}/pay`,
+      },
+    };
+  }
+
+  return {
+    is_error: false,
+    content: JSON.stringify({ success: true, booking_code: res.code, status: "requested" }),
+    card: { kind: "request_sent", bookingId: res.bookingId, code: res.code, tripUrl: `/trips/${res.bookingId}` },
+  };
+}
+
 // ── Dispatcher ────────────────────────────────────────────────────────────────
 
 export async function handleToolCall(
   name: string,
   input: ToolInput,
   userId: string | null,
-): Promise<{ is_error: boolean; content: string }> {
+  sessionId: string | null = null,
+): Promise<ToolResult> {
   switch (name) {
     case "search_listings":
       return searchListingsHandler(input);
@@ -566,13 +703,9 @@ export async function handleToolCall(
     case "get_saved_listings":
       return getSavedListingsHandler(userId);
     case "create_booking_draft":
+      return createBookingDraftHandler(input, userId, sessionId);
     case "submit_booking_request":
-      // Issue #32 — blocked by #21 (request-to-book flow)
-      return {
-        is_error: true,
-        content:
-          "ฟังก์ชันการจองยังไม่พร้อมใช้งาน กรุณาจองผ่านหน้าที่พักโดยตรงค่ะ",
-      };
+      return submitBookingRequestHandler(input, userId, sessionId);
     default:
       return { is_error: true, content: `Unknown tool: ${name}` };
   }

@@ -597,7 +597,20 @@
     "errorDailyLimit": "ใช้งานครบ {limit} ข้อความวันนี้แล้วค่ะ ลองใหม่พรุ่งนี้ได้เลย",
     "errorTokenCeiling": "การสนทนานี้ยาวมากแล้วค่ะ เริ่มสนทนาใหม่ได้เลย",
     "newChat": "เริ่มสนทนาใหม่",
-    "loginPrompt": "เข้าสู่ระบบเพื่อบันทึกประวัติการสนทนาและใช้ฟีเจอร์ครบถ้วน"
+    "loginPrompt": "เข้าสู่ระบบเพื่อบันทึกประวัติการสนทนาและใช้ฟีเจอร์ครบถ้วน",
+    "cardGuests": "{count} คน",
+    "cardNights": "{count} คืน",
+    "cardTotal": "ราคารวม",
+    "cardConfirm": "ยืนยันส่งคำขอจอง",
+    "cardConfirming": "กำลังส่ง…",
+    "cardConfirmed": "ยืนยันแล้ว ✓",
+    "cardConfirmMessage": "ยืนยันการจองค่ะ",
+    "cardPhoneNeeded": "กรุณายืนยันเบอร์โทรศัพท์ก่อนจองค่ะ",
+    "cardConfirmError": "ยืนยันไม่สำเร็จ กรุณาลองใหม่ค่ะ",
+    "cardPayTitle": "สแกนเพื่อชำระเงิน (PromptPay)",
+    "cardPayLink": "เปิดหน้าชำระเงิน",
+    "cardRequestSent": "ส่งคำขอจองแล้ว รอโฮสต์ยืนยัน",
+    "cardViewTrip": "ดูสถานะการจอง"
   },
   "SavedVillas": {
     "pageTitle": "ที่พักที่บันทึกไว้",
