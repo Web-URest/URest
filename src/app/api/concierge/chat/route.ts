@@ -55,16 +55,22 @@ export async function POST(request: Request): Promise<Response> {
   let userMessage: string;
   let sessionId: string | undefined;
   let scopedListingId: string | undefined;
+  // Set when the guest tapped Confirm on a booking-draft card. The token was
+  // already minted server-side by /api/concierge/confirm; here we nudge the model
+  // to call submit_booking_request with this draft_id (the token stays server-side).
+  let confirmedDraftId: string | undefined;
 
   try {
     const body = (await request.json()) as {
       message: string;
       sessionId?: string;
       scopedListingId?: string;
+      confirmedDraftId?: string;
     };
     userMessage = body.message?.trim();
     sessionId = body.sessionId;
     scopedListingId = body.scopedListingId;
+    confirmedDraftId = body.confirmedDraftId;
     if (!userMessage) throw new Error("empty");
   } catch {
     return sseError("INVALID_REQUEST");
@@ -101,11 +107,22 @@ export async function POST(request: Request): Promise<Response> {
 
   // --- Build message history for Anthropic ---
   const history = await getSessionMessages(resolvedSessionId);
-  // The last message is the one we just saved; include all as the history
-  const anthropicMessages: Anthropic.MessageParam[] = history.map((m) => ({
-    role: m.role as "user" | "assistant",
-    content: m.content,
-  }));
+  // Only user/assistant turns go to the model. "card" rows (booking draft / QR)
+  // are UI side-effects persisted for the transcript — they must NEVER enter the
+  // model context (they'd break the role cast + leak the QR url, AC#4).
+  const anthropicMessages: Anthropic.MessageParam[] = history
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+
+  // On a confirm tap, nudge the model to submit THIS draft — appended to the last
+  // user turn (a separate turn would break user/assistant alternation). The
+  // draft_id is not secret; the confirmation token is never included.
+  if (confirmedDraftId) {
+    const last = anthropicMessages[anthropicMessages.length - 1];
+    if (last && last.role === "user" && typeof last.content === "string") {
+      last.content += `\n\n[ระบบ] ผู้ใช้กดยืนยันการจองแล้ว — เรียก submit_booking_request ด้วย draft_id: ${confirmedDraftId}`;
+    }
+  }
 
   // --- SSE streaming response ---
   const encoder = new TextEncoder();
@@ -191,7 +208,19 @@ export async function POST(request: Request): Promise<Response> {
               ) {
                 lastToolListingId = toolInput.listing_id;
               }
-              const result = await handleToolCall(toolUse.name, toolInput, userId);
+              const result = await handleToolCall(
+                toolUse.name,
+                toolInput,
+                userId,
+                resolvedSessionId,
+              );
+              // A UI card (booking draft / payment QR) is emitted to the browser
+              // + persisted, but ONLY result.content goes back to the model — the
+              // QR url / token never enter the model transcript (AC#4).
+              if (result.card) {
+                send({ type: "card", card: result.card });
+                await saveMessage(resolvedSessionId, "card", JSON.stringify(result.card));
+              }
               toolResults.push({
                 type: "tool_result",
                 tool_use_id: toolUse.id,
