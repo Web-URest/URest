@@ -305,8 +305,8 @@ describe("loadPayoutDueList", () => {
       },
     ]);
     db.payoutHold.findMany.mockResolvedValue([
-      { bookingId: "bk2", hostUserId: null, reason: "รอตรวจสลิป" }, // booking-scope
-      { bookingId: null, hostUserId: "host2", reason: "บัญชีถูกระงับ" }, // whole-host scope
+      { id: "h-bk2", bookingId: "bk2", hostUserId: null, reason: "รอตรวจสลิป" }, // booking-scope
+      { id: "h-host2", bookingId: null, hostUserId: "host2", reason: "บัญชีถูกระงับ" }, // whole-host scope
     ]);
     db.payoutAccount.findMany.mockResolvedValue([
       { id: "pa1", userId: "host1", bankCode: "014", accountName: "H1" }, // host2 has no account
@@ -319,14 +319,21 @@ describe("loadPayoutDueList", () => {
     const g1 = groups.find((g) => g.hostId === "host1")!;
     expect(g1.payoutAccount).toEqual({ id: "pa1", bankCode: "014", accountName: "H1" });
     expect(g1.bookings).toHaveLength(2);
-    expect(g1.bookings.find((b) => b.id === "bk1")).toMatchObject({ hostAmountSatang: 9_000_00, heldReason: null });
-    expect(g1.bookings.find((b) => b.id === "bk2")).toMatchObject({ hostAmountSatang: 4_500_00, heldReason: "รอตรวจสลิป" });
+    expect(g1.bookings.find((b) => b.id === "bk1")).toMatchObject({ hostAmountSatang: 9_000_00, hold: null });
+    expect(g1.bookings.find((b) => b.id === "bk2")).toMatchObject({
+      hostAmountSatang: 4_500_00,
+      hold: { id: "h-bk2", scope: "booking", reason: "รอตรวจสลิป" },
+    });
     expect(g1.totalSatang).toBe(9_000_00); // excludes the held bk2
 
     const g2 = groups.find((g) => g.hostId === "host2")!;
     expect(g2.payoutAccount).toBeNull();
     expect(g2.hostName).toBe("โฮสต์ สอง");
-    expect(g2.bookings[0]).toMatchObject({ id: "bk3", hostAmountSatang: 7_200_00, heldReason: "บัญชีถูกระงับ" });
+    expect(g2.bookings[0]).toMatchObject({
+      id: "bk3",
+      hostAmountSatang: 7_200_00,
+      hold: { id: "h-host2", scope: "host", reason: "บัญชีถูกระงับ" },
+    });
     expect(g2.totalSatang).toBe(0); // its only booking is host-held
   });
 

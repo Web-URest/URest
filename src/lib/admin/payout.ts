@@ -242,13 +242,14 @@ export async function releaseHold(admin: AdminPrincipal, holdId: string): Promis
   if (notifyHostId) await notify(notifyHostId, "PAYOUT_HOLD_RELEASED", {});
 }
 
-/** One RELEASABLE booking awaiting payout. `heldReason` is set when an active hold covers it. */
+/** One RELEASABLE booking awaiting payout. `hold` is set when an active hold covers it. */
 export interface DuePayoutBooking {
   id: string;
   code: string | null;
   checkOut: Date;
   hostAmountSatang: number;
-  heldReason: string | null;
+  /** The active hold covering this booking (booking- or host-scope), with the id the UI releases by. */
+  hold: { id: string; scope: "booking" | "host"; reason: string } | null;
 }
 
 /** RELEASABLE bookings for one host, with their payout account and the payable (non-held) total. */
@@ -284,13 +285,13 @@ export async function loadPayoutDueList(): Promise<PayoutGroup[]> {
 
   const holds = await prisma.payoutHold.findMany({
     where: { releasedAt: null },
-    select: { bookingId: true, hostUserId: true, reason: true },
+    select: { id: true, bookingId: true, hostUserId: true, reason: true },
   });
-  const bookingHold = new Map<string, string>();
-  const hostHold = new Map<string, string>();
+  const bookingHold = new Map<string, { id: string; reason: string }>();
+  const hostHold = new Map<string, { id: string; reason: string }>();
   for (const h of holds) {
-    if (h.bookingId) bookingHold.set(h.bookingId, h.reason);
-    else if (h.hostUserId) hostHold.set(h.hostUserId, h.reason);
+    if (h.bookingId) bookingHold.set(h.bookingId, { id: h.id, reason: h.reason });
+    else if (h.hostUserId) hostHold.set(h.hostUserId, { id: h.id, reason: h.reason });
   }
 
   const hostIds = [...new Set(bookings.map((b) => b.listing.hostId))];
@@ -320,10 +321,16 @@ export async function loadPayoutDueList(): Promise<PayoutGroup[]> {
       };
       groups.set(hostId, group);
     }
-    const heldReason = bookingHold.get(b.id) ?? hostHold.get(hostId) ?? null;
+    const bh = bookingHold.get(b.id);
+    const hh = hostHold.get(hostId);
+    const hold = bh
+      ? { id: bh.id, scope: "booking" as const, reason: bh.reason }
+      : hh
+        ? { id: hh.id, scope: "host" as const, reason: hh.reason }
+        : null;
     const hostAmountSatang = b.totalSatang - b.commissionSatang;
-    group.bookings.push({ id: b.id, code: b.code, checkOut: b.checkOut, hostAmountSatang, heldReason });
-    if (!heldReason) group.totalSatang += hostAmountSatang;
+    group.bookings.push({ id: b.id, code: b.code, checkOut: b.checkOut, hostAmountSatang, hold });
+    if (!hold) group.totalSatang += hostAmountSatang;
   }
 
   return [...groups.values()];
