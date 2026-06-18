@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { loadListingReviews } from "@/lib/reviews/reviews";
 import { Prisma, type Amenity } from "@prisma/client";
 
 export interface SearchParams {
@@ -85,8 +86,8 @@ export async function searchListings(params: SearchParams): Promise<SearchListin
     mapLat: l.mapLat,
     mapLng: l.mapLng,
     coverKey: l.photos[0]?.r2Key ?? null,
-    rating: null,
-    reviewCount: 0,
+    rating: l.avgRating === null ? null : Math.round(l.avgRating * 10) / 10,
+    reviewCount: l.reviewCount,
   }));
 }
 
@@ -137,7 +138,9 @@ export async function getListingDetail(id: string) {
     .sort((a, b) => (a.distKm ?? 999) - (b.distKm ?? 999))
     .slice(0, 6);
 
-  return { listing, holidaySet, attractions: withDistance };
+  const reviews = await loadListingReviews(id);
+
+  return { listing, holidaySet, attractions: withDistance, reviews };
 }
 
 // ── Host-scoped reads (PRODUCT_FLOWS §4.2 dashboard, §4.4 edit) ───────────────
@@ -225,14 +228,20 @@ export async function getHostOverview(hostId: string): Promise<HostOverview> {
   const statusCounts: Record<string, number> = {};
   for (const g of grouped) statusCounts[g.status] = g._count._all;
 
+  // Host-wide average review score across all their listings (§4.2). The other
+  // KPIs (revenue, response rate) remain zero-state until their own slices land.
+  const ratingAgg = await prisma.review.aggregate({
+    where: { removedAt: null, booking: { listing: { hostId } } },
+    _avg: { overall: true },
+  });
+
   return {
     statusCounts,
-    // Phase 3 (M3) fills these from Booking/Review. Until then: zero-state.
     kpis: {
       revenueSatang: null,
       bookingsThisMonth: null,
       responseRatePct: null,
-      avgRating: null,
+      avgRating: ratingAgg._avg.overall,
     },
   };
 }

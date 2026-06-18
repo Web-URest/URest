@@ -389,6 +389,7 @@
     "cancellationModerate": "ยกเลิกฟรี ก่อนเช็คอิน 5 วัน",
     "cancellationStrict": "ยกเลิกฟรี ก่อนเช็คอิน 14 วัน",
     "reviewsEmpty": "ยังไม่มีรีวิว — เป็นผู้เข้าพักคนแรก",
+    "verifiedGuest": "ผู้เข้าพักจริง",
     "reportLink": "รายงานที่พักนี้",
     "conciergeChip": "ถามน้องเรสต์เกี่ยวกับที่พักนี้",
     "distanceKm": "{km} กม.",
