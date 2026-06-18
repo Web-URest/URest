@@ -92,6 +92,22 @@ describe("listing approval templates (#14)", () => {
   });
 });
 
+describe("report templates (#27)", () => {
+  it("REPORT_RECEIVED acks with the Thai category label", () => {
+    const t = getTemplate("REPORT_RECEIVED");
+    expect(t?.priority).toBe(true);
+    expect(t?.email({ category: "SAFETY", targetLabel: "วิลล่า A" }).subject).toContain("ความปลอดภัย");
+    expect(t?.line({ category: "SAFETY", targetLabel: "วิลล่า A" })).toContain("ความปลอดภัย");
+  });
+  it("REPORT_RESOLVED carries the decision reason", () => {
+    const t = getTemplate("REPORT_RESOLVED");
+    expect(t?.email({ category: "CLEANLINESS", reason: "คืนเงินแล้ว" }).body).toContain("คืนเงินแล้ว");
+  });
+  it("REPORT_DISMISSED resolves to a template", () => {
+    expect(getTemplate("REPORT_DISMISSED")?.line({ category: "OTHER", reason: "นอกประเด็น" })).toContain("นอกประเด็น");
+  });
+});
+
 describe("cancellation templates", () => {
   it("BOOKING_CANCELLED_BY_GUEST notifies the host which listing was cancelled", () => {
     const t = getTemplate("BOOKING_CANCELLED_BY_GUEST");

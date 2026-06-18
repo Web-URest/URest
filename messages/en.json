@@ -108,6 +108,35 @@
         "BANK_NAME_MISMATCH": "Bank account name mismatch"
       }
     },
+    "ReportsQueue": {
+      "title": "Reports queue",
+      "subtitle": "User-submitted reports — money-at-risk first, then by age (24h SLA).",
+      "empty": "No reports pending",
+      "colCategory": "Category",
+      "colReporter": "Reporter",
+      "colTarget": "Target",
+      "colAge": "Age",
+      "colRisk": "At risk",
+      "moneyAtRisk": "Payout held",
+      "reviewCta": "Review",
+      "anonymous": "(anonymous)",
+      "targetBooking": "Booking",
+      "targetListing": "Listing",
+      "targetReview": "Review",
+      "targetUser": "User",
+      "backToQueue": "← Back to queue",
+      "reportText": "Report detail",
+      "decisionTitle": "Triage",
+      "accept": "Accept into review",
+      "acceptHint": "Unpaid bookings: payout auto-frozen",
+      "resolve": "Resolve (upheld)",
+      "dismiss": "Dismiss (off-topic)",
+      "unlist": "Unlist pending investigation",
+      "escalate": "Escalate to dispute",
+      "strike": "Strike host",
+      "reasonLabel": "Reason (required)",
+      "reasonRequired": "A reason is required"
+    },
     "nav": {
       "approvalQueue": "Approval queue",
       "payouts": "Payouts",
@@ -150,6 +179,33 @@
       "heldHostBadge": "Host on hold",
       "release": "Release hold",
       "releaseConfirm": "Release this payout hold?"
+    }
+  },
+  "Reports": {
+    "title": "My reports",
+    "empty": "You haven't reported anything yet",
+    "reportListing": "Report this listing",
+    "reportBooking": "Report a problem",
+    "formTitle": "Report a problem",
+    "categoryLabel": "Problem type",
+    "detailLabel": "Details",
+    "detailPlaceholder": "Describe the problem",
+    "submit": "Submit report",
+    "submitted": "Report submitted — our team will review and update you",
+    "loginToReport": "Sign in to report a booking problem",
+    "trail": {
+      "received": "Received",
+      "inReview": "In review",
+      "resolved": "Decision",
+      "dismissed": "Closed"
+    },
+    "categories": {
+      "DOESNT_MATCH_LISTING": "Doesn't match listing",
+      "CLEANLINESS": "Cleanliness",
+      "SAFETY": "Safety",
+      "HOST_BEHAVIOR": "Host behavior",
+      "SUSPECTED_FRAUD": "Suspected fraud",
+      "OTHER": "Other"
     }
   },
   "Status": {

@@ -4,6 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { requireHostEligible } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import { formatSatang } from "@/lib/money";
+import { ReportForm } from "@/components/ui/ReportForm";
+import { submitBookingReportAction } from "@/app/[locale]/(protected)/reports/actions";
 
 import { HostCancelButton } from "./cancel-button";
 import { RateGuestForm } from "./rate-guest-form";
@@ -14,9 +16,10 @@ import { RateGuestForm } from "./rate-guest-form";
  * is a 100% guest refund + a strike (ADR-012 §2).
  */
 export default async function HostBookingsPage() {
-  const [host, t, tMsg] = await Promise.all([
+  const [host, t, tr, tMsg] = await Promise.all([
     requireHostEligible(),
     getTranslations("Host.bookings"),
+    getTranslations("Reports"),
     getTranslations("Thread"),
   ]);
 
@@ -57,6 +60,12 @@ export default async function HostBookingsPage() {
               {tMsg("messageGuest")}
             </Link>
             <HostCancelButton bookingId={b.id} />
+            <details className="text-sm text-ink-900/50">
+              <summary className="cursor-pointer underline hover:text-ink-700">
+                {tr("reportBooking")}
+              </summary>
+              <ReportForm action={submitBookingReportAction.bind(null, b.id)} />
+            </details>
           </div>
         ))
       )}

@@ -27,6 +27,7 @@ import { claimWebhookEvent, freeze, recordCharge, release, settle } from "@/lib/
 import { issueBookingCode } from "@/lib/ledger/code";
 
 import { breakdown, computeRefund, refundSatangForPct, type RefundBreakdown } from "./refund";
+import { issueStrike } from "./strikes";
 
 export type BookingErrorReason =
   | "NOT_FOUND"
@@ -46,7 +47,6 @@ export class BookingError extends Error {
 const HOST_RESPOND_HOURS = 12; // REQUESTED → host must accept within 12h
 const PAY_HOURS_REQUEST = 12; // AWAITING_PAYMENT (request mode) → pay within 12h
 const PAY_HOURS_INSTANT = 1; // AWAITING_PAYMENT (instant mode) → pay within 1h
-const STRIKE_SUSPENSION_THRESHOLD = 3; // ADR-012 §2: 3 strikes → host suspended
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
@@ -289,7 +289,7 @@ export function cancelByHost(bookingId: string, hostId: string, now: Date): Prom
     });
     await recordRefund(tx, bookingId, breakdown(booking.totalSatang, booking.totalSatang), "host cancellation");
     await settle(tx, bookingId, booking.totalSatang, LedgerCause.REFUND_HOST_CANCELLED);
-    await strikeHost(tx, booking.listing.hostId, bookingId, now);
+    await issueStrike(tx, booking.listing.hostId, "HOST_CANCELLED", bookingId, now);
     return cancelled;
   });
 }
@@ -373,7 +373,7 @@ export function resolveDispute(
     });
     await recordRefund(tx, bookingId, breakdown(booking.totalSatang, booking.totalSatang), "dispute refunded");
     await settle(tx, bookingId, booking.totalSatang, LedgerCause.REFUND_DISPUTE_FULL, adminId);
-    await strikeHost(tx, booking.listing.hostId, bookingId, now);
+    await issueStrike(tx, booking.listing.hostId, "HOST_CANCELLED", bookingId, now);
     return tx.booking.update({
       where: { id: bookingId },
       data: { status: BookingStatus.CANCELLED_BY_HOST },
@@ -420,20 +420,4 @@ function recordRefund(
   reason: string,
 ) {
   return tx.refund.create({ data: { bookingId, ...refund, reason } });
-}
-
-/** Record a host strike; a third strike suspends the host (ADR-012 §2). */
-async function strikeHost(
-  tx: Prisma.TransactionClient,
-  hostUserId: string,
-  bookingId: string,
-  now: Date,
-): Promise<void> {
-  await tx.hostStrike.create({
-    data: { hostUserId, bookingId, reason: "HOST_CANCELLED" },
-  });
-  const strikes = await tx.hostStrike.count({ where: { hostUserId } });
-  if (strikes >= STRIKE_SUSPENSION_THRESHOLD) {
-    await tx.user.update({ where: { id: hostUserId }, data: { suspendedAt: now } });
-  }
 }
