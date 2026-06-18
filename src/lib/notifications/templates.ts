@@ -190,6 +190,14 @@ const templates: Record<string, NotificationTemplate> = {
     }),
     line: () => "▶️ การระงับการโอนเงินถูกยกเลิกแล้ว — เงินจะถูกโอนในรอบถัดไป",
   },
+  REVIEW_RECEIVED_HOST: {
+    priority: true,
+    email: (p) => ({
+      subject: `มีรีวิวใหม่ — การจอง ${str(p.code)}`,
+      body: `แขกเขียนรีวิวที่พัก "${str(p.listingTitle)}" ของคุณแล้ว (การจอง ${str(p.code)}) เปิดแอปเพื่ออ่าน`,
+    }),
+    line: (p) => `⭐ มีรีวิวใหม่สำหรับ "${str(p.listingTitle)}" — การจอง ${str(p.code)}`,
+  },
 };
 
 export function getTemplate(key: string): NotificationTemplate | undefined {
