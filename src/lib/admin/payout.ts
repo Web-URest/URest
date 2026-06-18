@@ -7,10 +7,13 @@
  * writes a status field directly (rule 2). Holds are administrative `PayoutHold`
  * rows and leave escrow untouched (distinct from the dispute auto-freeze, #27).
  */
+import { EscrowState } from "@prisma/client";
+
 import { decryptField } from "@/lib/crypto";
 import { prisma } from "@/lib/db";
 import { invariantHolds } from "@/lib/ledger/escrow";
-import { ledgerTotals } from "@/lib/ledger/apply";
+import { ledgerTotals, payout } from "@/lib/ledger/apply";
+import { notify } from "@/lib/notifications";
 import { getBalance } from "@/lib/payments/opn";
 
 import type { AdminPrincipal } from "./auth";
@@ -81,4 +84,78 @@ export async function revealAccountNumber(
   });
 
   return { accountNumber, bankCode: acct.bankCode, accountName: acct.accountName };
+}
+
+/**
+ * §5.2 mark-paid: discharge a RELEASABLE booking's escrow to the host. The
+ * reconciliation gate (acceptance #3) and the no-active-hold check run BEFORE
+ * any write. The ledger move + the `Payout` record + the audit row commit in one
+ * interactive transaction (escrow ops consume `tx`); the host LINE push fires
+ * after. Double-pay is structurally impossible: `payout()` rejects once escrow
+ * is PAID and `Payout.bookingId` is unique.
+ */
+export async function markPaid(admin: AdminPrincipal, bookingId: string, slipRef: string): Promise<void> {
+  const ref = slipRef.trim();
+  if (!ref) throw new PayoutError("SLIP_REQUIRED");
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      escrowState: true,
+      totalSatang: true,
+      commissionSatang: true,
+      code: true,
+      listing: { select: { hostId: true } },
+    },
+  });
+  if (!booking) throw new PayoutError("NOT_FOUND");
+  if (booking.escrowState !== EscrowState.RELEASABLE) throw new PayoutError("NOT_RELEASABLE");
+
+  const hostId = booking.listing.hostId;
+  const activeHold = await prisma.payoutHold.findFirst({
+    where: { releasedAt: null, OR: [{ bookingId }, { hostUserId: hostId }] },
+  });
+  if (activeHold) throw new PayoutError("ON_HOLD");
+
+  const account = await prisma.payoutAccount.findFirst({
+    where: { userId: hostId },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!account) throw new PayoutError("NO_PAYOUT_ACCOUNT");
+
+  const { ok } = await reconcile();
+  if (!ok) throw new PayoutError("RECONCILE_BLOCKED");
+
+  const hostAmountSatang = booking.totalSatang - booking.commissionSatang; // host keeps 90%
+  await prisma.$transaction(async (tx) => {
+    await payout(tx, bookingId, admin.id); // ledger RELEASABLE→PAID (sole escrowState writer)
+    await tx.payout.create({
+      data: {
+        bookingId,
+        payoutAccountId: account.id,
+        hostAmountSatang,
+        slipRef: ref,
+        paidByAdminId: admin.id,
+        paidAt: new Date(),
+      },
+    });
+    await tx.auditLog.create({
+      data: {
+        adminId: admin.id,
+        action: "PAYOUT_PAID",
+        targetType: "Booking",
+        targetId: bookingId,
+        after: { hostAmountSatang, slipRef: ref },
+      },
+    });
+  });
+
+  if (booking.code) {
+    await notify(hostId, "PAYOUT_PAID_HOST", {
+      amountSatang: hostAmountSatang,
+      slipRef: ref,
+      code: booking.code,
+    });
+  }
 }

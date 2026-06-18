@@ -21,7 +21,7 @@ import { ledgerTotals, payout } from "@/lib/ledger/apply";
 import { notify } from "@/lib/notifications";
 import { getBalance } from "@/lib/payments/opn";
 
-import { reconcile, revealAccountNumber } from "./payout";
+import { markPaid, PayoutError, reconcile, revealAccountNumber } from "./payout";
 
 const balance = getBalance as unknown as Mock;
 const totals = ledgerTotals as unknown as Mock;
@@ -108,5 +108,86 @@ describe("revealAccountNumber", () => {
     db.payoutAccount.findUnique.mockResolvedValue(null);
     await expect(revealAccountNumber(ADMIN, "nope")).rejects.toThrow();
     expect(decryptFieldMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("markPaid", () => {
+  const txClient = { payout: { create: vi.fn() }, auditLog: { create: vi.fn() } };
+
+  /** Arrange a fully payable booking (RELEASABLE, no hold, host account, reconcile ok). */
+  const ready = () => {
+    db.booking.findUnique.mockResolvedValue({
+      id: "bk1",
+      escrowState: "RELEASABLE",
+      totalSatang: 10_000_00,
+      commissionSatang: 1_000_00,
+      code: "UR-2606-0001",
+      listing: { hostId: "host1" },
+    });
+    db.payoutHold.findFirst.mockResolvedValue(null);
+    db.payoutAccount.findFirst.mockResolvedValue({ id: "pa1", userId: "host1" });
+    totals.mockResolvedValue(buckets({ received: 10_000_00, releasable: 10_000_00 }));
+    balance.mockResolvedValue({ total: 20_000_00, available: 20_000_00 });
+    db.$transaction.mockImplementation(async (fn: (tx: typeof txClient) => unknown) => fn(txClient));
+  };
+
+  it("pays out: ledger payout + Payout row (90% host amount) + audit, then notifies the host", async () => {
+    ready();
+
+    await markPaid(ADMIN, "bk1", "SLIP-001");
+
+    expect(payoutOp).toHaveBeenCalledWith(txClient, "bk1", "adm1");
+    expect(txClient.payout.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        bookingId: "bk1",
+        payoutAccountId: "pa1",
+        hostAmountSatang: 9_000_00, // total − commission
+        slipRef: "SLIP-001",
+        paidByAdminId: "adm1",
+      }),
+    });
+    expect(txClient.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "PAYOUT_PAID", targetId: "bk1" }),
+    });
+    expect(notifyFn).toHaveBeenCalledWith(
+      "host1",
+      "PAYOUT_PAID_HOST",
+      expect.objectContaining({ amountSatang: 9_000_00, slipRef: "SLIP-001", code: "UR-2606-0001" }),
+    );
+  });
+
+  it("refuses an empty slip ref before touching anything", async () => {
+    ready();
+    await expect(markPaid(ADMIN, "bk1", "   ")).rejects.toBeInstanceOf(PayoutError);
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses when escrow is not RELEASABLE", async () => {
+    ready();
+    db.booking.findUnique.mockResolvedValue({
+      id: "bk1",
+      escrowState: "HELD",
+      totalSatang: 10_000_00,
+      commissionSatang: 1_000_00,
+      code: "UR-2606-0001",
+      listing: { hostId: "host1" },
+    });
+    await expect(markPaid(ADMIN, "bk1", "SLIP")).rejects.toBeInstanceOf(PayoutError);
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses when an active hold covers the booking or host", async () => {
+    ready();
+    db.payoutHold.findFirst.mockResolvedValue({ id: "h1", reason: "ตรวจสอบ" });
+    await expect(markPaid(ADMIN, "bk1", "SLIP")).rejects.toBeInstanceOf(PayoutError);
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses when reconciliation fails (gateway shortfall) — no ledger payout", async () => {
+    ready();
+    balance.mockResolvedValue({ total: 1_000_00, available: 1_000_00 }); // short of the obligation
+    await expect(markPaid(ADMIN, "bk1", "SLIP")).rejects.toBeInstanceOf(PayoutError);
+    expect(payoutOp).not.toHaveBeenCalled();
+    expect(db.$transaction).not.toHaveBeenCalled();
   });
 });
