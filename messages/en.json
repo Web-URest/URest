@@ -572,7 +572,9 @@
       "respondByNote": "Respond within 12h or the request expires",
       "accept": "Accept",
       "decline": "Decline",
-      "actionError": "Action failed — please try again"
+      "actionError": "Action failed — please try again",
+      "guestStays": "{count} stays",
+      "newGuest": "New guest (no rating yet)"
     },
     "bookings": {
       "title": "Confirmed bookings",
@@ -581,7 +583,14 @@
       "cancelWarn": "A host cancellation refunds the guest 100% and records a strike (3 strikes = suspension).",
       "cancelBack": "Back",
       "cancelConfirm": "Confirm cancellation",
-      "cancelError": "Couldn't cancel — please try again"
+      "cancelError": "Couldn't cancel — please try again",
+      "completedTitle": "Past stays",
+      "guestRated": "You've rated this guest",
+      "rateGuest": "Rate this guest",
+      "rateReasonLabel": "Note (optional, not shown to the guest)",
+      "rateReasonPlaceholder": "Looked after the villa / easy to reach, etc.",
+      "rateSubmit": "Save rating",
+      "rateError": "Couldn't save the rating — please try again"
     },
     "overviewTitle": "Overview",
     "kpiRevenue": "Revenue this month",

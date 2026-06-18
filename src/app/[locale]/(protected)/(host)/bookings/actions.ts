@@ -5,8 +5,25 @@ import { BookingError, cancelByHost } from "@/lib/booking/transitions";
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notifications";
 import { refundBookingToGuest } from "@/lib/payments/charge";
+import { RatingError, rateGuest } from "@/lib/reviews/ratings";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
+
+/** Host rates a guest 1–5 after a COMPLETED stay (PRODUCT_FLOWS §3.4). */
+export async function rateGuestAction(
+  bookingId: string,
+  score: number,
+  reason?: string,
+): Promise<ActionResult> {
+  try {
+    const host = await requireHostEligible();
+    await rateGuest({ bookingId, hostRaterId: host.id, score, reason });
+  } catch (err) {
+    if (err instanceof RatingError) return { ok: false, error: err.reason };
+    throw err;
+  }
+  return { ok: true };
+}
 
 /**
  * Host cancels a CONFIRMED booking (PRODUCT_FLOWS §3.6, ADR-012 §2). The transition
