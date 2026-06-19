@@ -42,6 +42,15 @@ const REPORT_CATEGORY_LABELS_TH: Record<string, string> = {
 const reportCategory = (v: unknown): string =>
   (typeof v === "string" && REPORT_CATEGORY_LABELS_TH[v]) || "เรื่องที่แจ้ง";
 
+/** Thai labels for a dispute resolution kind (§5.3) — notifications are Thai-only. */
+const DISPUTE_DECISION_LABELS_TH: Record<string, string> = {
+  RELEASED: "ตัดสินให้โฮสต์ — ไม่คืนเงิน",
+  PARTIAL: "คืนเงินบางส่วน",
+  REFUNDED: "คืนเงินเต็มจำนวนให้แขก",
+};
+const disputeDecision = (v: unknown): string =>
+  (typeof v === "string" && DISPUTE_DECISION_LABELS_TH[v]) || "ผลการตัดสิน";
+
 /** Render the NEEDS_INFO checklist payload as a Thai bullet list (defensive). */
 const needsInfoList = (v: unknown): string => {
   if (!Array.isArray(v)) return "";
@@ -225,6 +234,39 @@ const templates: Record<string, NotificationTemplate> = {
       body: "การระงับการโอนเงินถูกยกเลิกแล้ว เงินของคุณจะถูกโอนในรอบถัดไป",
     }),
     line: () => "▶️ การระงับการโอนเงินถูกยกเลิกแล้ว — เงินจะถูกโอนในรอบถัดไป",
+  },
+  DISPUTE_OPENED_GUEST: {
+    priority: true,
+    email: (p) => ({
+      subject: `รับเรื่องแจ้งปัญหาที่พักแล้ว — ${str(p.listingTitle)}`,
+      body: `เราได้รับเรื่องแจ้งปัญหาที่พัก "${str(p.listingTitle)}" ของคุณแล้ว เงินค่าจองถูกพักไว้ระหว่างตรวจสอบ ทีมงานจะติดต่อโฮสต์และแจ้งผลให้ทราบ ติดตามสถานะได้ในแอป`,
+    }),
+    line: (p) => `📩 รับเรื่องแจ้งปัญหาที่พัก "${str(p.listingTitle)}" แล้ว — เงินถูกพักไว้ระหว่างตรวจสอบ`,
+  },
+  DISPUTE_OPENED_HOST: {
+    priority: true,
+    email: (p) => ({
+      subject: `มีการแจ้งปัญหาที่พัก — การจอง ${str(p.code)}`,
+      body: `แขกแจ้งปัญหาที่พัก "${str(p.listingTitle)}" (การจอง ${str(p.code)}) การโอนเงินถูกพักไว้ระหว่างตรวจสอบ กรุณาตอบกลับและให้ข้อมูลในแชทการจองภายใน 48 ชั่วโมง`,
+    }),
+    line: (p) => `⚠️ แจ้งปัญหาที่พัก "${str(p.listingTitle)}" (${str(p.code)}) — ตอบกลับในแชทภายใน 48 ชม.`,
+  },
+  DISPUTE_RESOLVED: {
+    priority: true,
+    email: (p) => ({
+      subject: `ผลการตัดสินข้อพิพาท — การจอง ${str(p.code)}`,
+      body: `ข้อพิพาทเกี่ยวกับการจอง ${str(p.code)} ("${str(p.listingTitle)}") ได้รับการตัดสินแล้ว\nผลการตัดสิน: ${disputeDecision(p.kind)}${typeof p.refundSatang === "number" && p.refundSatang > 0 ? `\nคืนเงินให้แขก: ${satang(p.refundSatang)}` : ""}\nหากไม่เห็นด้วย สามารถยื่นอุทธรณ์ได้หนึ่งครั้ง`,
+    }),
+    line: (p) =>
+      `⚖️ ผลตัดสินข้อพิพาท ${str(p.code)}: ${disputeDecision(p.kind)}${typeof p.refundSatang === "number" && p.refundSatang > 0 ? ` — คืนเงิน ${satang(p.refundSatang)}` : ""}`,
+  },
+  DISPUTE_APPEAL_RESOLVED: {
+    priority: true,
+    email: (p) => ({
+      subject: `ผลการตัดสินอุทธรณ์ (สิ้นสุด) — การจอง ${str(p.code)}`,
+      body: `การอุทธรณ์ข้อพิพาทการจอง ${str(p.code)} ("${str(p.listingTitle)}") ได้รับการตัดสินแล้วและถือเป็นที่สิ้นสุด\nผลการตัดสิน: ${disputeDecision(p.kind)}${typeof p.refundSatang === "number" && p.refundSatang > 0 ? `\nคืนเงินให้แขก: ${satang(p.refundSatang)}` : ""}`,
+    }),
+    line: (p) => `⚖️ ผลอุทธรณ์ (สิ้นสุด) "${str(p.listingTitle)}" ${str(p.code)}: ${disputeDecision(p.kind)}`,
   },
   REVIEW_RECEIVED_HOST: {
     priority: true,

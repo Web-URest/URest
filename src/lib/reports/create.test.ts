@@ -57,6 +57,20 @@ describe("createBookingReport", () => {
     expect(reportCreate).toHaveBeenCalled();
   });
 
+  it("persists supplied photoKeys (dispute evidence)", async () => {
+    bookingFind.mockResolvedValue(booking);
+    await createBookingReport("guest1", "bk1", "CLEANLINESS", "สกปรก", ["disputes/bk1/a.jpg"]);
+    expect(reportCreate).toHaveBeenCalledWith({
+      data: {
+        reporterId: "guest1",
+        bookingId: "bk1",
+        category: "CLEANLINESS",
+        text: "สกปรก",
+        photoKeys: ["disputes/bk1/a.jpg"],
+      },
+    });
+  });
+
   it("throws NOT_FOUND for a missing booking", async () => {
     bookingFind.mockResolvedValue(null);
     await expect(createBookingReport("guest1", "bk1", "OTHER", "x")).rejects.toBeInstanceOf(ReportError);
