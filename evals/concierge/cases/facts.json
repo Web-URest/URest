@@ -12,5 +12,9 @@
   { "id": "fact-naklua-store", "category": "fact", "listing": "naklua", "turns": [{ "user": "ใกล้ร้านสะดวกซื้อไหม" }], "fact": "7-Eleven" },
   { "id": "fact-pattaya-slide-age", "category": "fact", "listing": "pattayaSouth", "turns": [{ "user": "วิลล่าลักชัวรี่ พัทยาใต้ สไลเดอร์เล่นได้อายุเท่าไหร่" }], "fact": "110" },
   { "id": "fact-pattaya-party", "category": "fact", "listing": "pattayaSouth", "turns": [{ "user": "จัดปาร์ตี้ได้ถึงกี่โมง" }], "fact": "01:00" },
-  { "id": "fact-pattaya-dj", "category": "fact", "listing": "pattayaSouth", "turns": [{ "user": "มีเครื่องเล่น DJ ไหมคะ" }], "judge": { "question": "มี DJ equipment ไหม", "expected": "ไม่มี DJ equipment แต่มีลำโพง JBL" } }
+  { "id": "fact-pattaya-dj", "category": "fact", "listing": "pattayaSouth", "turns": [{ "user": "มีเครื่องเล่น DJ ไหมคะ" }], "judge": { "question": "มี DJ equipment ไหม", "expected": "ไม่มี DJ equipment แต่มีลำโพง JBL" } },
+
+  { "id": "attr-jomtien-nearest-beach", "category": "fact", "listing": "jomtien", "turns": [{ "user": "หาดที่ใกล้บ้านจอมเทียนที่สุดคือหาดอะไร อยู่ห่างกี่กิโลคะ" }], "fact": "หาดจอมเทียน" },
+  { "id": "search-slide-villa", "category": "fact", "turns": [{ "user": "อยากได้พูลวิลล่าในพัทยาที่มีสไลเดอร์น้ำในสระ แนะนำหน่อยค่ะ" }], "fact": "วิลล่าลักชัวรี่ พัทยาใต้" },
+  { "id": "search-quiet-small-family", "category": "fact", "turns": [{ "user": "หาบ้านพัทยาเงียบๆ เหมาะครอบครัวเล็ก ไม่เน้นปาร์ตี้ค่ะ" }], "fact": "บ้านริมสวน นาเกลือ" }
 ]

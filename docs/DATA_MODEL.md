@@ -53,7 +53,7 @@ erDiagram
 | `CalendarBlock` | Host manual blocks | block-vs-booking checked in lib; booking-vs-booking = constraint №1 |
 | `ListingFaqEntry` | Per-listing Q&A | feeds `get_listing_details`; ADMIN_SUGGESTED from the §5.7 loop |
 | `SavedVilla` | ♡ flat list | composite PK (userId, listingId) |
-| `Attraction` | Curated POIs per region | embedding column deferred to Phase 4 (model choice) |
+| `Attraction` | Curated POIs per region | no embedding column — semantic match is chat-model ranking over candidates (ADR-006 Decision 7, #34); distance via lat/lng at query time |
 | `NotificationLog` | Channel of record (ADR-005) | retry sweep on (status, createdAt); doubles as LINE quota monitor |
 
 ## Booking domain 🔒 (Phase 3 — lands with lib/booking + lib/ledger)
@@ -85,7 +85,7 @@ erDiagram
 
 ## Concierge domain 🤖 (Phase 4 — AI_CONCIERGE_SPEC §5)
 
-`ConciergeSession` (userId?, scopedListingId?) · `ConciergeMessage` (role, content, toolCalls Json; 12-month purge) · `ConciergeUsage` (tokens, costSatang) · `UnansweredQuestion` (listingId, questionText, status OPEN/CONVERTED/DISMISSED → §5.7 admin view) · `ConciergeBookingDraft` (#32 — in-chat booking draft + price snapshot; `confirmTokenHash`/`confirmTokenExpiresAt`/`confirmedAt` minted on the guest tap and NEVER seen by the model; `consumedBookingId` = single-use; `expiresAt` = draft TTL). Phase 4 also adds `embedding vector(<dim>)` columns to `Listing` + `Attraction` once the embedding model (and thus dimension) is chosen.
+`ConciergeSession` (userId?, scopedListingId?) · `ConciergeMessage` (role, content, toolCalls Json; 12-month purge) · `ConciergeUsage` (tokens, costSatang) · `UnansweredQuestion` (listingId, questionText, status OPEN/CONVERTED/DISMISSED → §5.7 admin view) · `ConciergeBookingDraft` (#32 — in-chat booking draft + price snapshot; `confirmTokenHash`/`confirmTokenExpiresAt`/`confirmedAt` minted on the guest tap and NEVER seen by the model; `consumedBookingId` = single-use; `expiresAt` = draft TTL). No `embedding vector(<dim>)` columns are added for the pilot: at pilot scale (~15 villas, ~50 POIs/region) the candidate set fits in a tool result, so semantic search is the chat model ranking the candidates `search_listings`/`get_nearby_attractions` return (ADR-006 Decision 7, #34). The `vector` extension stays installed/ready; vector columns + an index land only when a region outgrows what fits a tool result.
 
 ## Raw-SQL constraint inventory
 

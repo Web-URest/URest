@@ -322,8 +322,8 @@ describe("check_availability", () => {
 describe("search_listings", () => {
   it("filters by max_price_per_night (THB)", async () => {
     searchListingsMock.mockResolvedValue([
-      { id: "l1", baseWeekdaySatang: 300000, baseWeekendSatang: 400000, title: "A", regionNameTh: "พัทยา", bedrooms: 3, maxGuests: 8, amenities: [], bookingMode: "REQUEST", legalBadgeAt: null },
-      { id: "l2", baseWeekdaySatang: 600000, baseWeekendSatang: 700000, title: "B", regionNameTh: "พัทยา", bedrooms: 4, maxGuests: 10, amenities: [], bookingMode: "REQUEST", legalBadgeAt: null },
+      { id: "l1", description: "วิลล่า A", baseWeekdaySatang: 300000, baseWeekendSatang: 400000, title: "A", regionNameTh: "พัทยา", bedrooms: 3, maxGuests: 8, amenities: [], bookingMode: "REQUEST", legalBadgeAt: null },
+      { id: "l2", description: "วิลล่า B", baseWeekdaySatang: 600000, baseWeekendSatang: 700000, title: "B", regionNameTh: "พัทยา", bedrooms: 4, maxGuests: 10, amenities: [], bookingMode: "REQUEST", legalBadgeAt: null },
     ]);
 
     const result = await handleToolCall(
@@ -339,7 +339,7 @@ describe("search_listings", () => {
 
   it("converts satang to THB in results", async () => {
     searchListingsMock.mockResolvedValue([
-      { id: "l1", baseWeekdaySatang: 350000, baseWeekendSatang: 450000, title: "A", regionNameTh: "พัทยา", bedrooms: 3, maxGuests: 8, amenities: [], bookingMode: "REQUEST", legalBadgeAt: null },
+      { id: "l1", description: "วิลล่า A", baseWeekdaySatang: 350000, baseWeekendSatang: 450000, title: "A", regionNameTh: "พัทยา", bedrooms: 3, maxGuests: 8, amenities: [], bookingMode: "REQUEST", legalBadgeAt: null },
     ]);
     const result = await handleToolCall(
       "search_listings",
@@ -351,6 +351,21 @@ describe("search_listings", () => {
     };
     expect(data.listings[0]!.price_weekday_thb).toBe(3500);
     expect(data.listings[0]!.price_weekend_thb).toBe(4500);
+  });
+
+  it("gives the model a host_content-wrapped, truncated description per candidate (for ranking)", async () => {
+    const longDesc = "วิลล่าหรูริมทะเล ".repeat(60); // > 240 chars
+    searchListingsMock.mockResolvedValue([
+      { id: "l1", baseWeekdaySatang: 350000, baseWeekendSatang: 450000, title: "A", regionNameTh: "พัทยา", bedrooms: 3, maxGuests: 8, amenities: [], bookingMode: "REQUEST", legalBadgeAt: null, description: longDesc },
+    ]);
+    const result = await handleToolCall("search_listings", { query: "หรู" }, null);
+    const data = JSON.parse(result.content) as { listings: { description: string }[] };
+    const d = data.listings[0]!.description;
+    expect(d.startsWith("<host_content>")).toBe(true);
+    expect(d.endsWith("</host_content>")).toBe(true);
+    const inner = d.slice("<host_content>".length, -"</host_content>".length);
+    expect(inner.length).toBeLessThanOrEqual(241); // 240 chars + ellipsis
+    expect(inner.length).toBeLessThan(longDesc.length); // actually truncated
   });
 });
 

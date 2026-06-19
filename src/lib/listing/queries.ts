@@ -15,6 +15,7 @@ export interface SearchParams {
 export type SearchListing = {
   id: string;
   title: string;
+  description: string;
   regionNameTh: string;
   regionSlug: string;
   bedrooms: number;
@@ -74,6 +75,7 @@ export async function searchListings(params: SearchParams): Promise<SearchListin
   return listings.map((l: SearchRow) => ({
     id: l.id,
     title: l.title,
+    description: l.description,
     regionNameTh: l.region.nameTh,
     regionSlug: l.region.slug,
     bedrooms: l.bedrooms,
