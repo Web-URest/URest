@@ -7,7 +7,7 @@ import { presignGet } from "@/lib/storage/r2";
 import { formatSatang } from "@/lib/money";
 import { Link } from "@/i18n/navigation";
 
-import { resolveAppealAction, resolveDisputeAction } from "../actions";
+import { finalizeRefundAction, resolveAppealAction, resolveDisputeAction } from "../actions";
 
 /**
  * Dispute case view (§5.3). Shows the money state, the guest's evidence report(s)
@@ -33,7 +33,7 @@ export default async function DisputeCasePage({ params }: { params: Promise<{ bo
     if (e instanceof DisputeReviewError) notFound();
     throw e;
   }
-  const { dispute, reports, thread } = data;
+  const { dispute, reports, thread, refund } = data;
 
   // Sign each private-bucket evidence photo for a short-lived admin view.
   const photoUrlsByReport = await Promise.all(
@@ -43,6 +43,9 @@ export default async function DisputeCasePage({ params }: { params: Promise<{ bo
   const isOpen = dispute.status === "OPEN";
   const awaitingAppeal = !isOpen && dispute.booking.escrowState === "FROZEN";
   const action = awaitingAppeal ? resolveAppealAction : resolveDisputeAction;
+  // Final + a guest refund owed but not yet sent → offer the deferred refund send.
+  const canFinalizeRefund =
+    !isOpen && !awaitingAppeal && !!refund && refund.refundSatang > 0 && !refund.opnRefundId;
 
   return (
     <section className="flex max-w-2xl flex-col gap-6">
@@ -136,10 +139,25 @@ export default async function DisputeCasePage({ params }: { params: Promise<{ bo
           </button>
         </form>
       ) : (
-        <p className="border-t border-ink-700 pt-6 text-sand-400">
-          {dispute.status}
-          {dispute.resolvedAt ? ` · ${bkk(dispute.resolvedAt)}` : ""}
-        </p>
+        <div className="flex flex-col gap-4 border-t border-ink-700 pt-6">
+          <p className="text-sand-400">
+            {dispute.status}
+            {dispute.resolvedAt ? ` · ${bkk(dispute.resolvedAt)}` : ""}
+          </p>
+          {canFinalizeRefund && (
+            <form action={finalizeRefundAction.bind(null, bookingId)} className="flex flex-col gap-2">
+              <p className="text-sm text-sand-300">
+                {t("refundOwed")}: {formatSatang(refund!.refundSatang)}
+              </p>
+              <button
+                type="submit"
+                className="w-fit rounded-full bg-jade-500 px-5 py-2 text-sm font-medium text-white hover:opacity-90"
+              >
+                {t("finalizeRefund")}
+              </button>
+            </form>
+          )}
+        </div>
       )}
     </section>
   );

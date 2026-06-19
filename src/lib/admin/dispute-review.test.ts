@@ -6,18 +6,22 @@ vi.mock("@/lib/db", () => ({
     report: { findMany: vi.fn() },
     booking: { findUnique: vi.fn() },
     refund: { findUnique: vi.fn() },
+    auditLog: { create: vi.fn() },
   },
 }));
 vi.mock("@/lib/notifications", () => ({ notify: vi.fn() }));
 vi.mock("@/lib/booking/transitions", () => ({ resolveDispute: vi.fn(), resolveAppeal: vi.fn() }));
 vi.mock("@/lib/messaging/admin", () => ({ readDisputeThreadRaw: vi.fn() }));
+vi.mock("@/lib/payments/charge", () => ({ refundBookingToGuest: vi.fn() }));
 
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notifications";
 import { resolveAppeal, resolveDispute } from "@/lib/booking/transitions";
 import { readDisputeThreadRaw } from "@/lib/messaging/admin";
+import { refundBookingToGuest } from "@/lib/payments/charge";
 import {
   DisputeReviewError,
+  finalizeDisputeRefund,
   loadDisputeCase,
   listOpenDisputes,
   resolveAppealCase,
@@ -29,10 +33,12 @@ const disputeFindMany = prisma.dispute.findMany as unknown as Mock;
 const reportFindMany = prisma.report.findMany as unknown as Mock;
 const bookingFind = prisma.booking.findUnique as unknown as Mock;
 const refundFind = prisma.refund.findUnique as unknown as Mock;
+const auditCreate = prisma.auditLog.create as unknown as Mock;
 const notifyMock = notify as unknown as Mock;
 const resolveDisputeMock = resolveDispute as unknown as Mock;
 const resolveAppealMock = resolveAppeal as unknown as Mock;
 const readRawMock = readDisputeThreadRaw as unknown as Mock;
+const refundGuestMock = refundBookingToGuest as unknown as Mock;
 
 const admin = { id: "a1", email: "a@x.co", displayName: "Aok" };
 
@@ -110,5 +116,34 @@ describe("resolveAppealCase", () => {
     expect(resolveAppealMock).toHaveBeenCalledWith("bk1", "a1", { kind: "REFUNDED" }, expect.any(Date));
     expect(notifyMock).toHaveBeenCalledWith("g1", "DISPUTE_APPEAL_RESOLVED", expect.objectContaining({ kind: "REFUNDED" }));
     expect(notifyMock).toHaveBeenCalledWith("h1", "DISPUTE_APPEAL_RESOLVED", expect.objectContaining({ kind: "REFUNDED" }));
+  });
+});
+
+describe("finalizeDisputeRefund", () => {
+  it("sends the guest refund + audits when the dispute is final (resolved, not frozen)", async () => {
+    disputeFind.mockResolvedValue({ status: "RESOLVED_PARTIAL", booking: { escrowState: "RELEASABLE" } });
+
+    await finalizeDisputeRefund(admin, "bk1");
+
+    expect(refundGuestMock).toHaveBeenCalledWith("bk1");
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: { adminId: "a1", action: "DISPUTE_REFUND_FINALIZED", targetType: "Booking", targetId: "bk1" },
+    });
+  });
+
+  it("refuses to send while an appeal is armed (escrow still FROZEN)", async () => {
+    disputeFind.mockResolvedValue({ status: "RESOLVED_PARTIAL", booking: { escrowState: "FROZEN" } });
+    await expect(finalizeDisputeRefund(admin, "bk1")).rejects.toMatchObject({ reason: "NOT_FINAL" });
+    expect(refundGuestMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses to send while the dispute is still OPEN", async () => {
+    disputeFind.mockResolvedValue({ status: "OPEN", booking: { escrowState: "FROZEN" } });
+    await expect(finalizeDisputeRefund(admin, "bk1")).rejects.toMatchObject({ reason: "NOT_FINAL" });
+  });
+
+  it("throws NOT_FOUND when the booking has no dispute", async () => {
+    disputeFind.mockResolvedValue(null);
+    await expect(finalizeDisputeRefund(admin, "bk1")).rejects.toBeInstanceOf(DisputeReviewError);
   });
 });

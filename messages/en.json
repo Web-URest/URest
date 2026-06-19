@@ -162,7 +162,9 @@
       "kindReleased": "Release to host (no refund)",
       "kindPartial": "Partial refund",
       "kindRefunded": "Full refund to guest",
-      "decide": "Confirm decision"
+      "decide": "Confirm decision",
+      "refundOwed": "Guest refund owed",
+      "finalizeRefund": "Finalize & send guest refund"
     },
     "nav": {
       "approvalQueue": "Approval queue",

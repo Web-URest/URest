@@ -25,7 +25,6 @@ import {
 import { prisma } from "@/lib/db";
 import { claimWebhookEvent, currentPosition, freeze, recordCharge, release, settle } from "@/lib/ledger/apply";
 import { issueBookingCode } from "@/lib/ledger/code";
-import { EscrowError } from "@/lib/ledger/escrow";
 
 import { breakdown, computeRefund, refundSatangForPct, type RefundBreakdown } from "./refund";
 import { issueStrike } from "./strikes";
@@ -411,10 +410,12 @@ const RESOLVED_DISPUTE_STATUSES = new Set<string>([
  * RE-FREEZES the still-RELEASABLE escrow — reusing the existing FREEZE move, no new
  * ledger transition — so the payout run can't disburse it before the final
  * re-decision (`resolveAppeal`). If the money already left escrow (REVERSED on a
- * full refund, or PAID), `freeze` rejects with EscrowError and the appeal is
- * recorded advisory-only (the documented v1 limit — terminal money can't be clawed
- * back without new ledger machinery).
+ * full refund, or PAID) it can't be re-frozen, so the appeal is REJECTED up front
+ * (APPEAL_NOT_OPEN) rather than silently consumed — the v1 limit, surfaced to the
+ * caller instead of swallowed.
  */
+const FREEZABLE = new Set<EscrowState>([EscrowState.HELD, EscrowState.RELEASABLE]);
+
 export function appealDispute(
   bookingId: string,
   userId: string,
@@ -437,17 +438,24 @@ export function appealDispute(
       side === "GUEST" ? booking.dispute.guestAppealedAt : booking.dispute.hostAppealedAt;
     if (already) throw new BookingError("ALREADY_APPEALED");
 
+    // Reject up front if the money already left escrow — re-freeze would be illegal,
+    // and a silently-recorded appeal flag would never surface in the admin queue.
+    if (!FREEZABLE.has(booking.escrowState)) throw new BookingError("APPEAL_NOT_OPEN");
+
+    // Once the guest's refund has actually been sent at Opn the dispute is
+    // financially final — reopening it would let the cumulative refund grow past
+    // the single Opn refund that already fired (the under-refund the refund must
+    // avoid). No appeal after the money has moved.
+    const refund = await tx.refund.findUnique({ where: { bookingId }, select: { opnRefundId: true } });
+    if (refund?.opnRefundId) throw new BookingError("APPEAL_NOT_OPEN");
+
     await tx.dispute.update({
       where: { bookingId },
       data: side === "GUEST" ? { guestAppealedAt: now } : { hostAppealedAt: now },
     });
+    await freeze(tx, bookingId, LedgerCause.HOLD_DISPUTE_OPENED, booking.dispute.id);
 
-    try {
-      await freeze(tx, bookingId, LedgerCause.HOLD_DISPUTE_OPENED, booking.dispute.id);
-    } catch (e) {
-      if (!(e instanceof EscrowError)) throw e; // advisory appeal: nothing left to freeze
-    }
-    return booking;
+    return tx.booking.findUniqueOrThrow({ where: { id: bookingId } });
   });
 }
 

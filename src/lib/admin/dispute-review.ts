@@ -11,10 +11,11 @@ import { prisma } from "@/lib/db";
 import { resolveAppeal, resolveDispute, type DisputeResolution } from "@/lib/booking/transitions";
 import { readDisputeThreadRaw } from "@/lib/messaging/admin";
 import { notify } from "@/lib/notifications";
+import { refundBookingToGuest } from "@/lib/payments/charge";
 
 import type { AdminPrincipal } from "./auth";
 
-export type DisputeReviewErrorReason = "NOT_FOUND";
+export type DisputeReviewErrorReason = "NOT_FOUND" | "NOT_FINAL";
 
 export class DisputeReviewError extends Error {
   constructor(public readonly reason: DisputeReviewErrorReason) {
@@ -109,8 +110,12 @@ export async function loadDisputeCase(admin: AdminPrincipal, bookingId: string) 
   });
 
   const thread = await readDisputeThreadRaw(admin, bookingId);
+  const refund = await prisma.refund.findUnique({
+    where: { bookingId },
+    select: { refundSatang: true, opnRefundId: true },
+  });
 
-  return { dispute, reports, thread };
+  return { dispute, reports, thread, refund };
 }
 
 /** Decision + refund amount for the both-parties notification (refund row is the truth). */
@@ -149,4 +154,29 @@ export async function resolveAppealCase(
 ): Promise<void> {
   await resolveAppeal(bookingId, admin.id, resolution, new Date());
   await notifyParties(bookingId, "DISPUTE_APPEAL_RESOLVED", resolution.kind);
+}
+
+/**
+ * Send the guest's refund to Opn once the dispute is truly final (§5.3). The refund
+ * is DEFERRED to here — not fired at resolution — so an appeal can grow the
+ * cumulative `Refund.refundSatang` before the single Opn refund moves it: firing on
+ * the initial resolution would skip the appeal delta (`opnRefundId` already set).
+ * Gated on the dispute being resolved with no pending appeal (escrow not FROZEN);
+ * `refundBookingToGuest` is best-effort + idempotent (no-op on 0 / already-sent), and
+ * the appeal path blocks once `opnRefundId` is set, so this fires the cumulative once.
+ */
+export async function finalizeDisputeRefund(admin: AdminPrincipal, bookingId: string): Promise<void> {
+  const dispute = await prisma.dispute.findUnique({
+    where: { bookingId },
+    select: { status: true, booking: { select: { escrowState: true } } },
+  });
+  if (!dispute) throw new DisputeReviewError("NOT_FOUND");
+  if (dispute.status === "OPEN" || dispute.booking.escrowState === "FROZEN") {
+    throw new DisputeReviewError("NOT_FINAL"); // still open or an appeal is armed
+  }
+
+  await refundBookingToGuest(bookingId); // best-effort, idempotent, no-op when nothing owed
+  await prisma.auditLog.create({
+    data: { adminId: admin.id, action: "DISPUTE_REFUND_FINALIZED", targetType: "Booking", targetId: bookingId },
+  });
 }

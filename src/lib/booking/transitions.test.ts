@@ -35,7 +35,6 @@ vi.mock("@/lib/ledger/code", () => ({
 import { prisma } from "@/lib/db";
 import { claimWebhookEvent, currentPosition, freeze, recordCharge, release, settle } from "@/lib/ledger/apply";
 import { issueBookingCode } from "@/lib/ledger/code";
-import { EscrowError } from "@/lib/ledger/escrow";
 
 import {
   accept,
@@ -367,7 +366,24 @@ describe("appealDispute", () => {
     });
   });
 
-  it("records the appeal as advisory when the escrow can't be re-frozen", async () => {
+  it("rejects an appeal once the guest refund has been sent at Opn (financially final)", async () => {
+    findUnique.mockResolvedValue(
+      booking({
+        status: BookingStatus.COMPLETED,
+        escrowState: EscrowState.RELEASABLE, // host remainder still freezable…
+        dispute: { id: "disp1", status: "RESOLVED_PARTIAL", guestAppealedAt: null, hostAppealedAt: null },
+      }),
+    );
+    refundFindUnique.mockResolvedValue({ opnRefundId: "rfnd_1" }); // …but the refund already moved
+
+    await expect(appealDispute("bk1", "guest1", "GUEST", NOW)).rejects.toMatchObject({
+      reason: "APPEAL_NOT_OPEN",
+    });
+    expect(disputeUpdate).not.toHaveBeenCalled();
+    expect(freeze).not.toHaveBeenCalled();
+  });
+
+  it("rejects up front when the escrow can't be re-frozen (money already moved)", async () => {
     findUnique.mockResolvedValue(
       booking({
         status: BookingStatus.CANCELLED_BY_HOST,
@@ -375,14 +391,13 @@ describe("appealDispute", () => {
         dispute: { id: "disp1", status: "RESOLVED_REFUNDED", guestAppealedAt: null, hostAppealedAt: null },
       }),
     );
-    (freeze as unknown as Mock).mockRejectedValue(new EscrowError("ILLEGAL_TRANSITION"));
 
-    // Does NOT throw — the appeal flag is still recorded.
-    await appealDispute("bk1", "host1", "HOST", NOW);
-    expect(disputeUpdate).toHaveBeenCalledWith({
-      where: { bookingId: "bk1" },
-      data: { hostAppealedAt: NOW },
+    await expect(appealDispute("bk1", "host1", "HOST", NOW)).rejects.toMatchObject({
+      reason: "APPEAL_NOT_OPEN",
     });
+    // The appeal flag must NOT be consumed.
+    expect(disputeUpdate).not.toHaveBeenCalled();
+    expect(freeze).not.toHaveBeenCalled();
   });
 });
 
