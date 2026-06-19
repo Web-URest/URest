@@ -18,7 +18,7 @@ export const CONCIERGE_TOOLS: Anthropic.Tool[] = [
   {
     name: "search_listings",
     description:
-      "Search real, published villa inventory. Call when the guest describes what they want (region, dates, group size, budget, amenities like สไลเดอร์/คาราโอเกะ/สัตว์เลี้ยง). Never describe villas from memory — always search first.",
+      "Search real, published villa inventory. Call when the guest describes what they want (region, dates, group size, budget, amenities like สไลเดอร์/คาราโอเกะ/สัตว์เลี้ยง). Never describe villas from memory — always search first. Returns candidate villas, each with a short description; recommend the ones that best match what the guest described (style, vibe, view, amenities), best matches first. If none fit, say so — never invent.",
     input_schema: {
       type: "object",
       properties: {
@@ -135,6 +135,11 @@ export type ToolInput = Record<string, unknown>;
  */
 export type ToolResult = { is_error: boolean; content: string; card?: ConciergeCard };
 
+// Truncate a host-written string to a ranking snippet (… if cut).
+function truncate(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max)}…` : s;
+}
+
 // Haversine for attraction distance
 const R_KM = 6371;
 function haversineKm(
@@ -190,6 +195,9 @@ async function searchListingsHandler(input: ToolInput): Promise<ToolResult> {
           bedrooms: l.bedrooms,
           max_guests: l.maxGuests,
           amenities: l.amenities,
+          // Free-text the model ranks against. Host-written → injection-defended
+          // (§4 rule 5), truncated so 10 candidates stay cheap.
+          description: `<host_content>${truncate(l.description, 240)}</host_content>`,
           price_weekday_thb: Math.round(l.baseWeekdaySatang / 100),
           price_weekend_thb: Math.round(l.baseWeekendSatang / 100),
           booking_mode: l.bookingMode,
