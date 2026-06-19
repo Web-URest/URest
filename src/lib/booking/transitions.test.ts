@@ -10,7 +10,7 @@ vi.mock("@/lib/db", () => ({
       update: vi.fn(),
     },
     dispute: { create: vi.fn(), update: vi.fn() },
-    refund: { create: vi.fn(), upsert: vi.fn() },
+    refund: { create: vi.fn(), upsert: vi.fn(), findUnique: vi.fn() },
     hostStrike: { create: vi.fn(), count: vi.fn() },
     user: { update: vi.fn() },
     auditLog: { create: vi.fn() },
@@ -63,6 +63,7 @@ const userUpdate = prisma.user.update as unknown as Mock;
 const auditCreate = prisma.auditLog.create as unknown as Mock;
 const disputeUpdate = prisma.dispute.update as unknown as Mock;
 const refundUpsert = prisma.refund.upsert as unknown as Mock;
+const refundFindUnique = prisma.refund.findUnique as unknown as Mock;
 const positionMock = currentPosition as unknown as Mock;
 const txRun = prisma.$transaction as unknown as Mock;
 
@@ -429,13 +430,39 @@ describe("resolveAppeal", () => {
   it("partial-refunds against the frozen pot (bounded by the remainder)", async () => {
     findUnique.mockResolvedValue(frozenAppeal());
     positionMock.mockResolvedValue({ state: EscrowState.FROZEN, amountSatang: 6_000_00 });
+    refundFindUnique.mockResolvedValue(null);
     disputeUpdate.mockResolvedValue({});
 
     await resolveAppeal("bk1", "admin1", { kind: "PARTIAL", refundPct: 50 }, NOW);
 
-    // 50% of the 6,000-baht frozen remainder → 3,000 to guest.
+    // The LEDGER settle moves 50% of the 6,000-baht frozen remainder → 3,000.
     expect(settle).toHaveBeenCalledWith(prisma, "bk1", 3_000_00, LedgerCause.REFUND_DISPUTE_PARTIAL, "admin1");
-    expect(refundUpsert).toHaveBeenCalled();
     expect(update).toHaveBeenCalledWith({ where: { id: "bk1" }, data: { status: BookingStatus.COMPLETED } });
+  });
+
+  it("writes a CUMULATIVE Refund row (prior partial + appeal), not just the appeal slice", async () => {
+    findUnique.mockResolvedValue(
+      booking({
+        status: BookingStatus.COMPLETED,
+        escrowState: EscrowState.FROZEN,
+        dispute: { id: "disp1", status: "RESOLVED_PARTIAL", guestAppealedAt: NOW, hostAppealedAt: null },
+      }),
+    );
+    // After an original 4,000 partial, the 6,000 remainder was re-frozen.
+    positionMock.mockResolvedValue({ state: EscrowState.FROZEN, amountSatang: 6_000_00 });
+    refundFindUnique.mockResolvedValue({ refundSatang: 4_000_00 });
+    disputeUpdate.mockResolvedValue({});
+
+    await resolveAppeal("bk1", "admin1", { kind: "PARTIAL", refundPct: 50 }, NOW);
+
+    // Ledger moves the 3,000 appeal slice; the Refund row totals 4,000 + 3,000 = 7,000.
+    expect(settle).toHaveBeenCalledWith(prisma, "bk1", 3_000_00, LedgerCause.REFUND_DISPUTE_PARTIAL, "admin1");
+    expect(refundUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { bookingId: "bk1" },
+        create: expect.objectContaining({ refundSatang: 7_000_00 }),
+        update: expect.objectContaining({ refundSatang: 7_000_00 }),
+      }),
+    );
   });
 });

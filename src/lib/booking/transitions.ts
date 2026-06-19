@@ -476,6 +476,12 @@ export function resolveAppeal(
     if (booking.escrowState !== EscrowState.FROZEN) throw new BookingError("APPEAL_NOT_OPEN");
 
     const { amountSatang: frozen } = await currentPosition(tx, bookingId);
+    // The appeal moves money out of the FROZEN pot only, but the booking's single
+    // (`@unique`) Refund row is the amount the reconciliation/Opn refund path treats
+    // as owed to the guest (lib/payments/charge) — so it must stay CUMULATIVE across
+    // the original resolution + this appeal, not be overwritten with the appeal slice.
+    const prior = await tx.refund.findUnique({ where: { bookingId }, select: { refundSatang: true } });
+    const priorRefund = prior?.refundSatang ?? 0;
 
     await tx.auditLog.create({
       data: {
@@ -500,13 +506,19 @@ export function resolveAppeal(
     }
 
     if (resolution.kind === "PARTIAL") {
-      const refundSatang = refundSatangForPct(frozen, resolution.refundPct);
+      const appealRefund = refundSatangForPct(frozen, resolution.refundPct); // from the frozen pot
       await tx.dispute.update({
         where: { bookingId },
         data: { status: "RESOLVED_PARTIAL", partialRefundPct: resolution.refundPct, resolvedAt: now },
       });
-      await upsertRefund(tx, bookingId, breakdown(frozen, refundSatang), "dispute appeal partial resolution");
-      await settle(tx, bookingId, refundSatang, LedgerCause.REFUND_DISPUTE_PARTIAL, adminId);
+      // Refund row = cumulative booking-level total (prior + this appeal slice).
+      await upsertRefund(
+        tx,
+        bookingId,
+        breakdown(booking.totalSatang, priorRefund + appealRefund),
+        "dispute appeal partial resolution",
+      );
+      await settle(tx, bookingId, appealRefund, LedgerCause.REFUND_DISPUTE_PARTIAL, adminId);
       return tx.booking.update({ where: { id: bookingId }, data: { status: BookingStatus.COMPLETED } });
     }
 
@@ -515,7 +527,12 @@ export function resolveAppeal(
       where: { bookingId },
       data: { status: "RESOLVED_REFUNDED", resolvedAt: now },
     });
-    await upsertRefund(tx, bookingId, breakdown(frozen, frozen), "dispute appeal refunded");
+    await upsertRefund(
+      tx,
+      bookingId,
+      breakdown(booking.totalSatang, priorRefund + frozen),
+      "dispute appeal refunded",
+    );
     await settle(tx, bookingId, frozen, LedgerCause.REFUND_DISPUTE_FULL, adminId);
     await issueStrike(tx, booking.listing.hostId, "HOST_CANCELLED", bookingId, now);
     return tx.booking.update({

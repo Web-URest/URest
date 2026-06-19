@@ -582,6 +582,7 @@
     "statusResolved": "This dispute has been resolved.",
     "ineligible": "You can't open a dispute for this booking yet",
     "backToTrip": "Back to booking",
+    "viewCase": "View dispute",
     "appeal": "Appeal (once)",
     "appealError": "Couldn't appeal — you may have already appealed or the window has passed"
   },
