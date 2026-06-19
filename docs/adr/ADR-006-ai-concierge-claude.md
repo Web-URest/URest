@@ -1,6 +1,6 @@
 # ADR-006: AI concierge "น้องเรสต์" — Claude tool-calling, confirmation-gated booking, never-guess grounding
 
-**Status:** Accepted · 2026-06-10, revised 2026-06-12 (grill session #3: provider locked, booking boundary extended, grounding + guardrails formalized)
+**Status:** Accepted · 2026-06-10, revised 2026-06-12 (grill session #3: provider locked, booking boundary extended, grounding + guardrails formalized), revised 2026-06-18 (#34: semantic search = model-ranked candidates; pgvector embeddings deferred — Decision 7)
 **Implementation contract:** `docs/AI_CONCIERGE_SPEC.md` (Phase 4)
 
 ## Context
@@ -17,7 +17,7 @@ The concierge is a differentiator, not the core loop: it helps groups *find, dec
    | `search_listings` | no |
    | `check_availability` | no |
    | `get_listing_details` (now includes host FAQ entries) | no |
-   | `get_nearby_attractions` (curated table, pgvector) | no |
+   | `get_nearby_attractions` (curated table; model-ranked — pgvector deferred, see Decision 7) | no |
    | `get_saved_listings` (guest's own ที่บันทึกไว้ list; server resolves the user from session — added 2026-06-12) | no |
    | `create_booking_draft` (renders the in-chat booking-summary confirmation card) | no |
    | `submit_booking_request` | **yes — confirmation-gated** (see 3) |
@@ -39,6 +39,8 @@ The concierge is a differentiator, not the core loop: it helps groups *find, dec
 
 6. **Sessions:** thread per conversation, transcripts retained 12 months then purged (PDPA scope, aligns ADR-007); token usage logged per conversation (`ConciergeUsage`).
 
+7. **Semantic search is the chat model ranking candidates — pgvector embeddings deferred (2026-06-18, #34).** At pilot scale (~15 villas, ~50 POIs/region) the candidate set fits in a tool result: `search_listings` returns candidate villas each with a host-written description snippet, `get_nearby_attractions` returns nearby POIs with descriptions + distances, and the model ranks them against what the guest described. The closed-world rule (Decision 4) already blocks fabrication, so no separate embedding index is needed for sensible Thai free-text matching at this scale. True pgvector embeddings are **explicitly deferred** because they would force a **non-Anthropic embedding provider** (Anthropic has no embeddings API) — a documented exception to the Anthropic-only stance in Decision 1 — plus an API key, a write-time embedding pipeline, and cost against the ฿1,000/mo ceiling, for negligible pilot gain. The `vector` extension stays installed/ready. **Revisit trigger:** when a region's candidate set outgrows what fits one tool result (≈ hundreds of listings) or recall visibly degrades, add `embedding vector(<dim>)` columns to `Listing` + `Attraction` + an index, and pick the embedding model/dimension then (recording the provider exception here at that point).
+
 ## Consequences
 
 - ✅ Worst-case model failure is a wrong refusal or a bad suggestion — never a bad charge and never an unconfirmed booking; the guarantees are structural (token gate, no payment tool), not prompt-dependent.
@@ -46,4 +48,5 @@ The concierge is a differentiator, not the core loop: it helps groups *find, dec
 - ✅ Haiku + seven narrow tools keeps cost linear and chat-grade latency; provider portability lives in the tool layer, so a future vendor change is an SDK swap, not a redesign.
 - ⚠️ **Caching caveat:** Haiku 4.5's minimum cacheable prefix is 4096 tokens — the system prompt + tool definitions may fall below it and silently not cache. Either structure the prompt to exceed the minimum or accept uncached input cost (still within budget at pilot scale). Verify via `usage.cache_read_input_tokens` in dev.
 - ⚠️ Attractions data and the seeded eval villa are content tasks someone must own in Phase 4.
+- ✅ Deferring embeddings (Decision 7) keeps the pilot Anthropic-only with zero new providers/keys/cost; the trade is that search recall is bounded by what fits a tool result, with a clear catalog-size revisit trigger rather than a silent ceiling.
 - ⚠️ Metrics to watch (replaces the old "deflection <50%" rule): refusal rate per conversation, FAQ-conversion rate of logged questions, and booking-draft → confirmation-tap rate. A rising refusal rate means the wizard/FAQ schema is missing what guests actually ask.
