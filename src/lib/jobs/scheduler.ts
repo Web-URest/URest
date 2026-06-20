@@ -12,6 +12,9 @@ import {
   sweepOverdueRequests,
   sweepPaymentReminders,
 } from "@/lib/booking/sweeps";
+import { purgeConciergeTranscripts } from "@/lib/concierge/retention";
+import { purgeRejectedKycDocs } from "@/lib/kyc/retention";
+import { purgeOldMessages } from "@/lib/messaging/retention";
 import { sweepFailedNotifications } from "@/lib/notifications/retry";
 import { purgeDeadOtps } from "@/lib/otp/otp";
 
@@ -26,6 +29,9 @@ export async function runSweeps(now: Date): Promise<void> {
     ["due-check-ins", () => sweepDueCheckIns(now)],
     ["due-checkouts", () => sweepDueCheckouts(now)],
     ["purge-otps", () => purgeDeadOtps()],
+    ["purge-kyc-docs", () => purgeRejectedKycDocs(now)],
+    ["purge-concierge", () => purgeConciergeTranscripts(now)],
+    ["purge-messages", () => purgeOldMessages(now)],
     ["retry-notifications", () => sweepFailedNotifications()],
   ];
   for (const [name, run] of jobs) {

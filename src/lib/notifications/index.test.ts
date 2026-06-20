@@ -88,4 +88,29 @@ describe("notify", () => {
     expect(findUser).not.toHaveBeenCalled();
     expect(logCreate).not.toHaveBeenCalled();
   });
+
+  it("suppresses an optional-group channel the user disabled (§3.7 prefs)", async () => {
+    // MESSAGE_NEW ∈ MESSAGES (optional); user muted its email but kept LINE.
+    findUser.mockResolvedValue({
+      email: "g@x.com",
+      lineUserId: "U1",
+      notificationPrefs: { MESSAGES: { email: false, line: true } },
+    });
+    await notify("u1", "MESSAGE_NEW", {});
+    expect(emailSend).not.toHaveBeenCalled();
+    expect(linePush).toHaveBeenCalledOnce();
+    expect(logCreate).toHaveBeenCalledTimes(1); // only the LINE channel logged
+  });
+
+  it("still emails an essential group even when the user disabled it (locked channel)", async () => {
+    // BOOKING_CANCELLED_BY_HOST ∈ BOOKING (essential); email is the channel of record.
+    findUser.mockResolvedValue({
+      email: "g@x.com",
+      lineUserId: "U1",
+      notificationPrefs: { BOOKING: { email: false, line: false } },
+    });
+    await notify("u1", "BOOKING_CANCELLED_BY_HOST", {});
+    expect(emailSend).toHaveBeenCalledOnce(); // locked on despite email:false
+    expect(linePush).not.toHaveBeenCalled(); // LINE is toggleable → suppressed
+  });
 });

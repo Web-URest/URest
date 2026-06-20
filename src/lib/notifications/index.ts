@@ -9,6 +9,7 @@ import { NotificationChannel, NotificationStatus, type Prisma } from "@prisma/cl
 import { prisma } from "@/lib/db";
 
 import { getEmailDriver, getLineDriver } from "./drivers";
+import { channelAllowed, type NotifPrefs } from "./prefs";
 import { getTemplate, type NotificationTemplate } from "./templates";
 
 interface Recipient {
@@ -85,14 +86,16 @@ export async function notify(
   }
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true, lineUserId: true },
+    select: { email: true, lineUserId: true, notificationPrefs: true },
   });
   if (!user) {
     console.error(`[notify] unknown user: ${userId}`);
     return;
   }
+  const prefs = user.notificationPrefs as NotifPrefs | null;
 
   for (const channel of [NotificationChannel.EMAIL, NotificationChannel.LINE]) {
+    if (!channelAllowed(prefs, templateKey, channel)) continue; // §3.7 per-group prefs
     const send = resolveSend(channel, user, template, payload);
     if (send) await dispatch(channel, userId, templateKey, payload, send);
   }
