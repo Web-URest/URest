@@ -51,6 +51,9 @@ export default async function AdminConsoleLayout({
         <Link href="/admin/unanswered-questions" className="text-sand-300 hover:text-sand-50">
           {t("nav.unanswered")}
         </Link>
+        <Link href="/admin/audit-log" className="text-sand-300 hover:text-sand-50">
+          {t("nav.auditLog")}
+        </Link>
       </nav>
       <main className="px-6 py-8">{children}</main>
     </div>
