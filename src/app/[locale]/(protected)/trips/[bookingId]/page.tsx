@@ -21,17 +21,21 @@ import { WithdrawButton } from "./withdraw-button";
  * withdraw action while the request is pre-payment.
  */
 export default async function TripPage({ params }: { params: Promise<{ bookingId: string }> }) {
-  const [{ bookingId }, user, t, tr, tMsg] = await Promise.all([
+  const [{ bookingId }, user, t, tr, tMsg, tDispute] = await Promise.all([
     params,
     requireUser(),
     getTranslations("Booking"),
     getTranslations("Reports"),
     getTranslations("Thread"),
+    getTranslations("Disputes"),
   ]);
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { listing: { select: { title: true, host: { select: { email: true, phone: true } } } } },
+    include: {
+      listing: { select: { title: true, host: { select: { email: true, phone: true } } } },
+      dispute: { select: { status: true } },
+    },
   });
   if (!booking || booking.userId !== user.id) notFound();
 
@@ -44,6 +48,7 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
     booking.status,
   );
   const canMessage = ["REQUESTED", "AWAITING_PAYMENT", "CONFIRMED", "CHECKED_IN", "DISPUTED"].includes(booking.status);
+  const canOpenDispute = booking.status === "CHECKED_IN" && !booking.dispute;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-6 bg-sand-50 px-4 py-8 md:px-6">
@@ -75,6 +80,14 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
             className="rounded-card border border-line px-4 py-2 text-center text-sm font-semibold text-ink-900 transition hover:bg-sand-50"
           >
             {tMsg("messageHost")}
+          </Link>
+        )}
+        {(canOpenDispute || booking.dispute) && (
+          <Link
+            href={`/trips/${booking.id}/dispute`}
+            className="rounded-card border border-line px-4 py-2 text-center text-sm font-semibold text-ink-900 transition hover:bg-sand-50"
+          >
+            {booking.dispute ? tDispute("viewCase") : tDispute("title")}
           </Link>
         )}
         {canWithdraw && <WithdrawButton bookingId={booking.id} />}

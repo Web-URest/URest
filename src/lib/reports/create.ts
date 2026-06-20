@@ -37,6 +37,7 @@ export async function createBookingReport(
   bookingId: string,
   category: ReportCategory,
   text: string,
+  photoKeys: string[] = [],
 ): Promise<string> {
   const body = requireText(text);
   const booking = await prisma.booking.findUnique({
@@ -49,7 +50,7 @@ export async function createBookingReport(
   }
 
   const report = await prisma.report.create({
-    data: { reporterId, bookingId, category, text: body, photoKeys: [] },
+    data: { reporterId, bookingId, category, text: body, photoKeys },
   });
 
   await notify(reporterId, "REPORT_RECEIVED", {

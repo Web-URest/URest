@@ -162,6 +162,35 @@ describe("payout templates (#25)", () => {
   });
 });
 
+describe("dispute templates (#26)", () => {
+  it("DISPUTE_OPENED_GUEST is priority and acks the case is under review", () => {
+    const t = getTemplate("DISPUTE_OPENED_GUEST");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({ listingTitle: "วิลล่า A" })).toContain("วิลล่า A");
+    expect(t?.email({ listingTitle: "วิลล่า A" }).subject).toBeTruthy();
+  });
+  it("DISPUTE_OPENED_HOST is priority and prompts a 48h response", () => {
+    const t = getTemplate("DISPUTE_OPENED_HOST");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({ listingTitle: "วิลล่า A", code: "UR-2606-0001" })).toContain("48");
+    expect(t?.email({ listingTitle: "วิลล่า A", code: "UR-2606-0001" }).body).toContain("48");
+  });
+  it("DISPUTE_RESOLVED carries the decision and the refund amount", () => {
+    const t = getTemplate("DISPUTE_RESOLVED");
+    expect(t?.priority).toBe(true);
+    const p = { listingTitle: "วิลล่า A", code: "UR-2606-0001", kind: "PARTIAL", refundSatang: 4_000_00 };
+    expect(t?.email(p).body).toContain("4,000");
+    expect(t?.email(p).subject).toContain("UR-2606-0001");
+    expect(t?.line(p)).toContain("4,000");
+  });
+  it("DISPUTE_APPEAL_RESOLVED is priority and names the listing as final", () => {
+    const t = getTemplate("DISPUTE_APPEAL_RESOLVED");
+    expect(t?.priority).toBe(true);
+    expect(t?.line({ listingTitle: "วิลล่า A", kind: "REFUNDED" })).toContain("วิลล่า A");
+    expect(t?.email({ listingTitle: "วิลล่า A", kind: "REFUNDED" }).subject).toBeTruthy();
+  });
+});
+
 describe("review template (#28)", () => {
   it("REVIEW_RECEIVED_HOST is priority and names the listing + booking code", () => {
     const t = getTemplate("REVIEW_RECEIVED_HOST");
