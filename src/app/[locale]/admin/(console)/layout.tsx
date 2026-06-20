@@ -45,6 +45,9 @@ export default async function AdminConsoleLayout({
         <Link href="/admin/reviews" className="text-sand-300 hover:text-sand-50">
           {t("nav.reviews")}
         </Link>
+        <Link href="/admin/disputes" className="text-sand-300 hover:text-sand-50">
+          {t("nav.disputes")}
+        </Link>
         <Link href="/admin/unanswered-questions" className="text-sand-300 hover:text-sand-50">
           {t("nav.unanswered")}
         </Link>

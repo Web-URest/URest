@@ -10,9 +10,10 @@ vi.mock("@/lib/db", () => ({
       update: vi.fn(),
     },
     dispute: { create: vi.fn(), update: vi.fn() },
-    refund: { create: vi.fn() },
+    refund: { create: vi.fn(), upsert: vi.fn(), findUnique: vi.fn() },
     hostStrike: { create: vi.fn(), count: vi.fn() },
     user: { update: vi.fn() },
+    auditLog: { create: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -24,6 +25,7 @@ vi.mock("@/lib/ledger/apply", () => ({
   freeze: vi.fn(),
   settle: vi.fn(),
   payout: vi.fn(),
+  currentPosition: vi.fn(),
 }));
 
 vi.mock("@/lib/ledger/code", () => ({
@@ -31,11 +33,12 @@ vi.mock("@/lib/ledger/code", () => ({
 }));
 
 import { prisma } from "@/lib/db";
-import { claimWebhookEvent, freeze, recordCharge, release, settle } from "@/lib/ledger/apply";
+import { claimWebhookEvent, currentPosition, freeze, recordCharge, release, settle } from "@/lib/ledger/apply";
 import { issueBookingCode } from "@/lib/ledger/code";
 
 import {
   accept,
+  appealDispute,
   BookingError,
   cancelByGuest,
   cancelByHost,
@@ -44,6 +47,7 @@ import {
   expire,
   openDispute,
   request,
+  resolveAppeal,
   resolveDispute,
 } from "./transitions";
 
@@ -55,6 +59,11 @@ const refundCreate = prisma.refund.create as unknown as Mock;
 const strikeCreate = prisma.hostStrike.create as unknown as Mock;
 const strikeCount = prisma.hostStrike.count as unknown as Mock;
 const userUpdate = prisma.user.update as unknown as Mock;
+const auditCreate = prisma.auditLog.create as unknown as Mock;
+const disputeUpdate = prisma.dispute.update as unknown as Mock;
+const refundUpsert = prisma.refund.upsert as unknown as Mock;
+const refundFindUnique = prisma.refund.findUnique as unknown as Mock;
+const positionMock = currentPosition as unknown as Mock;
 const txRun = prisma.$transaction as unknown as Mock;
 
 const NOW = new Date("2026-06-20T03:00:00.000Z");
@@ -283,10 +292,192 @@ describe("resolveDispute", () => {
     expect(update).toHaveBeenCalledWith({ where: { id: "bk1" }, data: { status: BookingStatus.COMPLETED } });
   });
 
+  it("writes a DISPUTE_RESOLVED audit row in the same transaction", async () => {
+    findUnique.mockResolvedValue(booking({ status: BookingStatus.DISPUTED, dispute: { status: "OPEN" } }));
+    (prisma.dispute.update as unknown as Mock).mockResolvedValue({});
+
+    await resolveDispute("bk1", "admin1", { kind: "RELEASED" }, NOW);
+
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: {
+        adminId: "admin1",
+        action: "DISPUTE_RESOLVED",
+        targetType: "Booking",
+        targetId: "bk1",
+        after: { kind: "RELEASED" },
+      },
+    });
+  });
+
   it("rejects resolving a booking whose dispute isn't open", async () => {
     findUnique.mockResolvedValue(booking({ status: BookingStatus.DISPUTED, dispute: { status: "RESOLVED_RELEASED" } }));
     await expect(
       resolveDispute("bk1", "admin1", { kind: "RELEASED" }, NOW),
     ).rejects.toMatchObject({ reason: "DISPUTE_NOT_OPEN" });
+  });
+});
+
+describe("appealDispute", () => {
+  const resolved = () =>
+    booking({
+      status: BookingStatus.COMPLETED,
+      escrowState: EscrowState.RELEASABLE,
+      dispute: { id: "disp1", status: "RESOLVED_RELEASED", guestAppealedAt: null, hostAppealedAt: null },
+    });
+
+  it("records the guest's appeal and re-freezes the releasable escrow", async () => {
+    findUnique.mockResolvedValue(resolved());
+
+    await appealDispute("bk1", "guest1", "GUEST", NOW);
+
+    expect(disputeUpdate).toHaveBeenCalledWith({
+      where: { bookingId: "bk1" },
+      data: { guestAppealedAt: NOW },
+    });
+    expect(freeze).toHaveBeenCalledWith(prisma, "bk1", LedgerCause.HOLD_DISPUTE_OPENED, "disp1");
+  });
+
+  it("rejects a second appeal from the same side", async () => {
+    findUnique.mockResolvedValue(
+      booking({
+        status: BookingStatus.COMPLETED,
+        escrowState: EscrowState.RELEASABLE,
+        dispute: { id: "disp1", status: "RESOLVED_RELEASED", guestAppealedAt: NOW, hostAppealedAt: null },
+      }),
+    );
+    await expect(appealDispute("bk1", "guest1", "GUEST", NOW)).rejects.toMatchObject({
+      reason: "ALREADY_APPEALED",
+    });
+  });
+
+  it("rejects an appeal of a dispute that isn't resolved yet", async () => {
+    findUnique.mockResolvedValue(
+      booking({ status: BookingStatus.DISPUTED, dispute: { id: "disp1", status: "OPEN" } }),
+    );
+    await expect(appealDispute("bk1", "guest1", "GUEST", NOW)).rejects.toMatchObject({
+      reason: "WRONG_STATE",
+    });
+  });
+
+  it("rejects a non-guest acting on the guest's behalf", async () => {
+    findUnique.mockResolvedValue(resolved());
+    await expect(appealDispute("bk1", "intruder", "GUEST", NOW)).rejects.toMatchObject({
+      reason: "NOT_GUEST",
+    });
+  });
+
+  it("rejects an appeal once the guest refund has been sent at Opn (financially final)", async () => {
+    findUnique.mockResolvedValue(
+      booking({
+        status: BookingStatus.COMPLETED,
+        escrowState: EscrowState.RELEASABLE, // host remainder still freezable…
+        dispute: { id: "disp1", status: "RESOLVED_PARTIAL", guestAppealedAt: null, hostAppealedAt: null },
+      }),
+    );
+    refundFindUnique.mockResolvedValue({ opnRefundId: "rfnd_1" }); // …but the refund already moved
+
+    await expect(appealDispute("bk1", "guest1", "GUEST", NOW)).rejects.toMatchObject({
+      reason: "APPEAL_NOT_OPEN",
+    });
+    expect(disputeUpdate).not.toHaveBeenCalled();
+    expect(freeze).not.toHaveBeenCalled();
+  });
+
+  it("rejects up front when the escrow can't be re-frozen (money already moved)", async () => {
+    findUnique.mockResolvedValue(
+      booking({
+        status: BookingStatus.CANCELLED_BY_HOST,
+        escrowState: EscrowState.REVERSED,
+        dispute: { id: "disp1", status: "RESOLVED_REFUNDED", guestAppealedAt: null, hostAppealedAt: null },
+      }),
+    );
+
+    await expect(appealDispute("bk1", "host1", "HOST", NOW)).rejects.toMatchObject({
+      reason: "APPEAL_NOT_OPEN",
+    });
+    // The appeal flag must NOT be consumed.
+    expect(disputeUpdate).not.toHaveBeenCalled();
+    expect(freeze).not.toHaveBeenCalled();
+  });
+});
+
+describe("resolveAppeal", () => {
+  const frozenAppeal = () =>
+    booking({
+      status: BookingStatus.COMPLETED,
+      escrowState: EscrowState.FROZEN,
+      dispute: { id: "disp1", status: "RESOLVED_RELEASED", guestAppealedAt: NOW, hostAppealedAt: null },
+    });
+
+  it("rejects when the escrow isn't frozen (the one-shot appeal lock)", async () => {
+    findUnique.mockResolvedValue(
+      booking({ status: BookingStatus.COMPLETED, escrowState: EscrowState.RELEASABLE, dispute: { id: "disp1", status: "RESOLVED_RELEASED" } }),
+    );
+    await expect(resolveAppeal("bk1", "admin1", { kind: "REFUNDED" }, NOW)).rejects.toMatchObject({
+      reason: "APPEAL_NOT_OPEN",
+    });
+  });
+
+  it("refunds the full frozen pot to the guest, strikes the host, and audits", async () => {
+    findUnique.mockResolvedValue(frozenAppeal());
+    positionMock.mockResolvedValue({ state: EscrowState.FROZEN, amountSatang: 10_000_00 });
+    disputeUpdate.mockResolvedValue({});
+    strikeCount.mockResolvedValue(1);
+
+    await resolveAppeal("bk1", "admin1", { kind: "REFUNDED" }, NOW);
+
+    expect(settle).toHaveBeenCalledWith(prisma, "bk1", 10_000_00, LedgerCause.REFUND_DISPUTE_FULL, "admin1");
+    expect(strikeCreate).toHaveBeenCalledWith({
+      data: { hostUserId: "host1", bookingId: "bk1", reason: "HOST_CANCELLED" },
+    });
+    expect(update).toHaveBeenCalledWith({ where: { id: "bk1" }, data: { status: BookingStatus.CANCELLED_BY_HOST } });
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: {
+        adminId: "admin1",
+        action: "DISPUTE_APPEAL_RESOLVED",
+        targetType: "Booking",
+        targetId: "bk1",
+        after: { kind: "REFUNDED" },
+      },
+    });
+  });
+
+  it("partial-refunds against the frozen pot (bounded by the remainder)", async () => {
+    findUnique.mockResolvedValue(frozenAppeal());
+    positionMock.mockResolvedValue({ state: EscrowState.FROZEN, amountSatang: 6_000_00 });
+    refundFindUnique.mockResolvedValue(null);
+    disputeUpdate.mockResolvedValue({});
+
+    await resolveAppeal("bk1", "admin1", { kind: "PARTIAL", refundPct: 50 }, NOW);
+
+    // The LEDGER settle moves 50% of the 6,000-baht frozen remainder → 3,000.
+    expect(settle).toHaveBeenCalledWith(prisma, "bk1", 3_000_00, LedgerCause.REFUND_DISPUTE_PARTIAL, "admin1");
+    expect(update).toHaveBeenCalledWith({ where: { id: "bk1" }, data: { status: BookingStatus.COMPLETED } });
+  });
+
+  it("writes a CUMULATIVE Refund row (prior partial + appeal), not just the appeal slice", async () => {
+    findUnique.mockResolvedValue(
+      booking({
+        status: BookingStatus.COMPLETED,
+        escrowState: EscrowState.FROZEN,
+        dispute: { id: "disp1", status: "RESOLVED_PARTIAL", guestAppealedAt: NOW, hostAppealedAt: null },
+      }),
+    );
+    // After an original 4,000 partial, the 6,000 remainder was re-frozen.
+    positionMock.mockResolvedValue({ state: EscrowState.FROZEN, amountSatang: 6_000_00 });
+    refundFindUnique.mockResolvedValue({ refundSatang: 4_000_00 });
+    disputeUpdate.mockResolvedValue({});
+
+    await resolveAppeal("bk1", "admin1", { kind: "PARTIAL", refundPct: 50 }, NOW);
+
+    // Ledger moves the 3,000 appeal slice; the Refund row totals 4,000 + 3,000 = 7,000.
+    expect(settle).toHaveBeenCalledWith(prisma, "bk1", 3_000_00, LedgerCause.REFUND_DISPUTE_PARTIAL, "admin1");
+    expect(refundUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { bookingId: "bk1" },
+        create: expect.objectContaining({ refundSatang: 7_000_00 }),
+        update: expect.objectContaining({ refundSatang: 7_000_00 }),
+      }),
+    );
   });
 });

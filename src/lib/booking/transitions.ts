@@ -23,7 +23,7 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
-import { claimWebhookEvent, freeze, recordCharge, release, settle } from "@/lib/ledger/apply";
+import { claimWebhookEvent, currentPosition, freeze, recordCharge, release, settle } from "@/lib/ledger/apply";
 import { issueBookingCode } from "@/lib/ledger/code";
 
 import { breakdown, computeRefund, refundSatangForPct, type RefundBreakdown } from "./refund";
@@ -35,7 +35,9 @@ export type BookingErrorReason =
   | "NOT_HOST" // the acting user isn't the listing's host
   | "WRONG_STATE" // the booking isn't in a state this transition accepts
   | "DEADLINE_NOT_PASSED" // expiry attempted before the timer elapsed
-  | "DISPUTE_NOT_OPEN";
+  | "DISPUTE_NOT_OPEN"
+  | "ALREADY_APPEALED" // that side already used its one appeal (§5.3)
+  | "APPEAL_NOT_OPEN"; // no frozen escrow to re-decide (lock spent / never armed)
 
 export class BookingError extends Error {
   constructor(public readonly reason: BookingErrorReason) {
@@ -343,6 +345,21 @@ export function resolveDispute(
       throw new BookingError("DISPUTE_NOT_OPEN");
     }
 
+    // Audit the money decision atomically with the settle (same tx) — mirrors the
+    // payout / report-review invariant (admin action + AuditLog in one transaction).
+    await tx.auditLog.create({
+      data: {
+        adminId,
+        action: "DISPUTE_RESOLVED",
+        targetType: "Booking",
+        targetId: bookingId,
+        after:
+          resolution.kind === "PARTIAL"
+            ? { kind: resolution.kind, partialRefundPct: resolution.refundPct }
+            : { kind: resolution.kind },
+      },
+    });
+
     if (resolution.kind === "RELEASED") {
       await tx.dispute.update({
         where: { bookingId },
@@ -373,6 +390,158 @@ export function resolveDispute(
     });
     await recordRefund(tx, bookingId, breakdown(booking.totalSatang, booking.totalSatang), "dispute refunded");
     await settle(tx, bookingId, booking.totalSatang, LedgerCause.REFUND_DISPUTE_FULL, adminId);
+    await issueStrike(tx, booking.listing.hostId, "HOST_CANCELLED", bookingId, now);
+    return tx.booking.update({
+      where: { id: bookingId },
+      data: { status: BookingStatus.CANCELLED_BY_HOST },
+    });
+  });
+}
+
+const RESOLVED_DISPUTE_STATUSES = new Set<string>([
+  "RESOLVED_RELEASED",
+  "RESOLVED_PARTIAL",
+  "RESOLVED_REFUNDED",
+]);
+
+/**
+ * Record one appeal of a resolved dispute (§5.3: "one appeal each, then final").
+ * `side` is the appealing party. Sets the side's `*AppealedAt` (one-per-side) and
+ * RE-FREEZES the still-RELEASABLE escrow — reusing the existing FREEZE move, no new
+ * ledger transition — so the payout run can't disburse it before the final
+ * re-decision (`resolveAppeal`). If the money already left escrow (REVERSED on a
+ * full refund, or PAID) it can't be re-frozen, so the appeal is REJECTED up front
+ * (APPEAL_NOT_OPEN) rather than silently consumed — the v1 limit, surfaced to the
+ * caller instead of swallowed.
+ */
+const FREEZABLE = new Set<EscrowState>([EscrowState.HELD, EscrowState.RELEASABLE]);
+
+export function appealDispute(
+  bookingId: string,
+  userId: string,
+  side: "GUEST" | "HOST",
+  now: Date,
+): Promise<Booking> {
+  return prisma.$transaction(async (tx) => {
+    const booking = await tx.booking.findUnique({
+      where: { id: bookingId },
+      include: { listing: { select: { hostId: true } }, dispute: true },
+    });
+    if (!booking) throw new BookingError("NOT_FOUND");
+    if (!booking.dispute || !RESOLVED_DISPUTE_STATUSES.has(booking.dispute.status)) {
+      throw new BookingError("WRONG_STATE");
+    }
+    if (side === "GUEST" && booking.userId !== userId) throw new BookingError("NOT_GUEST");
+    if (side === "HOST" && booking.listing.hostId !== userId) throw new BookingError("NOT_HOST");
+
+    const already =
+      side === "GUEST" ? booking.dispute.guestAppealedAt : booking.dispute.hostAppealedAt;
+    if (already) throw new BookingError("ALREADY_APPEALED");
+
+    // Reject up front if the money already left escrow — re-freeze would be illegal,
+    // and a silently-recorded appeal flag would never surface in the admin queue.
+    if (!FREEZABLE.has(booking.escrowState)) throw new BookingError("APPEAL_NOT_OPEN");
+
+    // Once the guest's refund has actually been sent at Opn the dispute is
+    // financially final — reopening it would let the cumulative refund grow past
+    // the single Opn refund that already fired (the under-refund the refund must
+    // avoid). No appeal after the money has moved.
+    const refund = await tx.refund.findUnique({ where: { bookingId }, select: { opnRefundId: true } });
+    if (refund?.opnRefundId) throw new BookingError("APPEAL_NOT_OPEN");
+
+    await tx.dispute.update({
+      where: { bookingId },
+      data: side === "GUEST" ? { guestAppealedAt: now } : { hostAppealedAt: now },
+    });
+    await freeze(tx, bookingId, LedgerCause.HOLD_DISPUTE_OPENED, booking.dispute.id);
+
+    return tx.booking.findUniqueOrThrow({ where: { id: bookingId } });
+  });
+}
+
+/**
+ * The final re-decision on an appealed dispute (§5.3). Redistributes ONLY the
+ * still-frozen pot that `appealDispute` parked at FROZEN — the full total for a
+ * released-origin appeal, the un-refunded remainder for a partial-origin one. The
+ * `escrowState === FROZEN` check is the one-shot lock: once this settle moves the
+ * money out, a second call finds it non-FROZEN and stops. Mirrors `resolveDispute`'s
+ * status/strike effects; the Refund row is upserted since a partial origin already
+ * wrote one.
+ */
+export function resolveAppeal(
+  bookingId: string,
+  adminId: string,
+  resolution: DisputeResolution,
+  now: Date,
+): Promise<Booking> {
+  return prisma.$transaction(async (tx) => {
+    const booking = await tx.booking.findUnique({
+      where: { id: bookingId },
+      include: { listing: { select: { hostId: true } }, dispute: true },
+    });
+    if (!booking) throw new BookingError("NOT_FOUND");
+    if (!booking.dispute) throw new BookingError("WRONG_STATE");
+    if (booking.escrowState !== EscrowState.FROZEN) throw new BookingError("APPEAL_NOT_OPEN");
+
+    const { amountSatang: frozen } = await currentPosition(tx, bookingId);
+    // The appeal moves money out of the FROZEN pot only, but the booking's single
+    // (`@unique`) Refund row is the amount the reconciliation/Opn refund path treats
+    // as owed to the guest (lib/payments/charge) — so it must stay CUMULATIVE across
+    // the original resolution + this appeal, not be overwritten with the appeal slice.
+    const prior = await tx.refund.findUnique({ where: { bookingId }, select: { refundSatang: true } });
+    const priorRefund = prior?.refundSatang ?? 0;
+
+    await tx.auditLog.create({
+      data: {
+        adminId,
+        action: "DISPUTE_APPEAL_RESOLVED",
+        targetType: "Booking",
+        targetId: bookingId,
+        after:
+          resolution.kind === "PARTIAL"
+            ? { kind: resolution.kind, partialRefundPct: resolution.refundPct }
+            : { kind: resolution.kind },
+      },
+    });
+
+    if (resolution.kind === "RELEASED") {
+      await tx.dispute.update({
+        where: { bookingId },
+        data: { status: "RESOLVED_RELEASED", resolvedAt: now },
+      });
+      await settle(tx, bookingId, 0, LedgerCause.REFUND_DISPUTE_FULL, adminId);
+      return tx.booking.update({ where: { id: bookingId }, data: { status: BookingStatus.COMPLETED } });
+    }
+
+    if (resolution.kind === "PARTIAL") {
+      const appealRefund = refundSatangForPct(frozen, resolution.refundPct); // from the frozen pot
+      await tx.dispute.update({
+        where: { bookingId },
+        data: { status: "RESOLVED_PARTIAL", partialRefundPct: resolution.refundPct, resolvedAt: now },
+      });
+      // Refund row = cumulative booking-level total (prior + this appeal slice).
+      await upsertRefund(
+        tx,
+        bookingId,
+        breakdown(booking.totalSatang, priorRefund + appealRefund),
+        "dispute appeal partial resolution",
+      );
+      await settle(tx, bookingId, appealRefund, LedgerCause.REFUND_DISPUTE_PARTIAL, adminId);
+      return tx.booking.update({ where: { id: bookingId }, data: { status: BookingStatus.COMPLETED } });
+    }
+
+    // REFUNDED — full frozen pot to the guest + strike, booking → CANCELLED_BY_HOST.
+    await tx.dispute.update({
+      where: { bookingId },
+      data: { status: "RESOLVED_REFUNDED", resolvedAt: now },
+    });
+    await upsertRefund(
+      tx,
+      bookingId,
+      breakdown(booking.totalSatang, priorRefund + frozen),
+      "dispute appeal refunded",
+    );
+    await settle(tx, bookingId, frozen, LedgerCause.REFUND_DISPUTE_FULL, adminId);
     await issueStrike(tx, booking.listing.hostId, "HOST_CANCELLED", bookingId, now);
     return tx.booking.update({
       where: { id: bookingId },
@@ -420,4 +589,19 @@ function recordRefund(
   reason: string,
 ) {
   return tx.refund.create({ data: { bookingId, ...refund, reason } });
+}
+
+/** Like `recordRefund` but for the appeal path, where a partial-origin resolution
+ * may have already written the booking's single (`@unique`) Refund row. */
+function upsertRefund(
+  tx: Prisma.TransactionClient,
+  bookingId: string,
+  refund: RefundBreakdown,
+  reason: string,
+) {
+  return tx.refund.upsert({
+    where: { bookingId },
+    create: { bookingId, ...refund, reason },
+    update: { ...refund, reason },
+  });
 }
