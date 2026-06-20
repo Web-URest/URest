@@ -46,6 +46,9 @@ standalone server → waits for `/api/health` to pass → routes traffic.
    | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | *(scoped R2 API token)* | object read/write on the two buckets only |
    | `R2_PUBLIC_BUCKET` / `R2_PRIVATE_BUCKET` | *(bucket names)* | photos vs KYC; **never** attach a CDN to the private one |
    | `R2_PUBLIC_BASE_URL` | *(public CDN domain)* | e.g. `https://media.urest.app`, no trailing slash |
+   | `OPN_PUBLIC_KEY` / `OPN_SECRET_KEY` | *(Opn LIVE keys: `pkey_live_…` / `skey_live_…`)* | from the Opn dashboard at the launch gate; test keys (`*_test_*`) until then. `OPN_API_BASE` stays default. The key prefix — not the URL — selects sandbox vs live, so going live is a key swap, no code change (PRD §6) |
+   | `RESEND_API_KEY` | *(Resend API key)* | email is the channel of record (ADR-005) — required in prod or `notify` throws on send |
+   | `ANTHROPIC_API_KEY` | *(Anthropic console key)* | AI concierge (#32–34); absent → the concierge shows the "น้องเรสต์พักผ่อน" kill-switch banner and the site works without it |
 
    `PORT` is injected by Railway; the standalone server reads it automatically — do not set it.
    All of the above are **required at boot today**: `env.ts` validates them and `instrumentation.ts`

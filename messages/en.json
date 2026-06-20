@@ -171,7 +171,26 @@
       "payouts": "Payouts",
       "reviews": "Reviews",
       "disputes": "Disputes",
-      "unanswered": "Unanswered Q&A"
+      "unanswered": "Unanswered Q&A",
+      "auditLog": "Audit log"
+    },
+    "AuditLog": {
+      "title": "Audit log",
+      "subtitle": "Every admin money/trust action — who did what, when, and the before→after.",
+      "filterAdmin": "Admin",
+      "filterTarget": "Target type",
+      "allAdmins": "All admins",
+      "allTargets": "All targets",
+      "apply": "Filter",
+      "clear": "Clear",
+      "colTime": "When",
+      "colAdmin": "Admin",
+      "colAction": "Action",
+      "colTarget": "Target",
+      "colChanges": "Changes",
+      "changesToggle": "before → after",
+      "empty": "No audit entries match",
+      "atCap": "Showing the latest {n} entries — narrow the filters to see older ones."
     },
     "Reviews": {
       "title": "Review moderation",
@@ -297,6 +316,7 @@
     "col3Title": "Follow us",
     "pdpa": "Privacy policy",
     "tos": "Terms of service",
+    "businessPolicy": "Business policy",
     "trustLine": "Your money stays with U-Rest until you check out"
   },
   "Wizard": {

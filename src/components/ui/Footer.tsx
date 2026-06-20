@@ -32,6 +32,9 @@ export async function Footer() {
           <Link href="/terms" className="hover:text-sand-50 transition duration-150 ease-out">
             {t("tos")}
           </Link>
+          <Link href="/business-policy" className="hover:text-sand-50 transition duration-150 ease-out">
+            {t("businessPolicy")}
+          </Link>
         </div>
       </div>
     </footer>
