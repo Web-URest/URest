@@ -850,6 +850,7 @@ model Message {
   sender User          @relation(fields: [senderId], references: [id])
 
   @@index([threadId, createdAt])
+  @@index([createdAt]) // 12-month retention purge sweep (#35, ADR-010 §6)
 }
 
 /// Guest review (§3.4): overall + 4 sub-scores; one per booking, no edits;
@@ -955,6 +956,7 @@ model ConciergeSession {
   bookingDrafts       ConciergeBookingDraft[]
 
   @@index([userId, createdAt])
+  @@index([createdAt]) // 12-month transcript purge sweep (#35, ADR-010 §6)
 }
 
 /// In-chat booking draft + its server-side confirmation token (#32, AI_CONCIERGE_SPEC §3).

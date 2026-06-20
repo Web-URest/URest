@@ -9,9 +9,15 @@ vi.mock("@/lib/booking/sweeps", () => ({
 }));
 vi.mock("@/lib/notifications/retry", () => ({ sweepFailedNotifications: vi.fn().mockResolvedValue(0) }));
 vi.mock("@/lib/otp/otp", () => ({ purgeDeadOtps: vi.fn().mockResolvedValue(0) }));
+vi.mock("@/lib/kyc/retention", () => ({ purgeRejectedKycDocs: vi.fn().mockResolvedValue(0) }));
+vi.mock("@/lib/concierge/retention", () => ({ purgeConciergeTranscripts: vi.fn().mockResolvedValue(0) }));
+vi.mock("@/lib/messaging/retention", () => ({ purgeOldMessages: vi.fn().mockResolvedValue(0) }));
 
 import cron from "node-cron";
 import { sweepDueCheckIns, sweepOverdueRequests } from "@/lib/booking/sweeps";
+import { purgeConciergeTranscripts } from "@/lib/concierge/retention";
+import { purgeRejectedKycDocs } from "@/lib/kyc/retention";
+import { purgeOldMessages } from "@/lib/messaging/retention";
 import { sweepFailedNotifications } from "@/lib/notifications/retry";
 import { purgeDeadOtps } from "@/lib/otp/otp";
 
@@ -29,6 +35,10 @@ describe("runSweeps", () => {
     expect(sweepDueCheckIns as unknown as Mock).toHaveBeenCalledWith(NOW);
     expect(purgeDeadOtps as unknown as Mock).toHaveBeenCalledOnce();
     expect(sweepFailedNotifications as unknown as Mock).toHaveBeenCalledOnce();
+    // #35 retention sweeps run with the supplied now
+    expect(purgeRejectedKycDocs as unknown as Mock).toHaveBeenCalledWith(NOW);
+    expect(purgeConciergeTranscripts as unknown as Mock).toHaveBeenCalledWith(NOW);
+    expect(purgeOldMessages as unknown as Mock).toHaveBeenCalledWith(NOW);
   });
 
   it("isolates a failing sweep so the others still run", async () => {

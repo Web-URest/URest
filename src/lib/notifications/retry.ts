@@ -14,6 +14,7 @@ import { NotificationStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 import { resolveSend } from "./index";
+import { channelAllowed, type NotifPrefs } from "./prefs";
 import { getTemplate } from "./templates";
 
 const MAX_ATTEMPTS = 5;
@@ -31,9 +32,13 @@ export async function sweepFailedNotifications(): Promise<number> {
     if (!template || !row.userId) continue;
     const user = await prisma.user.findUnique({
       where: { id: row.userId },
-      select: { email: true, lineUserId: true },
+      select: { email: true, lineUserId: true, notificationPrefs: true },
     });
     if (!user) continue;
+    // Honor prefs that may have changed since the original send (§3.7).
+    if (!channelAllowed(user.notificationPrefs as NotifPrefs | null, row.templateKey, row.channel)) {
+      continue;
+    }
     const payload =
       typeof row.payload === "object" && row.payload !== null
         ? (row.payload as Record<string, unknown>)
