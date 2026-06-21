@@ -327,7 +327,12 @@
     "profile": "Profile",
     "menu": "Menu",
     "switchToEn": "Switch to English",
-    "switchToTh": "Switch to Thai"
+    "switchToTh": "Switch to Thai",
+    "searchPlaceholder": "Search pool villas",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "signUp": "Sign up",
+    "signOut": "Sign out"
   },
   "Footer": {
     "col1Title": "U-Rest",

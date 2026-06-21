@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { Anuphan, Prompt } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { Topbar } from "@/components/ui/Topbar";
 import { Footer } from "@/components/ui/Footer";
+import { ToastProvider } from "@/components/ui/Toast";
+import { BottomTabBar } from "@/components/ui/BottomTabBar";
 import "../globals.css";
 
 const anuphan = Anuphan({
@@ -39,13 +42,28 @@ export default async function LocaleLayout({
     notFound();
   }
 
+  const nav = await getTranslations("Nav");
+
   return (
     <html lang={locale}>
-      <body className={`${anuphan.variable} ${prompt.variable} antialiased`}>
+      <body
+        className={`${anuphan.variable} ${prompt.variable} antialiased pb-[var(--space-bottomtab)]`}
+      >
         <NextIntlClientProvider>
-          <Topbar />
-          {children}
-          <Footer />
+          <ToastProvider>
+            <Topbar />
+            {children}
+            <Footer />
+            <BottomTabBar
+              labels={{
+                search: nav("search"),
+                saved: nav("saved"),
+                trips: nav("trips"),
+                messages: nav("messages"),
+                profile: nav("profile"),
+              }}
+            />
+          </ToastProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -327,7 +327,12 @@
     "profile": "โปรไฟล์",
     "menu": "เมนู",
     "switchToEn": "Switch to English",
-    "switchToTh": "เปลี่ยนเป็นภาษาไทย"
+    "switchToTh": "เปลี่ยนเป็นภาษาไทย",
+    "searchPlaceholder": "ค้นหาพูลวิลล่า",
+    "openMenu": "เปิดเมนู",
+    "closeMenu": "ปิดเมนู",
+    "signUp": "สมัครสมาชิก",
+    "signOut": "ออกจากระบบ"
   },
   "Footer": {
     "col1Title": "U-Rest",

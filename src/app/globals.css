@@ -121,6 +121,13 @@
   --space-bottomtab: 0px; /* mobile sets 56px to clear the BottomTabBar */
 }
 
+/* The BottomTabBar (md:hidden) occupies the bottom on mobile — reserve space for it. */
+@media (max-width: 767px) {
+  :root {
+    --space-bottomtab: 56px;
+  }
+}
+
 /* Thai body text needs taller line-height than Latin defaults (spec: 1.65) */
 body {
   background-color: var(--color-surface-0);
