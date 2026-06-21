@@ -2,11 +2,13 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth/auth";
-import { searchListings } from "@/lib/listing/queries";
+import { searchListings, getRegions } from "@/lib/listing/queries";
 import { getSavedVillaIds } from "@/lib/savedVilla";
 import { VillaCard } from "@/components/ui/VillaCard";
 import { HeartButton } from "@/components/ui/HeartButton";
 import { SearchFilters } from "@/components/ui/SearchFilters";
+import { CategoryRail } from "@/components/ui/CategoryRail";
+import { AskAiButton } from "@/components/ui/AskAiButton";
 import { MapView, type MapPin } from "@/components/ui/MapView";
 
 interface SearchPageProps {
@@ -30,7 +32,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const instantOnly = params.instant === "1";
   const sort = (sp(params.sort) || "price_asc") as "price_asc" | "price_desc" | "rating";
 
-  const [session, listings] = await Promise.all([
+  const [session, listings, regions] = await Promise.all([
     auth(),
     searchListings({
       regionSlug,
@@ -41,7 +43,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       instantOnly,
       sort,
     }),
+    getRegions(),
   ]);
+
+  // Preserve dates/guests when switching region via the category rail.
+  const railQuery = new URLSearchParams();
+  if (checkIn) railQuery.set("checkIn", checkIn);
+  if (checkOut) railQuery.set("checkOut", checkOut);
+  if (guests > 1) railQuery.set("guests", String(guests));
+  const railSuffix = railQuery.toString() ? `&${railQuery}` : "";
 
   const savedIds = session?.user?.id
     ? await getSavedVillaIds(
@@ -65,9 +75,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const centerLng = 100.8825;
 
   return (
-    <main className="min-h-screen bg-sand-50">
+    <main className="min-h-screen">
       {/* Sticky sub-header */}
-      <div className="sticky top-0 z-20 border-b border-line bg-white/95 px-4 py-3 backdrop-blur md:px-6">
+      <div className="sticky top-0 z-20 border-b border-border-subtle bg-white/95 px-4 py-3 backdrop-blur md:px-6">
         <div className="mx-auto max-w-[1280px]">
           {/* Editable summary row */}
           <form
@@ -79,15 +89,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               name="checkIn"
               type="date"
               defaultValue={checkIn}
-              className="rounded-full border border-line bg-sand-100 px-3 py-1.5 text-xs font-semibold text-ink-900 outline-none"
+              className="rounded-pill border border-border bg-surface-50 px-3 py-1.5 text-xs font-semibold text-ink-900 outline-none"
               placeholder="เช็คอิน"
             />
-            <span className="text-ink-900/40">→</span>
+            <span className="text-ink-500">→</span>
             <input
               name="checkOut"
               type="date"
               defaultValue={checkOut}
-              className="rounded-full border border-line bg-sand-100 px-3 py-1.5 text-xs font-semibold text-ink-900 outline-none"
+              className="rounded-pill border border-border bg-surface-50 px-3 py-1.5 text-xs font-semibold text-ink-900 outline-none"
               placeholder="เช็คเอาท์"
             />
             <input
@@ -96,12 +106,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               min={1}
               max={30}
               defaultValue={guests}
-              className="w-16 rounded-full border border-line bg-sand-100 px-3 py-1.5 text-xs font-semibold text-ink-900 outline-none"
+              className="w-16 rounded-pill border border-border bg-surface-50 px-3 py-1.5 text-xs font-semibold text-ink-900 outline-none"
               placeholder="คน"
             />
             <button
               type="submit"
-              className="rounded-full bg-aqua-500 px-4 py-1.5 text-xs font-semibold text-ink-900"
+              className="rounded-pill bg-brand-500 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-600"
             >
               {t("searchButton")}
             </button>
@@ -109,6 +119,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <Suspense>
             <SearchFilters />
           </Suspense>
+          <div className="mt-3">
+            <CategoryRail
+              items={regions.map((r) => ({ key: r.slug, label: r.nameTh }))}
+              activeKey={regionSlug}
+              hrefFor={(slug) => `/search?region=${slug}${railSuffix}`}
+            />
+          </div>
         </div>
       </div>
 
@@ -118,9 +135,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <p className="text-sm font-semibold text-ink-900">
             {t("resultCount", { count: listings.length })}
           </p>
-          <button type="button" className="text-sm font-semibold text-teal-600">
-            {t("aiSuggest")}
-          </button>
+          <AskAiButton variant="inline" label={t("aiSuggest")} />
         </div>
 
         {/* Desktop: list left + map right. Mobile: list only + floating pill */}
@@ -129,21 +144,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <div className="flex-1">
             {listings.length === 0 ? (
               <div className="flex flex-col items-center gap-4 py-20 text-center">
-                <p className="font-display text-2xl text-ink-900">{t("noResults")}</p>
-                <p className="text-sm text-ink-900/60">{t("noResultsHint")}</p>
-                <button
-                  type="button"
-                  className="mt-2 rounded-full bg-aqua-500 px-5 py-2.5 text-sm font-semibold text-ink-900"
-                >
-                  {t("emptyAiCta")}
-                </button>
+                <p className="font-display text-2xl font-bold text-ink-900">{t("noResults")}</p>
+                <p className="text-sm text-ink-500">{t("noResultsHint")}</p>
+                <AskAiButton variant="chip" label={t("emptyAiCta")} className="mt-2" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-5 pb-24 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-8 pb-24 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {listings.map((l) => (
                   <div key={l.id} className="relative">
                     <Link href={`/listings/${l.id}`}>
                       <VillaCard
+                        chrome="bare"
                         villa={{
                           name: l.title,
                           region: l.regionNameTh,
