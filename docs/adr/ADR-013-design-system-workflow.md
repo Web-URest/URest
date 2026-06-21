@@ -101,3 +101,35 @@ skin: PRODUCT_FLOWS state machines, integer-satang money, and Thai-first i18n al
 - **Rollout:** prove-first (tokens → component library → `/styleguide` → landing page), then a
   per-page cascade (Phase B), each a small PR per CONTRIBUTING; `area:design-system`, Aok integrates
   the frozen shared file.
+
+## Amendment — 2026-06-21: Identity v3 "AirBnB skin" (supersedes the v2 Amendment's skin)
+
+**Decider:** Aok (lead). U-Rest adopts a full **AirBnB-style** marketplace skin across the whole app
+(all consumer pages, the floating AI concierge, and — newly — host + admin). **Behaviour/contract is
+unchanged** — PRODUCT_FLOWS state machines, integer-satang money, webhook idempotency, the eval-gated
+AI logic, and Thai-first i18n all stand. Only the skin changes.
+
+- **Identity:** rose **"Rausch" `#ff385c`** is the brand / primary-action color; a dedicated **trust
+  green `#0b7a5b`** (the kept v2 emerald) means escrow-safe / verified / paid; **red** = cancel /
+  frozen / error; **amber** = pending / star ratings. Because **trust is the product**, brand (rose)
+  and trust (green) are deliberately DIFFERENT roles (v2 had collapsed them into one emerald). This
+  dual rose+green mirrors AirBnB's own rose+teal palette and is the brand, **not** a clone tell. The
+  pay/money action stays solid **ink** (a 3-way split: ink = pay, rose = act, green = safe).
+- **The DESIGN_SPEC §1 anti-goal "must NOT look like a generic Airbnb clone" is REMOVED.** New
+  identity statement: *"AirBnB-grade trust marketplace — rose primary + retained green escrow-trust."*
+  The failure criterion becomes "looks like an unstyled Tailwind starter, OR violates the
+  rose-primary / green-trust split."
+- **Token mechanism = additive semantic layer + value-remap aliases + a narrow CTA migration**
+  (supersedes v2's "value-remap, keep names"). `--color-brand-*` / `--color-trust-*` / `--color-error-*`
+  / `--color-pending-*` / `--color-ink-*` / `--color-surface-*` / `--color-border(-subtle)` are now the
+  **contract**; new code MUST use them. Legacy `aqua/jade/teal/coral/gold/sand/line` are **deprecated
+  `var()` aliases** retained only to avoid the ~440-usage sweep (verified: Tailwind v4 still emits the
+  aliased utilities). Only ~30–40 *primary-action* sites were hand-migrated emerald→rose.
+- **Fonts unchanged** (Prompt display + Anuphan body, via `next/font`): Thai-first is non-negotiable,
+  the ฿1k/month ceiling favors free Google Fonts, and AirBnB's Cereal has **no Thai coverage**.
+- **Back-of-house goes LIGHT** (supersedes §4/§5.7/§5.9 ink "back-of-house" chrome): host + admin use
+  the clean light AirBnB-host look so they reuse the guest component system (no dark variants), and
+  trust/paid/frozen states read correctly on light. The "separate surface" boundary is preserved by
+  distinct nav + the separate `/admin` `AdminUser`/TOTP surface — **not** by darkness.
+- **`@theme` is unfrozen for this one v3 branch**; Aok integrates; it re-freezes after. `/styleguide`
+  remains the live catalog and the design gate; the reuse-first contract and design-PR checklist stand.

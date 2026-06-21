@@ -24,9 +24,17 @@ This document is the contract for all UI implementation in Phases 1–5. If code
 | Tagline (TH) | พักให้เต็มที่ จองให้มั่นใจ — "Rest fully, book with confidence" |
 | Trust line | เงินของคุณอยู่กับ U-Rest จนกว่าจะเช็คเอาท์ — appears on every money-related screen |
 | Personality | A modern Thai resort: warm, calm, generous — but precise and serious wherever money appears |
-| Anti-goal | Must NOT look like a Facebook villa page, a generic Airbnb clone, or corporate-bank sterile |
+| Anti-goal | Must NOT look like a Facebook villa page or corporate-bank sterile. (v3: the "generic Airbnb clone" anti-goal is REMOVED — see ADR-013 v3 amendment.) |
 
-**Design concept: "Modern Thai poolside."** Sand-colored pages (paper = sand), deep pool-water ink for headers and footers, aqua for actions, sunset coral reserved almost exclusively for payment moments. Pool-tile checker strips and a ripple squiggle are the recurring motifs. Everything money-related is visually "held" by the escrow strip component.
+> ⚠️ **Identity v3 "AirBnB skin" (2026-06-21 — see ADR-013 amendment) supersedes the design concept below.**
+> Current concept: **AirBnB-grade trust marketplace — rose primary + retained green escrow-trust.** Brand =
+> rose `#ff385c`; trust (escrow-safe/verified/paid) = green `#0b7a5b`; error = red; pending/ratings = amber;
+> pay/money action = ink. Authoritative tokens live in `src/app/globals.css` `@theme` (semantic names
+> `brand/trust/error/pending/ink/surface/border`; legacy names are deprecated aliases). Back-of-house
+> (host/admin) is now light, not ink. Failure criterion: "unstyled Tailwind starter, or violates the
+> rose-primary / green-trust split."
+
+**Design concept (v1, historical): "Modern Thai poolside."** Sand-colored pages (paper = sand), deep pool-water ink for headers and footers, aqua for actions, sunset coral reserved almost exclusively for payment moments. Pool-tile checker strips and a ripple squiggle are the recurring motifs. Everything money-related is visually "held" by the escrow strip component.
 
 ## 2. Design principles
 

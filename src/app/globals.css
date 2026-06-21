@@ -3,71 +3,148 @@
 /*
  * U-Rest design tokens — single source of truth.
  *
- * Identity v2 "Clean & Modern" (ADR-013 amended 2026-06-21): white surfaces,
- * near-black ink, a single EMERALD trust-accent (means safe / verified / paid),
- * warm AMBER for pending/ratings, clean RED for cancel/error. Sans-only type.
+ * Identity v3 "AirBnB skin" (ADR-013 amended 2026-06-21): a full AirBnB-style
+ * marketplace skin. ROSE "Rausch" (#ff385c) is the brand / primary-action color;
+ * a dedicated TRUST GREEN (#0b7a5b — the kept v2 emerald) means escrow-safe /
+ * verified / paid; RED for cancel/error; AMBER for pending/ratings. Trust is the
+ * product, so brand (rose) and trust (green) are deliberately DIFFERENT roles —
+ * mirroring AirBnB's own rose + teal. The pay/money action stays solid INK (a
+ * 3-way split: ink = pay, rose = act, green = safe). Sans-only type (Prompt +
+ * Anuphan) is kept — Thai-first; Cereal has no Thai coverage.
  *
- * NOTE — naming debt: token *names* are inherited from the retired v1 "Thai
- * poolside" palette and kept deliberately to avoid churning 440+ usages across
- * 100 files. Their VALUES are remapped to the v2 palette below. READ THE ROLE,
- * NOT THE NAME:
- *   sand-*  → white / neutral surfaces
- *   aqua-* / teal-* / jade-*  → emerald accent (primary / verified / success)
- *   gold-*  → amber (pending / disputed / star ratings)
- *   coral-* → red (cancelled / frozen / reversed / error / urgent)
- * A rename to semantic names is tracked as optional Phase-B cleanup.
- * Do not invent colors outside this palette — palette drift is grep-able.
+ * TOKEN CONTRACT — new code MUST use the SEMANTIC names:
+ *   --color-brand-*    rose      (primary CTA, links, active nav, focus, selected, saved heart)
+ *   --color-trust-*    green     (escrow / verified / paid / confirmed / success)
+ *   --color-error-*    red       (cancel / frozen / reversed / urgent / destructive)
+ *   --color-pending-*  amber     (awaiting / disputed / needs-info / star ratings)
+ *   --color-ink-*      text & dark structure (money button)
+ *   --color-surface-*  white / grey surfaces
+ *   --color-border(-subtle)  hairlines
+ *
+ * LEGACY ALIASES (deprecated) — the v1/v2 names (aqua/jade/teal/coral/gold/sand/
+ * line) are kept ONLY as var() aliases so the ~440 existing usages across ~95
+ * files keep building, role-correct, without a risky mass rename. Read the role:
+ *   aqua / jade / teal  -> trust GREEN   coral -> ERROR red
+ *   gold -> PENDING amber                sand -> SURFACE   line -> BORDER
+ * Do NOT use legacy names in new code. Removal is tracked as Phase-B cleanup.
  */
 @theme {
-  /* Ink — near-black text & dark structure (also the money-action button) */
-  --color-ink-900: #14161a;
-  --color-ink-700: #3a4047;
+  /* ── SEMANTIC: BRAND (rose "Rausch") ───────────────────────────────────── */
+  --color-brand-50: #fff1f3; /* rose tint — selected chip / focus halo / brand pill bg */
+  --color-brand-100: #ffd9e0; /* hover tint / subtle brand surface */
+  --color-brand-500: #ff385c; /* PRIMARY action bg (white text), active nav, selected pin */
+  --color-brand-600: #e00b41; /* hover / pressed */
+  --color-brand-700: #c40036; /* brand text-on-white when AA body text needed (~6.8:1) */
 
-  /* Emerald — the trust accent: primary action / links / verified / success */
-  --color-teal-600: #0a6a4f; /* links / dark emerald action */
-  --color-aqua-500: #0b7a5b; /* PRIMARY action, brand accent */
-  --color-aqua-600: #096647; /* darker emerald — hover / pressed */
-  --color-aqua-300: #8fbfb0; /* soft emerald — subtle accents / borders */
-  --color-aqua-100: #e7f4ef; /* emerald tint — verified / safe pill bg */
+  /* ── SEMANTIC: TRUST (green — escrow-safe / verified / paid) ────────────── */
+  --color-trust-50: #e7f4ef; /* verified/safe pill bg, escrow "held" tint */
+  --color-trust-100: #cfe9e0;
+  --color-trust-300: #8fbfb0; /* soft trust border */
+  --color-trust-500: #0b7a5b; /* verified / success / confirmed / paid */
+  --color-trust-600: #096647; /* darker trust / escrow done dot */
+  --color-trust-700: #0a6a4f; /* trust link text on white (~5:1, AA) */
 
-  /* Surfaces — clean whites & neutral grays (the page is pure white now) */
-  --color-sand-50: #ffffff; /* page background */
-  --color-sand-100: #f7f8f7; /* subtle panel / hover */
-  --color-sand-300: #d7dbdf; /* strong border / disabled */
-  --color-line: #e6e8eb; /* hairline border */
+  /* ── SEMANTIC: ERROR (red — distinct from brand rose) ──────────────────── */
+  --color-error-50: #fbeae8; /* cancelled / frozen pill bg */
+  --color-error-500: #b42318; /* error / cancel text + icon */
+  --color-error-600: #8a1a12; /* error hover / pressed */
 
-  /* Accents */
-  --color-coral-500: #b42318; /* red — cancel / frozen / reversed / urgent */
-  --color-coral-600: #8a1a12;
-  --color-jade-500: #0b7a5b; /* verified / success / confirmed (= emerald) */
-  --color-gold-400: #e0a14b; /* star ratings / amber accent */
+  /* ── SEMANTIC: PENDING (amber — awaiting / disputed / ratings) ─────────── */
+  --color-pending-50: #faede0; /* pending / disputed pill bg */
+  --color-pending-400: #e0a14b; /* star ratings, amber accent */
+  --color-pending-700: #8a3f08; /* pending pill text (AA) */
 
-  /* Status-pill tints — soft bg tints + one dark text */
-  --color-jade-100: #e7f4ef; /* COMPLETED / PAID pill bg (emerald tint) */
-  --color-coral-100: #fbeae8; /* CANCELLED_* / FROZEN / REVERSED pill bg (red tint) */
-  --color-gold-100: #faede0; /* DISPUTED / PENDING_REVIEW / NEEDS_INFO pill bg (amber tint) */
-  --color-gold-800: #8a3f08; /* DISPUTED / PENDING_REVIEW / NEEDS_INFO pill text */
+  /* ── SEMANTIC: INK (text & dark structure; money button) ───────────────── */
+  --color-ink-900: #222222; /* primary text, money-action button */
+  --color-ink-700: #484848; /* secondary text */
+  --color-ink-500: #717171; /* tertiary / captions */
 
-  /* Typography — sans only (fonts injected by next/font in layout.tsx) */
+  /* ── SEMANTIC: SURFACE (white + grey) ──────────────────────────────────── */
+  --color-surface-0: #ffffff; /* cards, page bg */
+  --color-surface-50: #f7f7f7; /* grey panel / hover / alt section */
+  --color-surface-100: #ebebeb; /* subtle fill / disabled track */
+
+  /* ── SEMANTIC: BORDER ──────────────────────────────────────────────────── */
+  --color-border: #dddddd; /* default 1px border */
+  --color-border-subtle: #ebebeb; /* hairline */
+
+  /* ── LEGACY ALIASES (deprecated; remap to semantic — keep utilities alive) ─ */
+  /* aqua / jade / teal -> TRUST green */
+  --color-aqua-500: var(--color-trust-500);
+  --color-aqua-600: var(--color-trust-600);
+  --color-aqua-300: var(--color-trust-300);
+  --color-aqua-100: var(--color-trust-50);
+  --color-teal-600: var(--color-trust-700);
+  --color-jade-500: var(--color-trust-500);
+  --color-jade-100: var(--color-trust-50);
+  /* coral -> ERROR red */
+  --color-coral-500: var(--color-error-500);
+  --color-coral-600: var(--color-error-600);
+  --color-coral-100: var(--color-error-50);
+  /* gold -> PENDING amber */
+  --color-gold-400: var(--color-pending-400);
+  --color-gold-100: var(--color-pending-50);
+  --color-gold-800: var(--color-pending-700);
+  /* sand -> SURFACE / line -> BORDER */
+  --color-sand-50: var(--color-surface-0);
+  --color-sand-100: var(--color-surface-50);
+  --color-sand-300: var(--color-border);
+  --color-line: var(--color-border-subtle);
+
+  /* ── Typography — sans only (fonts injected by next/font in layout.tsx) ─── */
   --font-sans: var(--font-anuphan), "Noto Sans Thai", system-ui, sans-serif;
   --font-display: var(--font-prompt), var(--font-anuphan), system-ui, sans-serif;
+  --tracking-display: -0.01em; /* AirBnB-tight display headings */
 
-  /* Shape — crisper radii */
-  --radius-card: 14px;
-  --radius-input: 10px;
+  /* ── Shape — AirBnB radii (custom names; do NOT clobber Tailwind defaults) ─ */
+  --radius-card: 12px;
+  --radius-input: 8px;
   --radius-photo: 12px;
+  --radius-pill: 999px;
+  --radius-modal: 16px; /* modal / sheet / lightbox chrome, big feature cards */
 
-  /* Depth — neutral, subtle shadows */
-  --shadow-card: 0 1px 2px rgba(20, 22, 26, 0.05);
-  --shadow-raised: 0 12px 32px -16px rgba(20, 22, 26, 0.18);
+  /* ── Depth — AirBnB soft elevation (neutral) ───────────────────────────── */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-raised: 0 6px 16px rgba(0, 0, 0, 0.12);
+  --shadow-overlay: 0 8px 28px rgba(0, 0, 0, 0.28);
+
+  /* ── Motion easings (→ ease-standard / ease-emphasized utilities) ──────── */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+/* Non-namespaced design vars (used in component styles, not Tailwind utilities) */
+:root {
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --space-bottomtab: 0px; /* mobile sets 56px to clear the BottomTabBar */
 }
 
 /* Thai body text needs taller line-height than Latin defaults (spec: 1.65) */
 body {
-  background-color: var(--color-sand-50);
+  background-color: var(--color-surface-0);
   color: var(--color-ink-900);
   font-family: var(--font-sans);
   line-height: 1.65;
+}
+
+/* AirBnB-style brand focus ring on every interactive element (a11y) */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Heart "pop" micro-interaction (saved toggle) — disabled under reduced-motion */
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* Skeleton shimmer — disabled under reduced-motion (falls back to static) */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -75,6 +152,8 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
