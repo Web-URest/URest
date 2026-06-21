@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { StatusPill } from "@/components/ui/StatusPill";
+import { EscrowStrip } from "@/components/ui/EscrowStrip";
 import { ReportForm } from "@/components/ui/ReportForm";
 import { submitBookingReportAction } from "@/app/[locale]/(protected)/reports/actions";
 import { Link } from "@/i18n/navigation";
@@ -49,19 +50,27 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
   );
   const canMessage = ["REQUESTED", "AWAITING_PAYMENT", "CONFIRMED", "CHECKED_IN", "DISPUTED"].includes(booking.status);
   const canOpenDispute = booking.status === "CHECKED_IN" && !booking.dispute;
+  const escrowStep: 1 | 2 | 3 | null =
+    booking.status === "AWAITING_PAYMENT"
+      ? 1
+      : booking.status === "CONFIRMED" || booking.status === "CHECKED_IN"
+        ? 2
+        : booking.status === "COMPLETED"
+          ? 3
+          : null;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-6 bg-sand-50 px-4 py-8 md:px-6">
-      <h1 className="font-display text-2xl text-ink-900">{t("statusTitle")}</h1>
-      <div className="flex flex-col gap-3 rounded-card border border-line bg-white p-5 shadow-card">
+    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-6 px-4 py-8 md:px-6">
+      <h1 className="font-display text-2xl font-bold text-ink-900">{t("statusTitle")}</h1>
+      <div className="flex flex-col gap-3 rounded-card border border-border-subtle bg-white p-5 shadow-card">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-display text-lg text-ink-900">{booking.listing.title}</h2>
+          <h2 className="font-display text-lg font-semibold text-ink-900">{booking.listing.title}</h2>
           <StatusPill status={booking.status} />
         </div>
         {booking.status === "REQUESTED" && (
-          <p className="text-sm text-ink-900/60">{t("respondByNote")}</p>
+          <p className="text-sm text-ink-500">{t("respondByNote")}</p>
         )}
-        <p className="text-sm text-ink-900/70">
+        <p className="text-sm text-ink-700">
           {contact.phone || contact.email
             ? [contact.phone, contact.email].filter(Boolean).join(" · ")
             : t("contactMasked")}
@@ -69,7 +78,7 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
         {booking.status === "AWAITING_PAYMENT" && (
           <Link
             href={`/trips/${booking.id}/pay`}
-            className="rounded-card bg-coral-500 px-4 py-2 text-center text-sm font-semibold text-white shadow-card transition hover:brightness-95"
+            className="rounded-pill bg-error-500 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-error-600"
           >
             {t("payCta")}
           </Link>
@@ -77,7 +86,7 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
         {canMessage && (
           <Link
             href={`/messages/${booking.id}`}
-            className="rounded-card border border-line px-4 py-2 text-center text-sm font-semibold text-ink-900 transition hover:bg-sand-50"
+            className="rounded-pill border border-border px-4 py-2 text-center text-sm font-semibold text-ink-900 transition hover:bg-surface-50"
           >
             {tMsg("messageHost")}
           </Link>
@@ -85,7 +94,7 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
         {(canOpenDispute || booking.dispute) && (
           <Link
             href={`/trips/${booking.id}/dispute`}
-            className="rounded-card border border-line px-4 py-2 text-center text-sm font-semibold text-ink-900 transition hover:bg-sand-50"
+            className="rounded-pill border border-border px-4 py-2 text-center text-sm font-semibold text-ink-900 transition hover:bg-surface-50"
           >
             {booking.dispute ? tDispute("viewCase") : tDispute("title")}
           </Link>
@@ -104,8 +113,9 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
           />
         )}
       </div>
+      {escrowStep ? <EscrowStrip variant="full" step={escrowStep} audience="guest" /> : null}
       {reportable && (
-        <details className="text-sm text-ink-900/50">
+        <details className="text-sm text-ink-500">
           <summary className="cursor-pointer underline hover:text-ink-700">
             {tr("reportBooking")}
           </summary>
