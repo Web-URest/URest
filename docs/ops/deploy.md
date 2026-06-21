@@ -37,9 +37,10 @@ standalone server → waits for `/api/health` to pass → routes traffic.
    |---|---|---|
    | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | Railway reference variable — links the DB plugin |
    | `DATA_ENCRYPTION_KEY` | *(generated, see below)* | 32 bytes base64; **never commit**; back up in the password manager (ADR-010) |
-   | `AUTH_SECRET` | `openssl rand -base64 32` | Auth.js signing secret (LINE login is live — ADR-007) |
+   | `AUTH_SECRET` | `openssl rand -base64 32` | Auth.js signing secret (ADR-007) |
+   | `AUTH_URL` | the public app URL, e.g. `https://urest.up.railway.app` | **Required in prod** — Auth.js builds OAuth callbacks from it; without it the callback uses the `0.0.0.0:8080` bind host and Google rejects `redirect_uri`. Must match the URI registered in Google Cloud |
    | `ADMIN_SESSION_SECRET` | `openssl rand -base64 32` | Admin session HMAC; **separate** from `AUTH_SECRET` (ADR-010 #4) |
-   | `LINE_CLIENT_ID` / `LINE_CLIENT_SECRET` | *(prod LINE Login channel)* | a channel SEPARATE from dev; register the prod callback URL |
+   | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | *(prod Google OAuth 2.0 client)* | a client SEPARATE from dev; register redirect URI `https://<domain>/api/auth/callback/google` + JS origin (ADR-007; LINE disabled) |
    | `NODE_ENV` | `production` | |
    | `HOSTNAME` | `0.0.0.0` | **Required** — the Next standalone server otherwise binds localhost and Railway can't reach it |
    | `R2_ACCOUNT_ID` | *(Cloudflare account id)* | R2 S3 endpoint host (#11) |
