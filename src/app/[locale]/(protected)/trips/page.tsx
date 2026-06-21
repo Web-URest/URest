@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth/guards";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/db";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 import { TripCard } from "./trip-card";
 
@@ -22,7 +23,12 @@ export default async function TripsPage({ searchParams }: { searchParams: Promis
   const bookings = await prisma.booking.findMany({
     where: { userId: user.id, status: { in: [...TABS[active]] } },
     include: {
-      listing: { select: { title: true } },
+      listing: {
+        select: {
+          title: true,
+          photos: { orderBy: { sortOrder: "asc" }, take: 1, select: { r2Key: true } },
+        },
+      },
       refund: { select: { refundSatang: true } },
       review: { select: { id: true } },
     },
@@ -30,16 +36,18 @@ export default async function TripsPage({ searchParams }: { searchParams: Promis
   });
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-5 bg-sand-50 px-4 py-8 md:px-6">
-      <h1 className="font-display text-2xl text-ink-900">{t("tripsTitle")}</h1>
-      <nav className="flex gap-2" aria-label={t("tripsTitle")}>
+    <main className="mx-auto flex min-h-screen max-w-[820px] flex-col gap-5 px-4 py-8 md:px-6">
+      <h1 className="font-display text-2xl font-bold text-ink-900">{t("tripsTitle")}</h1>
+      <nav className="flex gap-1 border-b border-border-subtle" aria-label={t("tripsTitle")}>
         {TAB_KEYS.map((k) => (
           <Link
             key={k}
             href={`/trips?tab=${k}`}
             aria-current={active === k ? "page" : undefined}
-            className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-              active === k ? "bg-ink-900 text-sand-50" : "text-ink-900/60 hover:bg-sand-100"
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold transition ${
+              active === k
+                ? "border-ink-900 text-ink-900"
+                : "border-transparent text-ink-500 hover:text-ink-900"
             }`}
           >
             {t(`tab_${k}`)}
@@ -47,7 +55,17 @@ export default async function TripsPage({ searchParams }: { searchParams: Promis
         ))}
       </nav>
       {bookings.length === 0 ? (
-        <p className="text-sm text-ink-900/60">{t("tripsEmpty")}</p>
+        <EmptyState
+          title={t("tripsEmpty")}
+          primaryAction={
+            <Link
+              href="/search"
+              className="inline-flex items-center justify-center rounded-pill bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600"
+            >
+              {t("tripsExplore")}
+            </Link>
+          }
+        />
       ) : (
         bookings.map((b) => <TripCard key={b.id} booking={b} />)
       )}

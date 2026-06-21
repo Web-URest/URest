@@ -31,15 +31,17 @@ export default async function ThreadPage({ params }: { params: Promise<{ booking
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-4 bg-sand-50 px-4 py-6 md:px-6">
-      <Link href="/messages" className="text-sm text-ink-900/60 hover:text-ink-900">
+    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-4 px-4 py-6 md:px-6">
+      <Link href="/messages" className="text-sm text-ink-500 transition hover:text-ink-900">
         {t("back")}
       </Link>
-      <h1 className="font-display text-xl text-ink-900">{thread.listingTitle}</h1>
+      <h1 className="font-display text-xl font-bold text-ink-900">{thread.listingTitle}</h1>
 
       <p
-        className={`rounded-card px-4 py-2 text-xs ${
-          thread.contactUnmasked ? "bg-jade-100 text-jade-500" : "bg-gold-100 text-gold-800"
+        className={`rounded-card px-4 py-2.5 text-xs font-medium ${
+          thread.contactUnmasked
+            ? "bg-trust-50 text-trust-700"
+            : "bg-pending-50 text-pending-700"
         }`}
       >
         {thread.contactUnmasked ? t("unmaskedNote") : t("maskingNotice")}
@@ -47,15 +49,17 @@ export default async function ThreadPage({ params }: { params: Promise<{ booking
 
       <div className="flex flex-1 flex-col gap-2">
         {thread.messages.length === 0 ? (
-          <p className="text-sm text-ink-900/50">{t("empty")}</p>
+          <p className="text-sm text-ink-500">{t("empty")}</p>
         ) : (
           thread.messages.map((m) => {
             const mine = m.senderId === thread.viewerId;
             return (
               <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                 <p
-                  className={`max-w-[80%] whitespace-pre-wrap rounded-card px-4 py-2 text-sm shadow-card ${
-                    mine ? "bg-aqua-500 text-ink-900" : "bg-white text-ink-900"
+                  className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm ${
+                    mine
+                      ? "rounded-tr-sm bg-brand-50 text-ink-900"
+                      : "rounded-tl-sm border border-border-subtle bg-white text-ink-900 shadow-card"
                   }`}
                 >
                   {m.bodyMasked}

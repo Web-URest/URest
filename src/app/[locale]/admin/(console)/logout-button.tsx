@@ -15,7 +15,7 @@ export function AdminLogoutButton() {
       type="button"
       disabled={pending}
       onClick={() => startTransition(() => logoutAction(locale))}
-      className="rounded-full border border-ink-700 px-4 py-1.5 text-sand-300 transition hover:bg-ink-700 disabled:opacity-50"
+      className="rounded-full border border-border px-4 py-1.5 text-ink-700 transition hover:bg-surface-50 disabled:opacity-50"
     >
       {t("logout")}
     </button>

@@ -26,10 +26,11 @@ const EXAMPLE_PROMPTS = [
   "examplePrompt3",
 ] as const;
 
-type Props = { scopedListingId?: string };
+type Props = { scopedListingId?: string; embedded?: boolean };
 
-export function ConciergeChat({ scopedListingId }: Props) {
+export function ConciergeChat({ scopedListingId, embedded = false }: Props) {
   const t = useTranslations("Concierge");
+  const widthCls = embedded ? "w-full" : "mx-auto max-w-2xl";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -183,7 +184,7 @@ export function ConciergeChat({ scopedListingId }: Props) {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Message list */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="mx-auto flex max-w-2xl flex-col gap-3">
+        <div className={`flex flex-col gap-3 ${widthCls}`}>
           {messages.map((msg, i) =>
             msg.role === "card" ? (
               msg.card.kind === "booking_draft" ? (
@@ -208,7 +209,7 @@ export function ConciergeChat({ scopedListingId }: Props) {
                   key={key}
                   type="button"
                   onClick={() => void sendMessage(t(key))}
-                  className="rounded-xl border border-line bg-white px-4 py-2.5 text-left text-sm text-ink-900 transition hover:bg-sand-100"
+                  className="rounded-xl border border-border-subtle bg-white px-4 py-2.5 text-left text-sm text-ink-900 transition hover:bg-surface-50"
                 >
                   {t(key)}
                 </button>
@@ -218,7 +219,7 @@ export function ConciergeChat({ scopedListingId }: Props) {
 
           {/* Error banner */}
           {error && (
-            <div role="alert" className="rounded-xl bg-coral-500/10 px-4 py-3 text-sm text-coral-500">
+            <div role="alert" className="rounded-xl bg-error-50 px-4 py-3 text-sm text-error-600">
               {error}
             </div>
           )}
@@ -228,8 +229,8 @@ export function ConciergeChat({ scopedListingId }: Props) {
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-line bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-2xl items-end gap-2">
+      <div className="border-t border-border-subtle bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <div className={`flex items-end gap-2 ${widthCls}`}>
           <textarea
             ref={inputRef}
             rows={1}
@@ -238,14 +239,14 @@ export function ConciergeChat({ scopedListingId }: Props) {
             onKeyDown={handleKeyDown}
             placeholder={t("inputPlaceholder")}
             disabled={isLoading}
-            className="flex-1 resize-none rounded-2xl border border-line bg-sand-100 px-4 py-3 text-sm text-ink-900 outline-none focus:ring-2 focus:ring-aqua-500 disabled:opacity-50"
+            className="flex-1 resize-none rounded-2xl border border-border bg-surface-50 px-4 py-3 text-sm text-ink-900 outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"
             style={{ maxHeight: "120px" }}
           />
           <button
             type="button"
             onClick={() => void sendMessage(input)}
             disabled={!input.trim() || isLoading}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-aqua-500 text-ink-900 transition hover:brightness-95 disabled:pointer-events-none disabled:opacity-40"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white transition hover:bg-brand-600 disabled:pointer-events-none disabled:opacity-40"
             aria-label={t("sendButton")}
           >
             <svg

@@ -43,7 +43,7 @@ export default async function PayoutsPage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="mt-1 text-sand-300">{t("subtitle")}</p>
+      <p className="mt-1 text-ink-700">{t("subtitle")}</p>
 
       {recon === null ? (
         <div className="mt-4 rounded bg-coral-100 px-4 py-3 text-sm text-coral-600">{t("reconcileError")}</div>
@@ -64,17 +64,17 @@ export default async function PayoutsPage() {
       )}
 
       {groups.length === 0 ? (
-        <p className="mt-8 text-sand-300">{t("empty")}</p>
+        <p className="mt-8 text-ink-700">{t("empty")}</p>
       ) : (
         groups.map((group) => {
           const hostHold = group.bookings.find((b) => b.hold?.scope === "host")?.hold ?? null;
           return (
-            <div key={group.hostId} className="mt-6 rounded-lg border border-ink-700 p-4">
+            <div key={group.hostId} className="mt-6 rounded-lg border border-border p-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="font-semibold text-sand-50">{group.hostName}</h2>
+                  <h2 className="font-semibold text-ink-900">{group.hostName}</h2>
                   {group.payoutAccount ? (
-                    <p className="mt-1 text-sm text-sand-300">
+                    <p className="mt-1 text-sm text-ink-700">
                       {t("account")}: {group.payoutAccount.bankCode} · {group.payoutAccount.accountName} ·{" "}
                       <RevealAccount
                         payoutAccountId={group.payoutAccount.id}
@@ -86,7 +86,7 @@ export default async function PayoutsPage() {
                     <p className="mt-1 text-sm text-coral-500">{t("noAccount")}</p>
                   )}
                 </div>
-                <span className="shrink-0 text-sm font-medium text-sand-100">
+                <span className="shrink-0 text-sm font-medium text-ink-900">
                   {t("groupTotal", { amount: formatSatang(group.totalSatang) })}
                 </span>
               </div>
@@ -110,11 +110,11 @@ export default async function PayoutsPage() {
                     name="reason"
                     required
                     placeholder={t("holdHostReasonPlaceholder")}
-                    className="flex-1 rounded border border-ink-700 bg-ink-900 px-2 py-1 text-sm text-sand-50 placeholder:text-sand-300"
+                    className="flex-1 rounded border border-border bg-white px-2 py-1 text-sm text-ink-900 placeholder:text-ink-700"
                   />
                   <button
                     type="submit"
-                    className="rounded border border-ink-700 px-3 py-1 text-sm text-sand-300 hover:bg-ink-700"
+                    className="rounded border border-border px-3 py-1 text-sm text-ink-700 hover:bg-surface-50"
                   >
                     {t("holdHostTitle")}
                   </button>
@@ -123,7 +123,7 @@ export default async function PayoutsPage() {
 
               <table className="mt-4 w-full border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-sand-300">
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-ink-700">
                     <th className="py-2 pr-4">{t("colBooking")}</th>
                     <th className="py-2 pr-4">{t("colCheckout")}</th>
                     <th className="py-2 pr-4">{t("colAmount")}</th>
@@ -132,10 +132,10 @@ export default async function PayoutsPage() {
                 </thead>
                 <tbody>
                   {group.bookings.map((b) => (
-                    <tr key={b.id} className="border-b border-ink-700/50">
-                      <td className="py-3 pr-4 text-sand-100">{b.code ?? b.id}</td>
-                      <td className="py-3 pr-4 text-sand-300">{bkk(b.checkOut)}</td>
-                      <td className="py-3 pr-4 tabular-nums text-sand-100">{formatSatang(b.hostAmountSatang)}</td>
+                    <tr key={b.id} className="border-b border-border/50">
+                      <td className="py-3 pr-4 text-ink-900">{b.code ?? b.id}</td>
+                      <td className="py-3 pr-4 text-ink-700">{bkk(b.checkOut)}</td>
+                      <td className="py-3 pr-4 tabular-nums text-ink-900">{formatSatang(b.hostAmountSatang)}</td>
                       <td className="py-3">
                         {b.hold ? (
                           b.hold.scope === "booking" ? (
@@ -143,7 +143,7 @@ export default async function PayoutsPage() {
                               <span className="rounded-full bg-gold-100 px-2 py-0.5 text-xs font-medium text-gold-800">
                                 {t("heldBadge")}
                               </span>
-                              <span className="text-xs text-sand-300">{b.hold.reason}</span>
+                              <span className="text-xs text-ink-700">{b.hold.reason}</span>
                               <form action={releaseHoldAction}>
                                 <input type="hidden" name="holdId" value={b.hold.id} />
                                 <button type="submit" title={t("releaseConfirm")} className="text-xs text-aqua-300 underline">
@@ -164,7 +164,7 @@ export default async function PayoutsPage() {
                                 name="slipRef"
                                 required
                                 placeholder={t("slipRefPlaceholder")}
-                                className="w-44 rounded border border-ink-700 bg-ink-900 px-2 py-1 text-xs text-sand-50 placeholder:text-sand-300"
+                                className="w-44 rounded border border-border bg-white px-2 py-1 text-xs text-ink-900 placeholder:text-ink-700"
                               />
                               <button
                                 type="submit"
@@ -181,11 +181,11 @@ export default async function PayoutsPage() {
                                 name="reason"
                                 required
                                 placeholder={t("holdReasonPlaceholder")}
-                                className="w-36 rounded border border-ink-700 bg-ink-900 px-2 py-1 text-xs text-sand-50 placeholder:text-sand-300"
+                                className="w-36 rounded border border-border bg-white px-2 py-1 text-xs text-ink-900 placeholder:text-ink-700"
                               />
                               <button
                                 type="submit"
-                                className="rounded border border-ink-700 px-3 py-1 text-xs text-sand-300 hover:bg-ink-700"
+                                className="rounded border border-border px-3 py-1 text-xs text-ink-700 hover:bg-surface-50"
                               >
                                 {t("placeHold")}
                               </button>

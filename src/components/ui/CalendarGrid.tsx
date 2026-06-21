@@ -14,10 +14,10 @@ const MONTHS_TH = [
 ];
 const DAYS_TH = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 
-/** Diagonal pool-tile-ish stripe for ปิดเอง cells (tokens only — no invented hex). */
+/** Diagonal stripe for ปิดเอง cells (tokens only — no invented hex). */
 const BLOCKED_STRIPE = {
   backgroundImage:
-    "repeating-linear-gradient(45deg, var(--sand-300) 0, var(--sand-300) 4px, var(--line) 4px, var(--line) 6px)",
+    "repeating-linear-gradient(45deg, var(--color-border) 0, var(--color-border) 4px, var(--color-border-subtle) 4px, var(--color-border-subtle) 6px)",
 } as const;
 
 function ymdOf(year: number, month: number, day: number): string {
@@ -108,8 +108,8 @@ function MonthGrid({
               className={[
                 "flex h-9 items-center justify-center rounded-full text-sm transition duration-150 ease-out disabled:opacity-50",
                 isBlocked
-                  ? "text-ink-900/60 line-through"
-                  : "text-ink-900 hover:bg-aqua-100",
+                  ? "text-ink-500 line-through"
+                  : "text-ink-900 hover:bg-surface-50",
               ].join(" ")}
             >
               {day}

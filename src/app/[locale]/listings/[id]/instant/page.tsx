@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { PriceBreakdown } from "@/components/ui/PriceBreakdown";
+import { EscrowStrip } from "@/components/ui/EscrowStrip";
 import { redirect } from "@/i18n/navigation";
 import { getListingDetail } from "@/lib/listing/queries";
 import { buildQuote } from "@/lib/pricing/quote";
@@ -58,12 +59,13 @@ export default async function InstantPage({
   });
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-6 bg-sand-50 px-4 py-8 md:px-6">
-      <h1 className="font-display text-2xl text-ink-900">{t("instantTitle")}</h1>
-      <div className="flex flex-col gap-2 rounded-card border border-line bg-white p-5 shadow-card">
-        <h2 className="font-display text-lg text-ink-900">{listing.title}</h2>
+    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-6 px-4 py-8 md:px-6">
+      <h1 className="font-display text-2xl font-bold text-ink-900">{t("instantTitle")}</h1>
+      <div className="flex flex-col gap-3 rounded-card border border-border-subtle bg-white p-5 shadow-card">
+        <h2 className="font-display text-lg font-semibold text-ink-900">{listing.title}</h2>
         <PriceBreakdown quote={quote} />
       </div>
+      <EscrowStrip variant="compact" step={1} audience="guest" />
       <InstantForm listingId={id} checkIn={checkIn} checkOut={checkOut} guests={guests} />
     </main>
   );

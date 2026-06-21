@@ -93,6 +93,18 @@ export async function searchListings(params: SearchParams): Promise<SearchListin
   }));
 }
 
+/** Region options for search/category UI (Pattaya-first per GTM, then Thai-collated). */
+export async function getRegions(): Promise<{ slug: string; nameTh: string }[]> {
+  const regions = await prisma.region.findMany({ select: { slug: true, nameTh: true } });
+  return regions.sort((a, b) =>
+    a.slug === "pattaya"
+      ? -1
+      : b.slug === "pattaya"
+        ? 1
+        : a.nameTh.localeCompare(b.nameTh, "th"),
+  );
+}
+
 export type ListingDetail = Awaited<ReturnType<typeof getListingDetail>>;
 
 const detailInclude = {

@@ -1,146 +1,79 @@
 import { getTranslations } from "next-intl/server";
-import { Heart, User, Menu, MessageSquare } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { auth } from "@/lib/auth/auth";
-import { isKillSwitchActive } from "@/lib/concierge/cost";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "./LocaleSwitcher";
+import { UserMenu } from "./UserMenu";
 
 /**
- * TopbarShell — pure rendering (DESIGN_SPEC §4: sand topbar, hairline bottom).
- * Exported separately so /styleguide can render mock logged-in/out states.
- * TODO: host/admin variant swaps bg-sand-50 → bg-ink-900 (DESIGN_SPEC §4 "back of house").
+ * TopbarShell — AirBnB header (v3): logo (rose dot) · compact search pill → /search ·
+ * right cluster (Become-a-host, LocaleSwitcher, UserMenu account menu). The full
+ * interactive PillSearchBar lives in the landing hero + the /search sub-header; the
+ * floating concierge FAB replaces the old "AI" nav item. Exported separately so
+ * /styleguide can render mock logged-in/out states.
  */
 export type TopbarUser = {
   name?: string | null;
   image?: string | null;
 };
 
-export async function TopbarShell({
-  user,
-  conciergeDisabled = false,
-}: {
-  user: TopbarUser | null;
-  conciergeDisabled?: boolean;
-}) {
+export async function TopbarShell({ user }: { user: TopbarUser | null }) {
   const t = await getTranslations("Nav");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-sand-50">
-      <div className="mx-auto flex h-14 max-w-[1120px] items-center justify-between px-4 md:px-6">
-        {/* Logo */}
+    <header className="sticky top-0 z-40 border-b border-border-subtle bg-white">
+      <div className="mx-auto flex h-16 max-w-[1180px] items-center gap-3 px-4 md:px-6">
         <Link
           href="/"
-          className="font-display text-xl leading-none text-ink-900 transition duration-150 ease-out hover:opacity-80"
+          className="shrink-0 font-display text-xl font-bold leading-none text-ink-900 transition duration-150 ease-out hover:opacity-80"
         >
-          U<span className="text-aqua-500">·</span>Rest
+          U<span className="text-brand-500">·</span>Rest
         </Link>
 
-        {/* Center nav — desktop only */}
-        <nav
-          aria-label={t("menu")}
-          className="hidden items-center gap-6 md:flex"
+        {/* Compact search pill → /search (the interactive PillSearchBar lives on hero/search) */}
+        <Link
+          href="/search"
+          className="mx-auto flex w-full max-w-md items-center justify-between gap-3 rounded-pill border border-border bg-white py-2 pl-5 pr-2 shadow-card transition duration-150 ease-out hover:shadow-raised"
         >
-          <Link
-            href="/search"
-            className="text-sm font-semibold text-ink-700 transition duration-150 ease-out hover:text-teal-600"
-          >
-            {t("search")}
-          </Link>
-          {conciergeDisabled ? (
-            <span
-              className="cursor-default text-sm font-semibold text-ink-700/40"
-              title="น้องเรสต์ขอพักก่อนนะคะ 🌙"
-            >
-              {t("concierge")}
-            </span>
-          ) : (
-            <Link
-              href="/concierge"
-              className="text-sm font-semibold text-ink-700 transition duration-150 ease-out hover:text-teal-600"
-            >
-              {t("concierge")}
-            </Link>
-          )}
+          <span className="truncate text-sm font-semibold text-ink-700">
+            {t("searchPlaceholder")}
+          </span>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white">
+            <Search size={16} />
+          </span>
+        </Link>
+
+        <div className="flex shrink-0 items-center gap-1.5">
           <Link
             href="/host/new"
-            className="text-sm font-semibold text-ink-700 transition duration-150 ease-out hover:text-teal-600"
+            className="hidden rounded-pill px-3 py-2 text-sm font-semibold text-ink-900 transition duration-150 ease-out hover:bg-surface-50 md:inline-block"
           >
             {t("becomeHost")}
           </Link>
-        </nav>
-
-        {/* Right cluster */}
-        <div className="flex items-center gap-2">
           <LocaleSwitcher />
-
-          {user ? (
-            <>
-              <Link
-                href="/messages"
-                aria-label={t("messages")}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-ink-700 transition duration-150 ease-out hover:bg-sand-100"
-              >
-                <MessageSquare size={20} />
-              </Link>
-              <Link
-                href="/saved"
-                aria-label={t("saved")}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-ink-700 transition duration-150 ease-out hover:bg-sand-100"
-              >
-                <Heart size={20} />
-              </Link>
-              <Link
-                href="/profile"
-                aria-label={t("profile")}
-                className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-line bg-sand-100 transition duration-150 ease-out hover:border-teal-600"
-              >
-                {user.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={user.image}
-                    alt={user.name ?? ""}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <User size={18} className="text-ink-700" />
-                )}
-              </Link>
-            </>
-          ) : (
-            <Link
-              href="/sign-in"
-              className="rounded-full bg-teal-600 px-4 py-1.5 text-sm font-semibold text-white transition duration-150 ease-out hover:bg-ink-700"
-            >
-              {t("signIn")}
-            </Link>
-          )}
-
-          {/* Mobile hamburger — drawer not yet implemented; hidden from a11y until wired */}
-          <button
-            type="button"
-            aria-hidden
-            tabIndex={-1}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-700 transition duration-150 ease-out hover:bg-sand-100 md:hidden"
-          >
-            <Menu size={20} />
-          </button>
+          <UserMenu
+            user={user}
+            labels={{
+              menu: t("menu"),
+              signIn: t("signIn"),
+              signUp: t("signUp"),
+              signOut: t("signOut"),
+              trips: t("trips"),
+              saved: t("saved"),
+              messages: t("messages"),
+              profile: t("profile"),
+              becomeHost: t("becomeHost"),
+            }}
+          />
         </div>
       </div>
     </header>
   );
 }
 
-/** Async wrapper — fetches live session + kill-switch state. */
+/** Async wrapper — fetches live session. */
 export async function Topbar() {
-  const [session, killSwitch] = await Promise.all([
-    auth(),
-    isKillSwitchActive(),
-  ]);
-  return (
-    <TopbarShell
-      user={session?.user ?? null}
-      conciergeDisabled={killSwitch}
-    />
-  );
+  const session = await auth();
+  return <TopbarShell user={session?.user ?? null} />;
 }

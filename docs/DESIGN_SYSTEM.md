@@ -36,24 +36,32 @@ The library is the floor; features compose it.
   plain text; every state has a pill (DESIGN_SPEC §3).
 - **Money** is integer satang; format only at the UI edge via `src/lib/money.ts`.
 
-## Identity: modern, never generic-AI
+## Identity: AirBnB-grade trust marketplace (v3 — ADR-013 amendment 2026-06-21)
 
-Components must *express* the "Modern Thai poolside" identity, not flatten it into a
-generic Tailwind starter. Required signature elements (DESIGN_SPEC §1–3):
+Components must *express* the v3 "AirBnB skin" — rose primary + retained green escrow-trust —
+not flatten into an unstyled Tailwind starter. Required elements:
 
-- **Type**: Chonburi for display/hero/big-money; Anuphan for body/UI; Sriracha ≤ once per
-  page. Never Inter / system-generic.
-- **Surfaces**: sand pages (never pure white); ink "back-of-house" chrome for host/admin;
-  warm shadows (never gray); hairlines over shadows on sand.
-- **Motifs**: `TileStrip` (pool-tile checker), `RippleHeading` (aqua squiggle), caustics
-  photo placeholders, and the **`EscrowStrip`** brand component on every money screen.
-- **One coral per screen** — coral marks THE money action only.
-- **Motion**: 160ms ease-out; a single staggered fade-up on landing surfaces only;
-  dashboards load instantly; respect `prefers-reduced-motion`.
+- **Semantic tokens only** (the contract): `--color-brand-*` (rose, primary action / links /
+  active / focus / saved heart / selected), `--color-trust-*` (green, escrow-safe / verified /
+  paid), `--color-error-*` (red), `--color-pending-*` (amber, pending / star ratings),
+  `--color-ink/surface/border-*`. **Legacy names (`aqua/jade/teal/coral/gold/sand/line`) are
+  deprecated `var()` aliases — do NOT use them in new code.** No literal hex.
+- **The rose/green split is load-bearing:** brand = rose, trust = green. Never render an
+  escrow/verified/paid/confirmed surface (StatusPill CONFIRMED/CHECKED_IN/COMPLETED/HELD/PAID,
+  EscrowStrip dots, verified badge) in rose. The **pay/money action stays ink** (3-way split:
+  ink = pay, rose = act, green = safe).
+- **Type**: Prompt for display/hero; Anuphan for body/UI. Sans-only. Never Inter / system-generic.
+- **Surfaces**: white pages + grey panels; **light** AirBnB-host chrome for host/admin (no ink
+  back-of-house); soft neutral shadows; AirBnB radii (`rounded-card` 12 / `rounded-input` 8 /
+  `rounded-pill` / `rounded-modal` 16).
+- **`EscrowStrip`** (green) appears on every money screen — the brand trust component.
+- **Motion**: `ease-standard`/`ease-emphasized` tokens, 120–320ms; staggered fade-up on landing
+  only; dashboards load instantly; respect `prefers-reduced-motion`. Global rose `:focus-visible`
+  ring is in `globals.css` — don't re-invent per component.
+- **Every data-backed route ships a `loading.tsx`** (skeletons) and an empty state.
 
-**Failure criterion:** "looks like a generic AI/Tailwind starter" = reject and redo.
-Honor the DESIGN_SPEC §1 anti-goals (not a Facebook villa page, not a generic Airbnb
-clone, not corporate-bank sterile).
+**Failure criterion:** "looks like an unstyled Tailwind starter, OR violates the rose-primary /
+green-trust split" = reject and redo. (The v1/v2 "not a generic Airbnb clone" anti-goal is removed.)
 
 ## Flow consistency — same flow, same components
 

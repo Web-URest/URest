@@ -2,10 +2,11 @@ import { useTranslations } from "next-intl";
 import { formatSatang } from "@/lib/money";
 
 /**
- * VillaCard — the most-reused card (DESIGN_SPEC §5.1). Photo (3:2) with ♡ save +
- * verified badge, name (Chonburi), meta line, up-to-3 amenity chips (+N), price row
- * with weekend hint and rating. Until a real photo exists, the placeholder is a layered
- * aqua/sand "caustics" gradient (never a gray box), hue-varied per villa.
+ * VillaCard — the most-reused card (v3 "AirBnB skin"). Photo (3:2) with ♡ save +
+ * verified badge, name, meta line, up-to-3 amenity chips (+N), price row with weekend
+ * hint and rating. Until a real photo exists, the placeholder is a calm neutral-grey
+ * wash (never a colored smear). `chrome="bare"` (AirBnB grid look — no border/shadow,
+ * hover lift on the photo) vs `chrome="card"` (bordered white card, e.g. a feature slot).
  *
  * Money in is integer satang; formatted at the edge via formatSatang (CLAUDE.md rule 1).
  * Presentational: the ♡ shows `saved` state; optimistic toggling is a consumer concern.
@@ -36,33 +37,43 @@ export type VillaCardProps = {
   villa: Villa;
   /** Replaces the static heart span with an interactive toggle. */
   heartSlot?: React.ReactNode;
+  /** "bare" = AirBnB grid look (no chrome, hover-lift photo); "card" = bordered white card. */
+  chrome?: "card" | "bare";
 };
 
-// Soft, clean photographic stand-in until a real photo exists (never a gray box),
-// hue-varied per villa. Identity v2: a calm emerald→neutral wash, no pool "caustics".
-const CAUSTICS =
-  "radial-gradient(120% 85% at 75% 15%, var(--color-sand-100), transparent 60%)," +
-  "linear-gradient(150deg, var(--color-aqua-300) 0%, var(--color-aqua-100) 55%, var(--color-sand-100) 100%)";
+// Calm neutral-grey stand-in until a real photo exists (never a colored smear).
+const PLACEHOLDER =
+  "linear-gradient(150deg, var(--color-surface-100) 0%, var(--color-surface-50) 100%)";
 
-export function VillaCard({ villa, heartSlot }: VillaCardProps) {
+export function VillaCard({ villa, heartSlot, chrome = "card" }: VillaCardProps) {
   const t = useTranslations("VillaCard");
   const shown = villa.amenities.slice(0, 3);
   const extra = villa.amenities.length - shown.length;
+  const bare = chrome === "bare";
 
   return (
-    <article className="overflow-hidden rounded-card bg-white shadow-card">
-      <div className="relative aspect-[3/2]">
+    <article
+      className={
+        bare
+          ? "group"
+          : "overflow-hidden rounded-card border border-border-subtle bg-white shadow-card transition duration-150 ease-out hover:shadow-raised"
+      }
+    >
+      <div
+        className={`relative aspect-[3/2] overflow-hidden ${bare ? "rounded-photo" : ""}`}
+      >
         <div
           role="img"
           aria-label={villa.name}
-          className="absolute inset-0 rounded-photo bg-cover bg-center"
+          className={`absolute inset-0 bg-cover bg-center transition duration-300 ease-out ${
+            bare ? "rounded-photo group-hover:scale-[1.03]" : ""
+          }`}
           style={{
-            backgroundImage: villa.imageUrl ? `url(${villa.imageUrl})` : CAUSTICS,
-            filter: villa.imageUrl ? undefined : `hue-rotate(${villa.hueDeg ?? 0}deg)`,
+            backgroundImage: villa.imageUrl ? `url(${villa.imageUrl})` : PLACEHOLDER,
           }}
         />
         {villa.verified ? (
-          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-jade-500 shadow-card">
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-trust-500 shadow-card">
             {t("verified")} ✓
           </span>
         ) : null}
@@ -70,7 +81,7 @@ export function VillaCard({ villa, heartSlot }: VillaCardProps) {
           <span
             aria-hidden
             className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg shadow-card ${
-              villa.saved ? "text-coral-500" : "text-ink-900/40"
+              villa.saved ? "text-brand-500" : "text-ink-500"
             }`}
           >
             {villa.saved ? "♥" : "♡"}
@@ -78,7 +89,7 @@ export function VillaCard({ villa, heartSlot }: VillaCardProps) {
         )}
       </div>
 
-      <div className="flex flex-col gap-2 p-4">
+      <div className={`flex flex-col gap-2 ${bare ? "pt-3" : "p-4"}`}>
         <h3 className="font-display text-lg text-ink-900">{villa.name}</h3>
         <p className="text-sm text-ink-700">
           {villa.region} · {t("sleeps", { count: villa.sleeps })} ·{" "}

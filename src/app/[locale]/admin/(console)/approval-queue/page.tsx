@@ -44,14 +44,14 @@ export default async function ApprovalQueuePage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="mt-1 text-sand-300">{t("subtitle")}</p>
+      <p className="mt-1 text-ink-700">{t("subtitle")}</p>
 
       {submissions.length === 0 ? (
-        <p className="mt-8 text-sand-400">{t("emptyQueue")}</p>
+        <p className="mt-8 text-ink-500">{t("emptyQueue")}</p>
       ) : (
         <table className="mt-6 w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-sand-400">
+            <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-ink-500">
               <th className="py-2 pr-4">{t("colListing")}</th>
               <th className="py-2 pr-4">{t("colHost")}</th>
               <th className="py-2 pr-4">{t("colDocs")}</th>
@@ -66,13 +66,13 @@ export default async function ApprovalQueuePage() {
               const have = REQUIRED_DOC_TYPES.filter((type) => present.has(type)).length;
               const overdue = now - s.submittedAt.getTime() > SLA_MS;
               return (
-                <tr key={s.id} className="border-b border-ink-800 hover:bg-ink-800/40">
-                  <td className="py-3 pr-4 text-sand-100">{s.listing?.title}</td>
-                  <td className="py-3 pr-4 text-sand-300">{s.user.displayName}</td>
-                  <td className="py-3 pr-4 tabular-nums text-sand-300">
+                <tr key={s.id} className="border-b border-border-subtle hover:bg-surface-50">
+                  <td className="py-3 pr-4 text-ink-900">{s.listing?.title}</td>
+                  <td className="py-3 pr-4 text-ink-700">{s.user.displayName}</td>
+                  <td className="py-3 pr-4 tabular-nums text-ink-700">
                     {have}/{requiredCount}
                   </td>
-                  <td className="py-3 pr-4 text-sand-400">{bkk(s.submittedAt)}</td>
+                  <td className="py-3 pr-4 text-ink-500">{bkk(s.submittedAt)}</td>
                   <td className="py-3 pr-4">
                     {overdue ? (
                       <span className="rounded-full bg-coral-500/20 px-2 py-0.5 text-xs font-medium text-coral-500">

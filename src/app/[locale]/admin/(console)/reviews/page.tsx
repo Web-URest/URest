@@ -47,26 +47,26 @@ export default async function AdminReviewsPage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="mt-1 text-sand-300">{t("subtitle")}</p>
+      <p className="mt-1 text-ink-700">{t("subtitle")}</p>
 
       {flags.length === 0 ? (
-        <p className="mt-8 text-sand-300">{t("empty")}</p>
+        <p className="mt-8 text-ink-700">{t("empty")}</p>
       ) : (
         <div className="mt-6 flex flex-col gap-4">
           {flags.map((f) => (
-            <div key={f.id} className="rounded-lg border border-ink-700 p-4">
+            <div key={f.id} className="rounded-lg border border-border p-4">
               <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-sand-50">{f.review?.booking.listing.title}</span>
-                <span className="text-xs text-sand-300">{bkk(f.createdAt)}</span>
+                <span className="font-semibold text-ink-900">{f.review?.booking.listing.title}</span>
+                <span className="text-xs text-ink-700">{bkk(f.createdAt)}</span>
               </div>
-              <p className="mt-1 text-sm text-sand-300">
+              <p className="mt-1 text-sm text-ink-700">
                 {t("flagReason")}: {f.text}
               </p>
 
               {f.review && (
-                <blockquote className="mt-3 rounded bg-ink-700 p-3 text-sm text-sand-100">
+                <blockquote className="mt-3 rounded bg-surface-100 p-3 text-sm text-ink-900">
                   <span className="text-gold-400">{"★".repeat(f.review.overall)}</span>{" "}
-                  <span className="text-sand-300">— {f.review.author.displayName}</span>
+                  <span className="text-ink-700">— {f.review.author.displayName}</span>
                   {f.review.text && <p className="mt-1">{f.review.text}</p>}
                   {f.review.removedAt && <p className="mt-1 text-coral-500">{t("alreadyRemoved")}</p>}
                 </blockquote>
@@ -77,7 +77,7 @@ export default async function AdminReviewsPage() {
                   <input type="hidden" name="reportId" value={f.id} />
                   <button
                     type="submit"
-                    className="rounded border border-ink-700 px-3 py-1 text-sm text-sand-300 hover:bg-ink-700"
+                    className="rounded border border-border px-3 py-1 text-sm text-ink-700 hover:bg-surface-50"
                   >
                     {t("keep")}
                   </button>
@@ -89,7 +89,7 @@ export default async function AdminReviewsPage() {
                     name="reason"
                     required
                     placeholder={t("removeReasonPlaceholder")}
-                    className="rounded border border-ink-700 bg-ink-900 px-2 py-1 text-sm text-sand-50 placeholder:text-sand-300"
+                    className="rounded border border-border bg-white px-2 py-1 text-sm text-ink-900 placeholder:text-ink-700"
                   />
                   <button
                     type="submit"

@@ -21,7 +21,17 @@
     "how2Title": "Book and pay via escrow",
     "how2Body": "Pay into U-Rest's escrow. We hold the money and don't release it to the host until checkout.",
     "how3Title": "Stay and review",
-    "how3Body": "Enjoy your trip. Once you've checked out, the host gets paid — then leave a review."
+    "how3Body": "Enjoy your trip. Once you've checked out, the host gets paid — then leave a review.",
+    "searchWhere": "Where",
+    "searchWhen": "When",
+    "searchWho": "Who",
+    "searchAnywhere": "Anywhere",
+    "searchAnyDates": "Any week",
+    "searchGuestsUnit": "guests",
+    "categoryTitle": "Popular destinations",
+    "askAiTitle": "Let AI find your villa",
+    "askAiBody": "Tell น้องเรสต์ what you want — e.g. \"villa for 10 near Jomtien beach with karaoke\" — and it finds it.",
+    "askAiCta": "Ask น้องเรสต์"
   },
   "Auth": {
     "signInTitle": "Sign in",
@@ -327,7 +337,12 @@
     "profile": "Profile",
     "menu": "Menu",
     "switchToEn": "Switch to English",
-    "switchToTh": "Switch to Thai"
+    "switchToTh": "Switch to Thai",
+    "searchPlaceholder": "Search pool villas",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "signUp": "Sign up",
+    "signOut": "Sign out"
   },
   "Footer": {
     "col1Title": "U-Rest",
@@ -497,6 +512,9 @@
   },
   "ListingDetail": {
     "gallery": "See all photos ({count})",
+    "galleryClose": "Close",
+    "galleryPrev": "Previous photo",
+    "galleryNext": "Next photo",
     "verified": "Verified listing",
     "legalBadge": "Legally registered",
     "bookingModeRequest": "Request first",
@@ -572,6 +590,7 @@
     "statusTitle": "My booking",
     "tripsTitle": "My trips",
     "tripsEmpty": "Nothing in this tab yet",
+    "tripsExplore": "Find a villa",
     "tab_upcoming": "Upcoming",
     "tab_pending": "Pending",
     "tab_past": "Past",
@@ -689,6 +708,7 @@
     "cardGuests": "{count} guests",
     "cardNights": "{count} nights",
     "cardTotal": "Total",
+    "cardAiCannotBook": "น้องเรสต์ can't book for you — you always tap to confirm",
     "cardConfirm": "Confirm & send request",
     "cardConfirming": "Sending…",
     "cardConfirmed": "Confirmed ✓",
@@ -708,6 +728,7 @@
     "undo": "Undo",
     "emptyTitle": "No saved villas yet",
     "emptyHint": "Tap the heart on any villa to save it for later",
+    "emptyCta": "Find a villa",
     "errorGeneric": "Something went wrong, please try again"
   },
   "Host": {

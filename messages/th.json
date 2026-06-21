@@ -21,7 +21,17 @@
     "how2Title": "จองและจ่ายผ่านเอสโครว์",
     "how2Body": "ชำระเข้าระบบกลาง U-Rest ถือเงินไว้ ไม่ส่งให้เจ้าของจนกว่าจะเช็คเอาท์",
     "how3Title": "เข้าพักและรีวิว",
-    "how3Body": "สนุกกับทริป เมื่อเช็คเอาท์เรียบร้อย เจ้าของจึงได้รับเงิน แล้วรีวิวได้เลย"
+    "how3Body": "สนุกกับทริป เมื่อเช็คเอาท์เรียบร้อย เจ้าของจึงได้รับเงิน แล้วรีวิวได้เลย",
+    "searchWhere": "ที่ไหน",
+    "searchWhen": "เมื่อไหร่",
+    "searchWho": "กี่คน",
+    "searchAnywhere": "ทุกพื้นที่",
+    "searchAnyDates": "เลือกวันที่",
+    "searchGuestsUnit": "ท่าน",
+    "categoryTitle": "พื้นที่ยอดนิยม",
+    "askAiTitle": "ให้ AI ช่วยหาวิลลาให้",
+    "askAiBody": "บอกความต้องการ เช่น \"วิลลา 10 คน ใกล้หาดจอมเทียน มีคาราโอเกะ\" แล้วน้องเรสต์หาให้",
+    "askAiCta": "ถามน้องเรสต์"
   },
   "Auth": {
     "signInTitle": "เข้าสู่ระบบ",
@@ -327,7 +337,12 @@
     "profile": "โปรไฟล์",
     "menu": "เมนู",
     "switchToEn": "Switch to English",
-    "switchToTh": "เปลี่ยนเป็นภาษาไทย"
+    "switchToTh": "เปลี่ยนเป็นภาษาไทย",
+    "searchPlaceholder": "ค้นหาพูลวิลล่า",
+    "openMenu": "เปิดเมนู",
+    "closeMenu": "ปิดเมนู",
+    "signUp": "สมัครสมาชิก",
+    "signOut": "ออกจากระบบ"
   },
   "Footer": {
     "col1Title": "U-Rest",
@@ -497,6 +512,9 @@
   },
   "ListingDetail": {
     "gallery": "ดูรูปทั้งหมด ({count})",
+    "galleryClose": "ปิด",
+    "galleryPrev": "รูปก่อนหน้า",
+    "galleryNext": "รูปถัดไป",
     "verified": "ที่พักผ่านการตรวจสอบ",
     "legalBadge": "ถูกต้องตามกฎหมาย",
     "bookingModeRequest": "ส่งคำขอก่อน",
@@ -572,6 +590,7 @@
     "statusTitle": "การจองของฉัน",
     "tripsTitle": "ทริปของฉัน",
     "tripsEmpty": "ยังไม่มีรายการในหมวดนี้",
+    "tripsExplore": "ค้นหาที่พัก",
     "tab_upcoming": "กำลังจะถึง",
     "tab_pending": "รอดำเนินการ",
     "tab_past": "ที่ผ่านมา",
@@ -689,6 +708,7 @@
     "cardGuests": "{count} คน",
     "cardNights": "{count} คืน",
     "cardTotal": "ราคารวม",
+    "cardAiCannotBook": "น้องเรสต์จองให้ไม่ได้ — คุณกดยืนยันเองเสมอ",
     "cardConfirm": "ยืนยันส่งคำขอจอง",
     "cardConfirming": "กำลังส่ง…",
     "cardConfirmed": "ยืนยันแล้ว ✓",
@@ -708,6 +728,7 @@
     "undo": "เลิกทำ",
     "emptyTitle": "ยังไม่มีที่พักที่บันทึกไว้",
     "emptyHint": "กดหัวใจบนที่พักที่ชอบเพื่อบันทึกไว้ดูทีหลัง",
+    "emptyCta": "ค้นหาที่พัก",
     "errorGeneric": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"
   },
   "Host": {

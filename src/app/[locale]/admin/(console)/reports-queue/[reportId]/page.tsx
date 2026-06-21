@@ -55,11 +55,11 @@ export default async function ReportDetailPage({
   return (
     <section className="flex max-w-2xl flex-col gap-6">
       <div>
-        <Link href="/admin/reports-queue" className="text-sm text-sand-400 hover:text-sand-200">
+        <Link href="/admin/reports-queue" className="text-sm text-ink-500 hover:text-ink-700">
           {t("backToQueue")}
         </Link>
         <h1 className="mt-2 text-2xl font-bold">{cat(report.category)}</h1>
-        <p className="mt-1 text-sand-300">
+        <p className="mt-1 text-ink-700">
           {report.reporter?.displayName ?? t("anonymous")} ·{" "}
           {isBooking
             ? `${t("targetBooking")}: ${report.booking?.listing.title ?? ""}`
@@ -77,15 +77,15 @@ export default async function ReportDetailPage({
       </div>
 
       <div>
-        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-sand-300">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-ink-700">
           {t("reportText")}
         </h2>
-        <p className="whitespace-pre-wrap text-sand-100">{report.text}</p>
+        <p className="whitespace-pre-wrap text-ink-900">{report.text}</p>
       </div>
 
       {isOpen ? (
-        <div className="flex flex-col gap-6 border-t border-ink-700 pt-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-sand-300">
+        <div className="flex flex-col gap-6 border-t border-border pt-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-700">
             {t("decisionTitle")}
           </h2>
 
@@ -97,7 +97,7 @@ export default async function ReportDetailPage({
               >
                 {t("accept")}
               </button>
-              <span className="ml-3 text-xs text-sand-400">{t("acceptHint")}</span>
+              <span className="ml-3 text-xs text-ink-500">{t("acceptHint")}</span>
             </form>
           ) : null}
 
@@ -106,7 +106,7 @@ export default async function ReportDetailPage({
               <form action={unlistAction.bind(null, report.id)}>
                 <button
                   type="submit"
-                  className="rounded-full border border-ink-600 px-4 py-2 text-sm text-sand-200 hover:border-aqua-500"
+                  className="rounded-full border border-border px-4 py-2 text-sm text-ink-700 hover:border-aqua-500"
                 >
                   {t("unlist")}
                 </button>
@@ -116,7 +116,7 @@ export default async function ReportDetailPage({
               <form action={escalateAction.bind(null, report.id)}>
                 <button
                   type="submit"
-                  className="rounded-full border border-ink-600 px-4 py-2 text-sm text-sand-200 hover:border-aqua-500"
+                  className="rounded-full border border-border px-4 py-2 text-sm text-ink-700 hover:border-aqua-500"
                 >
                   {t("escalate")}
                 </button>
@@ -133,12 +133,12 @@ export default async function ReportDetailPage({
           </div>
 
           <form action={resolveAction.bind(null, report.id)} className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-sand-200">{t("reasonLabel")}</label>
+            <label className="text-sm font-medium text-ink-700">{t("reasonLabel")}</label>
             <textarea
               name="reason"
               required
               rows={2}
-              className="rounded-xl border border-ink-700 bg-ink-800 px-3 py-2 text-sm text-sand-100"
+              className="rounded-xl border border-border bg-surface-50 px-3 py-2 text-sm text-ink-900"
             />
             <div className="flex gap-3">
               <button
@@ -150,7 +150,7 @@ export default async function ReportDetailPage({
               <button
                 type="submit"
                 formAction={dismissAction.bind(null, report.id)}
-                className="w-fit rounded-full border border-ink-600 px-5 py-2 text-sm text-sand-400 hover:border-sand-500"
+                className="w-fit rounded-full border border-border px-5 py-2 text-sm text-ink-500 hover:border-ink-900"
               >
                 {t("dismiss")}
               </button>
@@ -158,7 +158,7 @@ export default async function ReportDetailPage({
           </form>
         </div>
       ) : (
-        <p className="border-t border-ink-700 pt-6 text-sand-400">
+        <p className="border-t border-border pt-6 text-ink-500">
           {report.status} — {report.resolvedReason}
         </p>
       )}

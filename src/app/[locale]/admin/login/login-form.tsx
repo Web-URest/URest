@@ -25,7 +25,7 @@ export function AdminLoginForm() {
   }
 
   const field =
-    "rounded-xl border border-ink-700 bg-ink-700 px-4 py-3 text-sand-50 placeholder:text-sand-300/50 outline-none focus:ring-2 focus:ring-aqua-500";
+    "rounded-xl border border-border bg-surface-100 px-4 py-3 text-ink-900 placeholder:text-ink-700/50 outline-none focus:ring-2 focus:ring-aqua-500";
 
   return (
     <form
@@ -36,7 +36,7 @@ export function AdminLoginForm() {
       className="flex flex-col gap-4"
     >
       <label className="flex flex-col gap-1">
-        <span className="text-sm text-sand-300">{t("email")}</span>
+        <span className="text-sm text-ink-700">{t("email")}</span>
         <input
           type="email"
           autoComplete="username"
@@ -46,7 +46,7 @@ export function AdminLoginForm() {
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm text-sand-300">{t("password")}</span>
+        <span className="text-sm text-ink-700">{t("password")}</span>
         <input
           type="password"
           autoComplete="current-password"
@@ -56,7 +56,7 @@ export function AdminLoginForm() {
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm text-sand-300">{t("totp")}</span>
+        <span className="text-sm text-ink-700">{t("totp")}</span>
         <input
           type="text"
           inputMode="numeric"
@@ -68,7 +68,7 @@ export function AdminLoginForm() {
         />
       </label>
 
-      {error && <p className="text-sm font-semibold text-sand-50">{t("loginError")}</p>}
+      {error && <p className="text-sm font-semibold text-ink-900">{t("loginError")}</p>}
 
       <button
         type="submit"

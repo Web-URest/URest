@@ -59,14 +59,14 @@ export default async function ReportsQueuePage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="mt-1 text-sand-300">{t("subtitle")}</p>
+      <p className="mt-1 text-ink-700">{t("subtitle")}</p>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sand-400">{t("empty")}</p>
+        <p className="mt-8 text-ink-500">{t("empty")}</p>
       ) : (
         <table className="mt-6 w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-sand-400">
+            <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-ink-500">
               <th className="py-2 pr-4">{t("colCategory")}</th>
               <th className="py-2 pr-4">{t("colReporter")}</th>
               <th className="py-2 pr-4">{t("colTarget")}</th>
@@ -77,11 +77,11 @@ export default async function ReportsQueuePage() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-ink-800 hover:bg-ink-800/40">
-                <td className="py-3 pr-4 text-sand-100">{cat(r.category)}</td>
-                <td className="py-3 pr-4 text-sand-300">{r.reporter?.displayName ?? t("anonymous")}</td>
-                <td className="py-3 pr-4 text-sand-300">{targetLabel(r)}</td>
-                <td className="py-3 pr-4 text-sand-400">{bkk(r.createdAt)}</td>
+              <tr key={r.id} className="border-b border-border-subtle hover:bg-surface-50">
+                <td className="py-3 pr-4 text-ink-900">{cat(r.category)}</td>
+                <td className="py-3 pr-4 text-ink-700">{r.reporter?.displayName ?? t("anonymous")}</td>
+                <td className="py-3 pr-4 text-ink-700">{targetLabel(r)}</td>
+                <td className="py-3 pr-4 text-ink-500">{bkk(r.createdAt)}</td>
                 <td className="py-3 pr-4">
                   {atRisk(r) ? (
                     <span className="rounded-full bg-coral-500/20 px-2 py-0.5 text-xs font-medium text-coral-500">

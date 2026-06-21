@@ -81,15 +81,15 @@ export default async function UnansweredQuestionsPage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="mt-1 text-sand-300">{t("subtitle")}</p>
+      <p className="mt-1 text-ink-700">{t("subtitle")}</p>
 
       {groups.length === 0 ? (
-        <p className="mt-8 text-sand-400">{t("noQuestions")}</p>
+        <p className="mt-8 text-ink-500">{t("noQuestions")}</p>
       ) : (
         <div className="mt-6 space-y-8">
           {groups.map((group) => (
             <div key={group.listingId ?? "__none__"}>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-sand-300">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-700">
                 {group.listingTitle}
               </h2>
               <table className="w-full border-collapse text-sm">
@@ -97,10 +97,10 @@ export default async function UnansweredQuestionsPage() {
                   {group.questions.map((q) => (
                     <tr
                       key={q.id}
-                      className="border-b border-ink-800 hover:bg-ink-800/40"
+                      className="border-b border-border-subtle hover:bg-surface-50"
                     >
-                      <td className="py-3 pr-4 text-sand-100">{q.text}</td>
-                      <td className="py-3 pr-4 text-right text-sand-400 tabular-nums">
+                      <td className="py-3 pr-4 text-ink-900">{q.text}</td>
+                      <td className="py-3 pr-4 text-right text-ink-500 tabular-nums">
                         {q.count}×
                       </td>
                       <td className="py-3 pr-2">
@@ -118,7 +118,7 @@ export default async function UnansweredQuestionsPage() {
                         <form action={dismissQuestionAction.bind(null, q.id)}>
                           <button
                             type="submit"
-                            className="rounded border border-ink-600 px-3 py-1 text-xs text-sand-400 hover:border-sand-500 hover:text-sand-200"
+                            className="rounded border border-border px-3 py-1 text-xs text-ink-500 hover:border-ink-900 hover:text-ink-700"
                           >
                             {t("dismiss")}
                           </button>

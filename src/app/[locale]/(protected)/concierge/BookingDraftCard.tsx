@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
 import type { ConciergeCard } from "@/lib/concierge/cards";
+import { EscrowStrip } from "@/components/ui/EscrowStrip";
 
 type DraftCard = Extract<ConciergeCard, { kind: "booking_draft" }>;
 
@@ -47,9 +48,9 @@ export function BookingDraftCard({
   }
 
   return (
-    <div className="rounded-2xl border border-line bg-white p-4 shadow-card">
-      <p className="font-display text-ink-900">{card.title}</p>
-      <p className="mt-0.5 text-sm text-ink-900/70">
+    <div className="rounded-2xl border border-border-subtle bg-white p-4 shadow-card">
+      <p className="font-display font-semibold text-ink-900">{card.title}</p>
+      <p className="mt-0.5 text-sm text-ink-500">
         {card.checkIn} – {card.checkOut} · {t("cardGuests", { count: card.guests })} ·{" "}
         {t("cardNights", { count: card.nights })}
       </p>
@@ -57,30 +58,40 @@ export function BookingDraftCard({
       <dl className="mt-3 flex flex-col gap-0.5 text-sm">
         {card.priceLines.map((p) => (
           <div key={p.date} className="flex justify-between">
-            <dt className="text-ink-900/60">
+            <dt className="text-ink-500">
               {p.date}
               {p.season ? ` · ${p.season}` : ""}
             </dt>
-            <dd className="tabular-nums text-ink-900/80">฿{p.priceThb.toLocaleString()}</dd>
+            <dd className="tabular-nums text-ink-700">฿{p.priceThb.toLocaleString()}</dd>
           </div>
         ))}
       </dl>
 
-      <div className="mt-2 flex justify-between border-t border-line pt-2 text-sm font-semibold text-ink-900">
-        <span>{t("cardTotal")}</span>
-        <span className="tabular-nums">฿{card.totalThb.toLocaleString()}</span>
+      <div className="mt-2 flex items-baseline justify-between border-t border-border-subtle pt-2 text-ink-900">
+        <span className="text-sm font-semibold">{t("cardTotal")}</span>
+        <span className="font-display text-lg font-bold tabular-nums">
+          ฿{card.totalThb.toLocaleString()}
+        </span>
       </div>
 
-      {error && <p className="mt-2 text-xs text-coral-500">{error}</p>}
+      <p className="mt-3 text-center text-xs text-ink-500">{t("cardAiCannotBook")}</p>
+
+      {error && <p className="mt-2 text-xs text-error-600">{error}</p>}
 
       <button
         type="button"
         disabled={pending || confirmed}
         onClick={confirm}
-        className="mt-3 w-full rounded-xl bg-coral-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
+        className={`mt-2 w-full rounded-pill px-4 py-2.5 text-sm font-semibold text-white transition duration-150 ease-out disabled:opacity-50 ${
+          confirmed ? "bg-trust-500" : "bg-brand-500 hover:bg-brand-600"
+        }`}
       >
         {confirmed ? t("cardConfirmed") : pending ? t("cardConfirming") : t("cardConfirm")}
       </button>
+
+      <div className="mt-3">
+        <EscrowStrip variant="compact" step={1} audience="guest" />
+      </div>
     </div>
   );
 }
