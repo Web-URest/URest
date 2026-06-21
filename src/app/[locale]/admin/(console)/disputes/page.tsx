@@ -24,14 +24,14 @@ export default async function DisputesQueuePage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="mt-1 text-sand-300">{t("subtitle")}</p>
+      <p className="mt-1 text-ink-700">{t("subtitle")}</p>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sand-400">{t("empty")}</p>
+        <p className="mt-8 text-ink-500">{t("empty")}</p>
       ) : (
         <table className="mt-6 w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-sand-400">
+            <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-ink-500">
               <th className="py-2 pr-4">{t("colCode")}</th>
               <th className="py-2 pr-4">{t("colListing")}</th>
               <th className="py-2 pr-4">{t("colGuest")}</th>
@@ -42,13 +42,13 @@ export default async function DisputesQueuePage() {
           </thead>
           <tbody>
             {rows.map((d) => (
-              <tr key={d.bookingId} className="border-b border-ink-800 hover:bg-ink-800/40">
-                <td className="py-3 pr-4 text-sand-100">{d.code ?? "—"}</td>
-                <td className="py-3 pr-4 text-sand-300">{d.listingTitle}</td>
-                <td className="py-3 pr-4 text-sand-300">{d.guestName}</td>
+              <tr key={d.bookingId} className="border-b border-border-subtle hover:bg-surface-50">
+                <td className="py-3 pr-4 text-ink-900">{d.code ?? "—"}</td>
+                <td className="py-3 pr-4 text-ink-700">{d.listingTitle}</td>
+                <td className="py-3 pr-4 text-ink-700">{d.guestName}</td>
                 <td className="py-3 pr-4">
                   {d.awaitingAppeal ? (
-                    <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-400">
+                    <span className="rounded-full bg-pending-50 px-2 py-0.5 text-xs font-medium text-pending-700">
                       {t("stateAppeal")}
                     </span>
                   ) : (
@@ -57,7 +57,7 @@ export default async function DisputesQueuePage() {
                     </span>
                   )}
                 </td>
-                <td className="py-3 pr-4 text-sand-400">{bkk(d.createdAt)}</td>
+                <td className="py-3 pr-4 text-ink-500">{bkk(d.createdAt)}</td>
                 <td className="py-3">
                   <Link
                     href={`/admin/disputes/${d.bookingId}`}

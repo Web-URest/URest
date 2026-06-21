@@ -21,7 +21,7 @@ export default async function AdminDashboardPage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t("dashboardTitle")}</h1>
-      <p className="mt-2 text-sand-300">{t("dashboardIntro")}</p>
+      <p className="mt-2 text-ink-700">{t("dashboardIntro")}</p>
     </section>
   );
 }

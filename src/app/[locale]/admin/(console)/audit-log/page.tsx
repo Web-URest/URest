@@ -36,17 +36,17 @@ export default async function AdminAuditLogPage({
     listAuditAdmins(),
   ]);
 
-  const selectClass = "rounded border border-ink-700 bg-ink-800 px-2 py-1 text-sand-50";
+  const selectClass = "rounded border border-border bg-surface-50 px-2 py-1 text-ink-900";
 
   return (
     <section>
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="mt-1 text-sand-300">{t("subtitle")}</p>
+      <p className="mt-1 text-ink-700">{t("subtitle")}</p>
 
       {/* GET filter bar — server-side filtering via query params */}
       <form className="mt-6 flex flex-wrap items-end gap-3 text-sm">
         <label className="flex flex-col gap-1">
-          <span className="text-sand-400">{t("filterAdmin")}</span>
+          <span className="text-ink-500">{t("filterAdmin")}</span>
           <select name="adminId" defaultValue={adminId ?? ""} className={selectClass}>
             <option value="">{t("allAdmins")}</option>
             {admins.map((a) => (
@@ -57,7 +57,7 @@ export default async function AdminAuditLogPage({
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sand-400">{t("filterTarget")}</span>
+          <span className="text-ink-500">{t("filterTarget")}</span>
           <select name="targetType" defaultValue={targetType ?? ""} className={selectClass}>
             <option value="">{t("allTargets")}</option>
             {AUDIT_TARGET_TYPES.map((tt) => (
@@ -70,21 +70,21 @@ export default async function AdminAuditLogPage({
         <button type="submit" className="rounded bg-aqua-600 px-3 py-1.5 font-medium text-ink-900">
           {t("apply")}
         </button>
-        <Link href="/admin/audit-log" className="px-2 py-1.5 text-sand-300 hover:text-sand-50">
+        <Link href="/admin/audit-log" className="px-2 py-1.5 text-ink-700 hover:text-ink-900">
           {t("clear")}
         </Link>
       </form>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sand-400">{t("empty")}</p>
+        <p className="mt-8 text-ink-500">{t("empty")}</p>
       ) : (
         <>
           {rows.length === AUDIT_LIMIT && (
-            <p className="mt-4 text-xs text-sand-400">{t("atCap", { n: AUDIT_LIMIT })}</p>
+            <p className="mt-4 text-xs text-ink-500">{t("atCap", { n: AUDIT_LIMIT })}</p>
           )}
           <table className="mt-4 w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-sand-400">
+              <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-ink-500">
                 <th className="py-2 pr-4">{t("colTime")}</th>
                 <th className="py-2 pr-4">{t("colAdmin")}</th>
                 <th className="py-2 pr-4">{t("colAction")}</th>
@@ -94,26 +94,26 @@ export default async function AdminAuditLogPage({
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-b border-ink-800 align-top hover:bg-ink-800/40">
-                  <td className="py-3 pr-4 text-sand-400">{bkk(r.createdAt)}</td>
-                  <td className="py-3 pr-4 text-sand-300">{r.admin.displayName}</td>
-                  <td className="py-3 pr-4 font-medium text-sand-100">{r.action}</td>
-                  <td className="py-3 pr-4 text-sand-300">
+                <tr key={r.id} className="border-b border-border-subtle align-top hover:bg-surface-50">
+                  <td className="py-3 pr-4 text-ink-500">{bkk(r.createdAt)}</td>
+                  <td className="py-3 pr-4 text-ink-700">{r.admin.displayName}</td>
+                  <td className="py-3 pr-4 font-medium text-ink-900">{r.action}</td>
+                  <td className="py-3 pr-4 text-ink-700">
                     {r.targetType}
-                    <span className="block text-xs text-sand-400">{r.targetId.slice(0, 12)}…</span>
+                    <span className="block text-xs text-ink-500">{r.targetId.slice(0, 12)}…</span>
                   </td>
                   <td className="py-3">
                     {r.before || r.after ? (
                       <details>
-                        <summary className="cursor-pointer text-sand-400 hover:text-sand-50">
+                        <summary className="cursor-pointer text-ink-500 hover:text-ink-900">
                           {t("changesToggle")}
                         </summary>
-                        <pre className="mt-1 max-w-md overflow-x-auto rounded bg-ink-800 p-2 text-xs text-sand-300">
+                        <pre className="mt-1 max-w-md overflow-x-auto rounded bg-surface-50 p-2 text-xs text-ink-700">
                           {JSON.stringify({ before: r.before, after: r.after }, null, 2)}
                         </pre>
                       </details>
                     ) : (
-                      <span className="text-sand-400">—</span>
+                      <span className="text-ink-500">—</span>
                     )}
                   </td>
                 </tr>

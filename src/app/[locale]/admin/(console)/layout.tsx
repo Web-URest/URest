@@ -6,7 +6,9 @@ import { Link, redirect } from "@/i18n/navigation";
 import { AdminLogoutButton } from "./logout-button";
 
 /**
- * Gate + ink "back-of-house" shell for the admin console (DESIGN_SPEC §5.9).
+ * Gate + v3 light "back-of-house" shell for the admin console (supersedes the ink
+ * §5.9 shell — the security boundary is the separate /admin + AdminUser/TOTP surface,
+ * not darkness).
  *
  * The redirect here is UX convenience, NOT the security boundary — every admin
  * page and server action re-checks via `getAdmin`/`requireAdmin` (server
@@ -26,36 +28,39 @@ export default async function AdminConsoleLayout({
 
   const t = await getTranslations("Admin");
 
+  const navCls =
+    "rounded-input px-2.5 py-1 text-ink-700 transition hover:bg-surface-50 hover:text-ink-900";
+
   return (
-    <div className="min-h-screen bg-ink-900 text-sand-50">
-      <header className="flex items-center justify-between border-b border-ink-700 px-6 py-4">
-        <span className="font-bold">{t("consoleTitle")}</span>
+    <div className="min-h-screen bg-surface-50 text-ink-900">
+      <header className="flex items-center justify-between border-b border-border-subtle bg-white px-6 py-4">
+        <span className="font-display font-bold text-ink-900">{t("consoleTitle")}</span>
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-sand-300">{admin?.displayName}</span>
+          <span className="text-ink-500">{admin?.displayName}</span>
           <AdminLogoutButton />
         </div>
       </header>
-      <nav className="flex gap-5 border-b border-ink-700 px-6 py-2 text-sm">
-        <Link href="/admin/approval-queue" className="text-sand-300 hover:text-sand-50">
+      <nav className="flex flex-wrap gap-2 border-b border-border-subtle bg-white px-6 py-2 text-sm font-medium">
+        <Link href="/admin/approval-queue" className={navCls}>
           {t("nav.approvalQueue")}
         </Link>
-        <Link href="/admin/payouts" className="text-sand-300 hover:text-sand-50">
+        <Link href="/admin/payouts" className={navCls}>
           {t("nav.payouts")}
         </Link>
-        <Link href="/admin/reviews" className="text-sand-300 hover:text-sand-50">
+        <Link href="/admin/reviews" className={navCls}>
           {t("nav.reviews")}
         </Link>
-        <Link href="/admin/disputes" className="text-sand-300 hover:text-sand-50">
+        <Link href="/admin/disputes" className={navCls}>
           {t("nav.disputes")}
         </Link>
-        <Link href="/admin/unanswered-questions" className="text-sand-300 hover:text-sand-50">
+        <Link href="/admin/unanswered-questions" className={navCls}>
           {t("nav.unanswered")}
         </Link>
-        <Link href="/admin/audit-log" className="text-sand-300 hover:text-sand-50">
+        <Link href="/admin/audit-log" className={navCls}>
           {t("nav.auditLog")}
         </Link>
       </nav>
-      <main className="px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-[1180px] px-6 py-8">{children}</main>
     </div>
   );
 }

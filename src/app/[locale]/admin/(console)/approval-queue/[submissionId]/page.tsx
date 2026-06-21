@@ -78,19 +78,19 @@ export default async function ReviewDetailPage({
   return (
     <section className="flex flex-col gap-8">
       <div>
-        <Link href="/admin/approval-queue" className="text-sm text-sand-400 hover:text-sand-200">
+        <Link href="/admin/approval-queue" className="text-sm text-ink-500 hover:text-ink-700">
           {t("backToQueue")}
         </Link>
         <h1 className="mt-2 text-2xl font-bold">{listing.title}</h1>
-        <p className="mt-1 text-sand-300">{submission.user.displayName}</p>
+        <p className="mt-1 text-ink-700">{submission.user.displayName}</p>
       </div>
 
       {/* KYC documents */}
       <div>
-        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-sand-300">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-ink-700">
           {t("docsTitle")}
         </h2>
-        <p className="mb-3 text-xs text-sand-500">{t("docExpiresHint")}</p>
+        <p className="mb-3 text-xs text-ink-500">{t("docExpiresHint")}</p>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           {docs.map((d) => (
             <a
@@ -98,11 +98,11 @@ export default async function ReviewDetailPage({
               href={d.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-xl border border-ink-700 p-2 hover:border-aqua-500"
+              className="block rounded-xl border border-border p-2 hover:border-aqua-500"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={d.url} alt={docLabels(d.type)} className="h-40 w-full rounded-lg object-cover" />
-              <span className="mt-2 block text-xs text-sand-300">{docLabels(d.type)}</span>
+              <span className="mt-2 block text-xs text-ink-700">{docLabels(d.type)}</span>
             </a>
           ))}
         </div>
@@ -111,7 +111,7 @@ export default async function ReviewDetailPage({
       {/* Listing photos */}
       {listing.photos.length > 0 ? (
         <div>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-sand-300">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-700">
             {t("photosTitle")}
           </h2>
           <div className="flex gap-3 overflow-x-auto">
@@ -131,10 +131,10 @@ export default async function ReviewDetailPage({
       {/* Map + payout name (§5.1 spot checks) */}
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-sand-300">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-700">
             {t("mapTitle")}
           </h2>
-          <p className="text-sand-300">{listing.address || "—"}</p>
+          <p className="text-ink-700">{listing.address || "—"}</p>
           {mapsUrl ? (
             <a
               href={mapsUrl}
@@ -147,16 +147,16 @@ export default async function ReviewDetailPage({
           ) : null}
         </div>
         <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-sand-300">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-700">
             {t("payoutNameLabel")}
           </h2>
-          <p className="text-sand-100">{payout?.accountName ?? "—"}</p>
+          <p className="text-ink-900">{payout?.accountName ?? "—"}</p>
         </div>
       </div>
 
       {/* Review checklist (spot-check reminders) */}
-      <ul className="space-y-1 text-sm text-sand-300">
-        <li className="text-xs font-semibold uppercase tracking-wide text-sand-400">
+      <ul className="space-y-1 text-sm text-ink-700">
+        <li className="text-xs font-semibold uppercase tracking-wide text-ink-500">
           {t("checklistTitle")}
         </li>
         <li>· {t("checkNamesMatch")}</li>
@@ -166,9 +166,9 @@ export default async function ReviewDetailPage({
       </ul>
 
       {/* Legal badge — independent of approval (AC#3) */}
-      <div className="rounded-xl border border-ink-700 p-4">
-        <h2 className="text-sm font-semibold text-sand-100">{t("legalBadgeTitle")}</h2>
-        <p className="mt-1 text-xs text-sand-400">{t("legalBadgeIntro")}</p>
+      <div className="rounded-xl border border-border p-4">
+        <h2 className="text-sm font-semibold text-ink-900">{t("legalBadgeTitle")}</h2>
+        <p className="mt-1 text-xs text-ink-500">{t("legalBadgeIntro")}</p>
         <div className="mt-3 flex items-center gap-3">
           {listing.legalBadgeAt ? (
             <span className="rounded-full bg-jade-500/20 px-2 py-0.5 text-xs text-jade-500">
@@ -178,7 +178,7 @@ export default async function ReviewDetailPage({
           <form action={legalBadgeAction.bind(null, listing.id, true)}>
             <button
               type="submit"
-              className="rounded border border-ink-600 px-3 py-1 text-xs text-sand-200 hover:border-jade-500"
+              className="rounded border border-border px-3 py-1 text-xs text-ink-700 hover:border-jade-500"
             >
               {t("grantBadge")}
             </button>
@@ -186,7 +186,7 @@ export default async function ReviewDetailPage({
           <form action={legalBadgeAction.bind(null, listing.id, false)}>
             <button
               type="submit"
-              className="rounded border border-ink-600 px-3 py-1 text-xs text-sand-400 hover:border-sand-500"
+              className="rounded border border-border px-3 py-1 text-xs text-ink-500 hover:border-ink-900"
             >
               {t("refuseBadge")}
             </button>
@@ -196,8 +196,8 @@ export default async function ReviewDetailPage({
 
       {/* Decision (only while PENDING_REVIEW) */}
       {pending ? (
-        <div className="flex flex-col gap-6 border-t border-ink-700 pt-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-sand-300">
+        <div className="flex flex-col gap-6 border-t border-border pt-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-700">
             {t("decisionTitle")}
           </h2>
 
@@ -212,11 +212,11 @@ export default async function ReviewDetailPage({
 
           {/* Needs-info: itemized checklist */}
           <form action={needsInfoAction.bind(null, submission.id)} className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-sand-200">{t("needsInfoTitle")}</p>
-            <p className="text-xs text-sand-400">{t("needsInfoIntro")}</p>
+            <p className="text-sm font-medium text-ink-700">{t("needsInfoTitle")}</p>
+            <p className="text-xs text-ink-500">{t("needsInfoIntro")}</p>
             {NEEDS_INFO_ITEM_KEYS.map((key) => (
               <div key={key} className="flex items-center gap-2">
-                <label className="flex min-w-[16rem] items-center gap-2 text-sm text-sand-200">
+                <label className="flex min-w-[16rem] items-center gap-2 text-sm text-ink-700">
                   <input type="checkbox" name="items" value={key} />
                   {t(`items.${key}`)}
                 </label>
@@ -224,13 +224,13 @@ export default async function ReviewDetailPage({
                   type="text"
                   name={`note:${key}`}
                   placeholder={t("itemNotePlaceholder")}
-                  className="flex-1 rounded border border-ink-700 bg-ink-800 px-2 py-1 text-xs text-sand-100 placeholder:text-sand-500"
+                  className="flex-1 rounded border border-border bg-surface-50 px-2 py-1 text-xs text-ink-900 placeholder:text-ink-500"
                 />
               </div>
             ))}
             <button
               type="submit"
-              className="mt-1 w-fit rounded-full border border-ink-600 px-5 py-2 text-sm text-sand-200 hover:border-aqua-500"
+              className="mt-1 w-fit rounded-full border border-border px-5 py-2 text-sm text-ink-700 hover:border-aqua-500"
             >
               {t("sendNeedsInfo")}
             </button>
@@ -238,12 +238,12 @@ export default async function ReviewDetailPage({
 
           {/* Reject: reason required */}
           <form action={rejectAction.bind(null, submission.id)} className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-sand-200">{t("reasonLabel")}</label>
+            <label className="text-sm font-medium text-ink-700">{t("reasonLabel")}</label>
             <textarea
               name="reason"
               required
               rows={2}
-              className="rounded-xl border border-ink-700 bg-ink-800 px-3 py-2 text-sm text-sand-100 placeholder:text-sand-500"
+              className="rounded-xl border border-border bg-surface-50 px-3 py-2 text-sm text-ink-900 placeholder:text-ink-500"
             />
             <button
               type="submit"
