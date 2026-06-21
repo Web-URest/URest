@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Anuphan, Chonburi } from "next/font/google";
+import { Anuphan, Prompt } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { routing } from "@/i18n/routing";
@@ -14,10 +14,10 @@ const anuphan = Anuphan({
   display: "swap",
 });
 
-const chonburi = Chonburi({
+const prompt = Prompt({
   subsets: ["thai", "latin"],
-  weight: "400",
-  variable: "--font-chonburi",
+  weight: ["500", "600", "700"],
+  variable: "--font-prompt",
   display: "swap",
 });
 
@@ -41,7 +41,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale}>
-      <body className={`${anuphan.variable} ${chonburi.variable} antialiased`}>
+      <body className={`${anuphan.variable} ${prompt.variable} antialiased`}>
         <NextIntlClientProvider>
           <Topbar />
           {children}

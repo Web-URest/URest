@@ -36,9 +36,9 @@ export type PillStatus = BookingStatus | PayoutStatus | ListingStatus;
 const STYLES: Record<PillStatus, string> = {
   // Booking states
   REQUESTED: "bg-sand-100 text-ink-900",
-  AWAITING_PAYMENT: "bg-coral-500 text-white",
+  AWAITING_PAYMENT: "bg-gold-100 text-gold-800",
   CONFIRMED: "bg-aqua-100 text-teal-600",
-  CHECKED_IN: "bg-aqua-500 text-ink-900",
+  CHECKED_IN: "bg-aqua-500 text-white",
   DISPUTED: "bg-gold-100 text-gold-800",
   COMPLETED: "bg-jade-100 text-jade-500",
   DECLINED: "bg-sand-300 text-ink-900/60",
