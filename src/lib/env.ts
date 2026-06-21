@@ -22,8 +22,8 @@ const schema = z.object({
     .min(44, "DATA_ENCRYPTION_KEY must be 32 bytes base64-encoded (44 chars)"),
 
   // --- Phase 1: auth — multi-provider login (ADR-007) ---
-  // LINE landed first; Google/Facebook/email+password are later providers
-  // (uncomment + register the OAuth apps when each lands).
+  // Google is the active provider; LINE is disabled (optional below);
+  // Facebook/email+password are later providers (uncomment + register when each lands).
   /** Auth.js session/CSRF signing secret. `openssl rand -base64 32`. */
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be ≥32 chars (openssl rand -base64 32)"),
   /**
@@ -34,10 +34,12 @@ const schema = z.object({
   ADMIN_SESSION_SECRET: z
     .string()
     .min(32, "ADMIN_SESSION_SECRET must be ≥32 chars (openssl rand -base64 32)"),
-  /** LINE Login channel ID (LINE Developers console). */
-  LINE_CLIENT_ID: z.string().min(1),
-  /** LINE Login channel secret. */
-  LINE_CLIENT_SECRET: z.string().min(1),
+  /** Google OAuth 2.0 client (Google Cloud console) — the active login provider. */
+  GOOGLE_CLIENT_ID: z.string().min(1),
+  GOOGLE_CLIENT_SECRET: z.string().min(1),
+  /** LINE Login — DISABLED for now (ADR-007); optional so the app boots without it. */
+  LINE_CLIENT_ID: z.string().min(1).optional(),
+  LINE_CLIENT_SECRET: z.string().min(1).optional(),
 
   // --- Media storage: Cloudflare R2 (ADR-002/010, issue #11) ---
   /** R2 account id → endpoint https://{id}.r2.cloudflarestorage.com */
@@ -50,8 +52,6 @@ const schema = z.object({
   R2_PRIVATE_BUCKET: z.string().min(1),
   /** CDN base URL for the public bucket (no trailing slash), e.g. https://media.urest.app */
   R2_PUBLIC_BASE_URL: z.string().url(),
-  // GOOGLE_CLIENT_ID: z.string().min(1),
-  // GOOGLE_CLIENT_SECRET: z.string().min(1),
   // FACEBOOK_CLIENT_ID: z.string().min(1),
   // FACEBOOK_CLIENT_SECRET: z.string().min(1),
 

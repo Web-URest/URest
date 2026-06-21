@@ -9,10 +9,10 @@ export function SignInButton({ callbackUrl = "/" }: { callbackUrl?: string }) {
   return (
     <button
       type="button"
-      onClick={() => signIn("line", { redirectTo: callbackUrl })}
+      onClick={() => signIn("google", { redirectTo: callbackUrl })}
       className="rounded-full bg-teal-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-ink-700"
     >
-      {t("signInWithLine")}
+      {t("signInWithGoogle")}
     </button>
   );
 }

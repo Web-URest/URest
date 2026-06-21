@@ -1,50 +1,21 @@
 import { describe, expect, it } from "vitest";
 
+import { env } from "@/lib/env";
 import { authConfig } from "./auth.config";
 
-type ProfileFn = (profile: Record<string, unknown>) => {
-  id: string;
-  name: string;
-  email: string | null;
-  image: string | null;
-  lineUserId: string;
-};
+describe("auth providers", () => {
+  it("registers Google as the sole login provider, wired to env credentials", () => {
+    expect(authConfig.providers).toHaveLength(1);
 
-function lineProfileMapper(): ProfileFn {
-  // Auth.js stashes user-supplied provider overrides (clientId, profile, …)
-  // under `.options` until NextAuth normalizes them at init.
-  const provider = authConfig.providers[0] as
-    | { options?: { profile?: ProfileFn } }
-    | undefined;
-  const profile = provider?.options?.profile;
-  if (!profile) {
-    throw new Error("LINE provider profile() not configured");
-  }
-  return profile;
-}
+    // Auth.js stashes user-supplied overrides (clientId/secret) under `.options`
+    // until NextAuth normalizes them at init; the provider's own id is top-level.
+    const provider = authConfig.providers[0] as {
+      id?: string;
+      options?: { clientId?: string; clientSecret?: string };
+    };
 
-describe("LINE provider profile() mapping", () => {
-  it("maps sub→lineUserId/id, name→name, picture→image", () => {
-    const out = lineProfileMapper()({
-      sub: "Uabc123",
-      name: "สมหญิง",
-      picture: "https://line/pic.png",
-      email: "s@example.com",
-    });
-    expect(out).toMatchObject({
-      id: "Uabc123",
-      lineUserId: "Uabc123",
-      name: "สมหญิง",
-      image: "https://line/pic.png",
-      email: "s@example.com",
-    });
-  });
-
-  it("falls back to 'LINE user' and null email/image when claims absent", () => {
-    const out = lineProfileMapper()({ sub: "Uxyz" });
-    expect(out.name).toBe("LINE user");
-    expect(out.email).toBeNull();
-    expect(out.image).toBeNull();
-    expect(out.lineUserId).toBe("Uxyz");
+    expect(provider.id).toBe("google");
+    expect(provider.options?.clientId).toBe(env.GOOGLE_CLIENT_ID);
+    expect(provider.options?.clientSecret).toBe(env.GOOGLE_CLIENT_SECRET);
   });
 });

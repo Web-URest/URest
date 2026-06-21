@@ -6,8 +6,8 @@
   },
   "Auth": {
     "signInTitle": "Sign in",
-    "signInSubtitle": "Use your LINE account to sign in",
-    "signInWithLine": "Sign in with LINE",
+    "signInSubtitle": "Use your Google account to sign in",
+    "signInWithGoogle": "Sign in with Google",
     "signOut": "Sign out",
     "errorGeneric": "Sign-in failed. Please try again.",
     "errorAccountNotLinked": "This account is already linked to another sign-in method."
