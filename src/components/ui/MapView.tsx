@@ -100,7 +100,7 @@ export function MapView({ pins, centerLat, centerLng, onPinClick }: MapViewProps
       el.className = [
         "flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold shadow-card cursor-pointer transition",
         pin.selected
-          ? "bg-aqua-500 text-ink-900 scale-110"
+          ? "bg-aqua-500 text-white scale-110"
           : "bg-white text-ink-900 hover:bg-aqua-100",
       ].join(" ");
       el.textContent = formatSatang(pin.priceSatang);

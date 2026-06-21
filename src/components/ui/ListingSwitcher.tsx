@@ -28,7 +28,7 @@ export function ListingSwitcher({
             onClick={() => onSelect(l.id)}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition duration-150 ease-out ${
               selected
-                ? "bg-aqua-500 text-ink-900 ring-2 ring-aqua-500"
+                ? "bg-aqua-500 text-white ring-2 ring-aqua-500"
                 : "border border-line bg-sand-100 text-ink-900 hover:bg-sand-50"
             }`}
           >

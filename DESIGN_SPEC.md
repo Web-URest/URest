@@ -33,12 +33,19 @@ This document is the contract for all UI implementation in Phases 1–5. If code
 1. **Trust is visible, not claimed.** Verification badges, the escrow strip, and review counts appear at every decision point. Never use trust language without a UI element backing it.
 2. **Thai-first.** All copy designed in Thai first; English is the translation. Numerals: Arabic digits. Currency: `฿12,900` (no decimals). Dates: `ศ. 19 มิ.ย.` short form.
 3. **Mobile-first.** Every screen is designed at 390px and then adapted up. Primary actions live in a sticky bottom bar on mobile.
-4. **One coral per screen.** Coral marks THE money action (pay, payout). If a screen has two coral elements, one is wrong.
+4. **One money action per screen.** Solid **ink** (near-black) marks THE money action (pay, payout); if a screen has two, one is wrong. (v2 Clean & Modern — was coral; see the §3 amendment.)
 5. **States are first-class.** A booking has 10 states; each has a defined pill color and copy. Never render a state as plain text.
 
 ## 3. Design tokens
 
 Implemented in `src/app/globals.css` under `@theme`. Use these names in the app (Tailwind utilities / CSS variables).
+
+> ⚠️ **Superseded by Identity v2 "Clean & Modern" (2026-06-21 — see the ADR-013 amendment).**
+> The palette, type, and motifs in this section describe the **retired v1 "Thai poolside"** identity.
+> **Authoritative current values live in `src/app/globals.css` `@theme`** — token *names* were kept,
+> *values* remapped. Role map: `aqua`/`jade`/`teal` → **emerald** (primary / verified / success),
+> `coral` → **red** (cancel / frozen / error), `gold` → **amber** (pending / star ratings),
+> `sand` → **white / neutral grays**. Fonts: **Prompt** (display) + **Anuphan** (body), sans-only.
 
 ### Color
 
@@ -186,7 +193,7 @@ Two flows by listing booking mode:
 
 ## 7. Accessibility & i18n
 
-- WCAG AA contrast on all text (sampled pairs in tokens table are compliant; aqua-500 only ever carries ink-900 text, never white).
+- WCAG AA contrast on all text. (v2 Clean & Modern: the emerald accent `aqua-500` is dark, so it carries **white** text — never dark ink; gold/amber is decorative or large-text only.)
 - Focus visible: 2px aqua ring, 2px offset, everywhere.
 - Touch targets ≥ 44px; countdowns also render absolute time (`ภายใน 21:30 น.`) for clarity.
 - All state pills carry text, never color alone.
