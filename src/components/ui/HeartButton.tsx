@@ -79,7 +79,7 @@ export function HeartButton({
       >
         <span
           aria-hidden
-          className={`text-lg ${saved ? "text-coral-500" : "text-ink-900/40"}`}
+          className={`text-lg ${saved ? "text-brand-500 [animation:heart-pop_200ms_ease-out]" : "text-ink-500"}`}
         >
           {saved ? "♥" : "♡"}
         </span>
@@ -87,7 +87,7 @@ export function HeartButton({
       {errorVisible && (
         <p
           role="alert"
-          className="absolute right-0 top-11 z-10 whitespace-nowrap rounded-md bg-white px-2.5 py-1 text-xs text-coral-600 shadow-card"
+          className="absolute right-0 top-11 z-10 whitespace-nowrap rounded-md bg-white px-2.5 py-1 text-xs text-error-600 shadow-card"
         >
           {t("errorGeneric")}
         </p>
