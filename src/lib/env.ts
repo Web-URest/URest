@@ -27,6 +27,14 @@ const schema = z.object({
   /** Auth.js session/CSRF signing secret. `openssl rand -base64 32`. */
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be ≥32 chars (openssl rand -base64 32)"),
   /**
+   * Public origin Auth.js builds OAuth callback URLs from (e.g. `https://urest.app`).
+   * REQUIRED in production: behind Railway's proxy the standalone server binds
+   * `0.0.0.0:8080`, so without this Auth.js derives `redirect_uri=https://0.0.0.0:8080/...`
+   * and Google rejects it. Optional in dev (localhost auto-detected). Auth.js reads
+   * `AUTH_URL` from env directly; declared here for boot-validation + docs (rule 4).
+   */
+  AUTH_URL: z.string().url().optional(),
+  /**
    * HMAC secret for the admin session token (ADR-007/010). Deliberately
    * SEPARATE from AUTH_SECRET so the admin surface shares no signing material
    * with the consumer auth path. `openssl rand -base64 32`.
