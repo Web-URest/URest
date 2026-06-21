@@ -18,7 +18,7 @@ const STEP: Record<ReportStatus, 1 | 2 | 3> = {
 function dotClass(state: "done" | "current" | "todo"): string {
   const base = "flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold";
   if (state === "done") return `${base} bg-jade-500 text-white`;
-  if (state === "current") return `${base} bg-aqua-500 text-ink-900`;
+  if (state === "current") return `${base} bg-aqua-500 text-white`;
   return `${base} border border-sand-300 text-ink-900/50`;
 }
 

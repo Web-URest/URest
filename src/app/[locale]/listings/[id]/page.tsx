@@ -362,10 +362,10 @@ export default async function ListingPage({ params }: ListingPageProps) {
           </div>
           <button
             type="button"
-            className={`rounded-button px-5 py-2.5 text-sm font-semibold ${
+            className={`rounded-full px-5 py-2.5 text-sm font-semibold ${
               isInstant
-                ? "bg-coral-500 text-white"
-                : "bg-aqua-500 text-ink-900"
+                ? "bg-ink-900 text-white"
+                : "bg-aqua-500 text-white"
             }`}
           >
             {isInstant ? tBook("ctaInstant") : tBook("ctaRequest")}

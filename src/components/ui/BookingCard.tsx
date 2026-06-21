@@ -74,10 +74,10 @@ export function BookingCard({
           const path = isInstant ? "instant" : "request";
           router.push(`/listings/${listingId}/${path}?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
         }}
-        className={`w-full rounded-button py-3 text-sm font-semibold transition ${
+        className={`w-full rounded-full py-3 text-sm font-semibold transition ${
           isInstant
-            ? "bg-coral-500 text-white hover:bg-coral-600 disabled:opacity-40"
-            : "bg-aqua-500 text-ink-900 hover:bg-teal-600 hover:text-white disabled:opacity-40"
+            ? "bg-ink-900 text-white hover:bg-ink-700 disabled:opacity-40"
+            : "bg-aqua-500 text-white hover:bg-teal-600 disabled:opacity-40"
         }`}
       >
         {isInstant ? t("ctaInstant") : t("ctaRequest")}

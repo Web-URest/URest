@@ -1,56 +1,68 @@
 @import "tailwindcss";
 
 /*
- * U-Rest design tokens — single source of truth, mapped 1:1 from
- * DESIGN_SPEC.md §3 ("Modern Thai poolside"). Tailwind v4 @theme makes
- * these available as utilities (bg-ink-900, text-coral-500, rounded-card…)
- * AND as plain CSS variables (var(--color-ink-900)).
+ * U-Rest design tokens — single source of truth.
+ *
+ * Identity v2 "Clean & Modern" (ADR-013 amended 2026-06-21): white surfaces,
+ * near-black ink, a single EMERALD trust-accent (means safe / verified / paid),
+ * warm AMBER for pending/ratings, clean RED for cancel/error. Sans-only type.
+ *
+ * NOTE — naming debt: token *names* are inherited from the retired v1 "Thai
+ * poolside" palette and kept deliberately to avoid churning 440+ usages across
+ * 100 files. Their VALUES are remapped to the v2 palette below. READ THE ROLE,
+ * NOT THE NAME:
+ *   sand-*  → white / neutral surfaces
+ *   aqua-* / teal-* / jade-*  → emerald accent (primary / verified / success)
+ *   gold-*  → amber (pending / disputed / star ratings)
+ *   coral-* → red (cancelled / frozen / reversed / error / urgent)
+ * A rename to semantic names is tracked as optional Phase-B cleanup.
  * Do not invent colors outside this palette — palette drift is grep-able.
  */
 @theme {
-  /* Color — ink (deep pool night) */
-  --color-ink-900: #07272b;
-  --color-ink-700: #0e3a40;
+  /* Ink — near-black text & dark structure (also the money-action button) */
+  --color-ink-900: #14161a;
+  --color-ink-700: #3a4047;
 
-  /* Color — water */
-  --color-teal-600: #0e7c82;
-  --color-aqua-500: #14a8ae;
-  --color-aqua-300: #7fd6d9;
-  --color-aqua-100: #dff4f4;
+  /* Emerald — the trust accent: primary action / links / verified / success */
+  --color-teal-600: #0a6a4f; /* links / dark emerald action */
+  --color-aqua-500: #0b7a5b; /* PRIMARY action, brand accent */
+  --color-aqua-600: #096647; /* darker emerald — hover / pressed */
+  --color-aqua-300: #8fbfb0; /* soft emerald — subtle accents / borders */
+  --color-aqua-100: #e7f4ef; /* emerald tint — verified / safe pill bg */
 
-  /* Color — sand (page is never pure white) */
-  --color-sand-50: #fbf7ee;
-  --color-sand-100: #f4eddd;
-  --color-sand-300: #e5d9bf;
-  --color-line: #e7e0cf;
+  /* Surfaces — clean whites & neutral grays (the page is pure white now) */
+  --color-sand-50: #ffffff; /* page background */
+  --color-sand-100: #f7f8f7; /* subtle panel / hover */
+  --color-sand-300: #d7dbdf; /* strong border / disabled */
+  --color-line: #e6e8eb; /* hairline border */
 
-  /* Color — accents */
-  --color-coral-500: #ff6b4a; /* THE money action, urgent countdowns */
-  --color-coral-600: #e8533a;
-  --color-jade-500: #1e9e6a; /* verified / success / confirmed */
-  --color-gold-400: #e9b949; /* star ratings only */
+  /* Accents */
+  --color-coral-500: #b42318; /* red — cancel / frozen / reversed / urgent */
+  --color-coral-600: #8a1a12;
+  --color-jade-500: #0b7a5b; /* verified / success / confirmed (= emerald) */
+  --color-gold-400: #e0a14b; /* star ratings / amber accent */
 
-  /* Status-pill tints — DESIGN_SPEC §3 pill mapping (soft bg tints + one dark text) */
-  --color-jade-100: #e2f4eb; /* COMPLETED / PAID pill bg */
-  --color-coral-100: #fbe9e4; /* CANCELLED_* / FROZEN / REVERSED pill bg */
-  --color-gold-100: #fbf1d9; /* DISPUTED / PENDING_REVIEW / NEEDS_INFO pill bg */
-  --color-gold-800: #8a6a1f; /* DISPUTED / PENDING_REVIEW / NEEDS_INFO pill text */
+  /* Status-pill tints — soft bg tints + one dark text */
+  --color-jade-100: #e7f4ef; /* COMPLETED / PAID pill bg (emerald tint) */
+  --color-coral-100: #fbeae8; /* CANCELLED_* / FROZEN / REVERSED pill bg (red tint) */
+  --color-gold-100: #faede0; /* DISPUTED / PENDING_REVIEW / NEEDS_INFO pill bg (amber tint) */
+  --color-gold-800: #8a3f08; /* DISPUTED / PENDING_REVIEW / NEEDS_INFO pill text */
 
-  /* Typography (fonts injected by next/font in layout.tsx) */
-  --font-sans: var(--font-anuphan), "Noto Sans Thai", sans-serif;
-  --font-display: var(--font-chonburi), serif;
+  /* Typography — sans only (fonts injected by next/font in layout.tsx) */
+  --font-sans: var(--font-anuphan), "Noto Sans Thai", system-ui, sans-serif;
+  --font-display: var(--font-prompt), var(--font-anuphan), system-ui, sans-serif;
 
-  /* Shape — DESIGN_SPEC §3 radii */
-  --radius-card: 16px;
-  --radius-input: 12px;
-  --radius-photo: 14px;
+  /* Shape — crisper radii */
+  --radius-card: 14px;
+  --radius-input: 10px;
+  --radius-photo: 12px;
 
-  /* Depth — warm shadows, never gray */
-  --shadow-card: 0 1px 2px rgba(7, 39, 43, 0.05);
-  --shadow-raised: 0 14px 40px rgba(7, 39, 43, 0.1);
+  /* Depth — neutral, subtle shadows */
+  --shadow-card: 0 1px 2px rgba(20, 22, 26, 0.05);
+  --shadow-raised: 0 12px 32px -16px rgba(20, 22, 26, 0.18);
 }
 
-/* Thai body text needs taller line-height than Latin defaults (≥1.5, spec says 1.65) */
+/* Thai body text needs taller line-height than Latin defaults (spec: 1.65) */
 body {
   background-color: var(--color-sand-50);
   color: var(--color-ink-900);

@@ -74,3 +74,30 @@ see and review it.
 - ⚠️ Phase 1 builds only a first batch of components (StatusPill, EscrowStrip, Button,
   VillaCard); the rest of the DESIGN_SPEC §6 inventory lands per-feature in its phase
   (CLAUDE.md "don't build ahead").
+
+## Amendment — 2026-06-21: Identity v2 "Clean & Modern" (supersedes Decision 4)
+
+**Decider:** Aok (lead). The v1 "Modern Thai poolside" identity (Decision 4 above; DESIGN_SPEC
+§1/§3) rendered, in practice, as a generic warm-cream/serif look — the exact "looks like an AI
+starter" failure it was meant to avoid. After grilling and a shareable proof artifact (approved
+before any code), the visual identity is replaced. **Behaviour/contract is unchanged** — only the
+skin: PRODUCT_FLOWS state machines, integer-satang money, and Thai-first i18n all stand.
+
+- **v2 identity:** white surfaces, near-black ink text, a single **emerald** trust-accent (means
+  safe / verified / paid), warm **amber** (pending, star ratings), clean **red** (cancel / frozen /
+  error). **Sans-only** type: **Prompt** (display) + **Anuphan** (body) via `next/font`; Chonburi
+  serif and the Sriracha accent are dropped. Motifs retired: pool-tile `TileStrip` → a thin emerald
+  rule; aqua "caustics" placeholders → a calm neutral wash; ripple squiggle → gone. The money
+  action is solid **ink** (supersedes "one coral per screen").
+- **Implementation = value-remap, not rename.** The `@theme` token VALUES in
+  `src/app/globals.css` were remapped to the v2 palette while the token NAMES were kept (≈440
+  usages across ~100 files) to avoid a high-risk mass rename. Read the role, not the name
+  (`aqua`/`jade`/`teal` = emerald, `coral` = red, `gold` = amber, `sand` = white/gray). This naming
+  debt is documented at the top of globals.css; an optional semantic rename is tracked as Phase-B
+  cleanup.
+- **Unchanged:** `globals.css @theme` remains the frozen single source of truth (CLAUDE.md rule 8);
+  `/styleguide` remains the live catalog; the reuse-first contract and design-PR checklist stand.
+  DESIGN_SPEC §3 is annotated as historical-v1 — current values live in globals.css.
+- **Rollout:** prove-first (tokens → component library → `/styleguide` → landing page), then a
+  per-page cascade (Phase B), each a small PR per CONTRIBUTING; `area:design-system`, Aok integrates
+  the frozen shared file.

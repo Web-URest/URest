@@ -13,9 +13,9 @@ type Variant = "primary" | "money" | "teal" | "ghost";
 type Size = "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-aqua-500 text-ink-900 hover:brightness-95",
-  money: "bg-coral-500 text-white hover:bg-coral-600",
-  teal: "bg-teal-600 text-white hover:bg-ink-700",
+  primary: "bg-aqua-500 text-white hover:bg-aqua-600",
+  money: "bg-ink-900 text-white hover:bg-ink-700",
+  teal: "bg-teal-600 text-white hover:bg-aqua-600",
   ghost: "border border-line bg-transparent text-ink-900 hover:bg-sand-100",
 };
 

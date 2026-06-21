@@ -27,7 +27,7 @@ export function WizardStepper({
         const active = n === current;
         const reachable = done && onStepSelect;
         const dot = active
-          ? "bg-aqua-500 text-ink-900"
+          ? "bg-aqua-500 text-white"
           : done
             ? "bg-jade-500 text-white"
             : "bg-sand-300 text-ink-700";

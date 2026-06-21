@@ -38,10 +38,11 @@ export type VillaCardProps = {
   heartSlot?: React.ReactNode;
 };
 
+// Soft, clean photographic stand-in until a real photo exists (never a gray box),
+// hue-varied per villa. Identity v2: a calm emerald→neutral wash, no pool "caustics".
 const CAUSTICS =
-  "radial-gradient(120% 80% at 20% 10%, var(--color-aqua-300), transparent 60%)," +
-  "radial-gradient(120% 90% at 90% 100%, var(--color-aqua-100), transparent 55%)," +
-  "linear-gradient(160deg, var(--color-aqua-500), var(--color-sand-100))";
+  "radial-gradient(120% 85% at 75% 15%, var(--color-sand-100), transparent 60%)," +
+  "linear-gradient(150deg, var(--color-aqua-300) 0%, var(--color-aqua-100) 55%, var(--color-sand-100) 100%)";
 
 export function VillaCard({ villa, heartSlot }: VillaCardProps) {
   const t = useTranslations("VillaCard");
