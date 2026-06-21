@@ -21,7 +21,17 @@
     "how2Title": "Book and pay via escrow",
     "how2Body": "Pay into U-Rest's escrow. We hold the money and don't release it to the host until checkout.",
     "how3Title": "Stay and review",
-    "how3Body": "Enjoy your trip. Once you've checked out, the host gets paid — then leave a review."
+    "how3Body": "Enjoy your trip. Once you've checked out, the host gets paid — then leave a review.",
+    "searchWhere": "Where",
+    "searchWhen": "When",
+    "searchWho": "Who",
+    "searchAnywhere": "Anywhere",
+    "searchAnyDates": "Any week",
+    "searchGuestsUnit": "guests",
+    "categoryTitle": "Popular destinations",
+    "askAiTitle": "Let AI find your villa",
+    "askAiBody": "Tell น้องเรสต์ what you want — e.g. \"villa for 10 near Jomtien beach with karaoke\" — and it finds it.",
+    "askAiCta": "Ask น้องเรสต์"
   },
   "Auth": {
     "signInTitle": "Sign in",

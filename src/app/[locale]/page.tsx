@@ -1,95 +1,101 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { searchListings } from "@/lib/listing/queries";
+import { searchListings, getRegions } from "@/lib/listing/queries";
 import { VillaCard } from "@/components/ui/VillaCard";
 import { EscrowStrip } from "@/components/ui/EscrowStrip";
+import { PillSearchBar } from "@/components/ui/PillSearchBar";
+import { CategoryRail } from "@/components/ui/CategoryRail";
+import { AskAiButton } from "@/components/ui/AskAiButton";
 
 /**
- * Landing page (Identity v2 "Clean & Modern"). Replaces the Phase-1 placeholder.
- * Trust-forward: hero → escrow explainer → verified featured villas → how it works.
- * Featured villas pull the top-rated published Pattaya listings (empty until any exist).
+ * Landing page (Identity v3 "AirBnB skin"). Full-bleed hero with the integrated
+ * PillSearchBar → category rail → photo-forward featured grid → escrow-trust story →
+ * ask-AI band → how it works. Featured villas = top-rated published Pattaya listings.
  */
 export default async function HomePage() {
   const t = await getTranslations("Home");
-  const featured = (
-    await searchListings({
+  const [featuredRaw, regions] = await Promise.all([
+    searchListings({
       regionSlug: "pattaya",
       guests: 1,
       amenities: [],
       instantOnly: false,
       sort: "rating",
-    })
-  ).slice(0, 6);
+    }),
+    getRegions(),
+  ]);
+  const featured = featuredRaw.slice(0, 6);
+  const regionOpts = regions.map((r) => ({ slug: r.slug, label: r.nameTh }));
+  const pillLabels = {
+    where: t("searchWhere"),
+    when: t("searchWhen"),
+    who: t("searchWho"),
+    anywhere: t("searchAnywhere"),
+    anyDates: t("searchAnyDates"),
+    guestsUnit: t("searchGuestsUnit"),
+    search: t("searchCta"),
+  };
 
   return (
-    <main className="bg-sand-50">
+    <main>
       {/* Hero */}
-      <section className="border-b border-line">
-        <div className="mx-auto grid max-w-[1160px] items-center gap-12 px-6 py-16 md:grid-cols-[1.05fr_.95fr] md:py-24">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-aqua-100 px-3 py-1.5 text-sm font-semibold text-teal-600">
-              <ShieldIcon className="h-4 w-4" /> {t("eyebrow")}
-            </span>
-            <h1 className="mt-5 font-display text-4xl font-bold leading-tight tracking-tight text-ink-900 md:text-5xl">
-              {t("title")}
-            </h1>
-            <p className="mt-5 max-w-[30em] text-lg text-ink-700">{t("subtitle")}</p>
-            <p className="mt-4 flex items-center gap-2 text-sm font-medium text-teal-600">
-              <ShieldIcon className="h-[18px] w-[18px]" /> {t("trustLine")}
-            </p>
-
-            {/* Search teaser → /search (the real filters live there) */}
-            <Link
-              href="/search"
-              className="mt-7 flex max-w-[560px] items-center gap-2 rounded-2xl border border-sand-300 bg-white p-2 shadow-card transition hover:shadow-raised"
-            >
-              <span className="flex-1 px-4 py-1.5">
-                <span className="block text-xs font-semibold text-ink-900/50">
-                  {t("searchDestination")}
-                </span>
-                <span className="block text-sm font-medium text-ink-900">
-                  {t("destinationDefault")}
-                </span>
-              </span>
-              <span className="hidden flex-1 border-l border-line px-4 py-1.5 sm:block">
-                <span className="block text-xs font-semibold text-ink-900/50">
-                  {t("searchDates")}
-                </span>
-                <span className="block text-sm font-medium text-ink-900/60">
-                  {t("searchDatesHint")}
-                </span>
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-aqua-500 px-5 py-2.5 text-sm font-semibold text-white">
-                {t("searchCta")}
-              </span>
-            </Link>
+      <section className="border-b border-border-subtle bg-gradient-to-b from-brand-50 to-white">
+        <div className="mx-auto max-w-[1180px] px-6 py-16 text-center md:py-24">
+          <span className="inline-flex items-center gap-2 rounded-full bg-trust-50 px-3 py-1.5 text-sm font-semibold text-trust-700">
+            <ShieldIcon className="h-4 w-4" /> {t("eyebrow")}
+          </span>
+          <h1 className="mx-auto mt-5 max-w-[16em] font-display text-4xl font-bold leading-tight tracking-tight text-ink-900 md:text-5xl">
+            {t("title")}
+          </h1>
+          <p className="mx-auto mt-4 max-w-[34em] text-lg text-ink-700">{t("subtitle")}</p>
+          <div className="mt-8 flex justify-center">
+            <PillSearchBar
+              variant="hero"
+              labels={pillLabels}
+              regions={regionOpts}
+              defaultRegion="pattaya"
+            />
           </div>
-
-          {/* Hero feature card */}
-          <div>
-            {featured[0] ? (
-              <Link href={`/listings/${featured[0].id}`} className="block">
-                <VillaCard villa={toVilla(featured[0])} />
-              </Link>
-            ) : (
-              <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 rounded-card border border-line bg-aqua-100 p-8 text-center">
-                <ShieldIcon className="h-10 w-10 text-teal-600" />
-                <p className="font-display text-xl font-semibold text-ink-900">
-                  {t("trustHeading")}
-                </p>
-              </div>
-            )}
-          </div>
+          <p className="mt-4 flex items-center justify-center gap-2 text-sm font-medium text-trust-700">
+            <ShieldIcon className="h-[18px] w-[18px]" /> {t("trustLine")}
+          </p>
         </div>
       </section>
 
-      {/* Escrow trust */}
-      <section className="border-b border-line bg-sand-100">
-        <div className="mx-auto max-w-[1160px] px-6 py-16 md:py-20">
-          <span className="inline-flex items-center gap-2 rounded-full bg-aqua-100 px-3 py-1.5 text-sm font-semibold text-teal-600">
-            <ShieldIcon className="h-4 w-4" /> {t("trustEyebrow")}
-          </span>
-          <h2 className="mt-3 max-w-[18em] font-display text-2xl font-bold text-ink-900 md:text-3xl">
+      {/* Region category rail */}
+      <section className="border-b border-border-subtle">
+        <div className="mx-auto max-w-[1180px] px-6 py-5">
+          <CategoryRail
+            items={regionOpts.map((r) => ({ key: r.slug, label: r.label }))}
+            hrefFor={(slug) => `/search?region=${slug}`}
+          />
+        </div>
+      </section>
+
+      {/* Featured villas */}
+      {featured.length > 0 ? (
+        <section className="border-b border-border-subtle">
+          <div className="mx-auto max-w-[1180px] px-6 py-14">
+            <h2 className="font-display text-2xl font-bold text-ink-900 md:text-3xl">
+              {t("featuredHeading")}
+            </h2>
+            <p className="mt-1 text-sm text-ink-500">{t("featuredEyebrow")}</p>
+            <div className="mt-8 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((l) => (
+                <Link key={l.id} href={`/listings/${l.id}`} className="block">
+                  <VillaCard villa={toVilla(l)} chrome="bare" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Escrow-trust story */}
+      <section className="border-b border-border-subtle bg-surface-50">
+        <div className="mx-auto max-w-[1180px] px-6 py-16">
+          <span className="text-sm font-semibold text-trust-700">{t("trustEyebrow")}</span>
+          <h2 className="mt-2 max-w-[18em] font-display text-2xl font-bold text-ink-900 md:text-3xl">
             {t("trustHeading")}
           </h2>
           <p className="mt-3 max-w-[40em] text-ink-700">{t("trustBody")}</p>
@@ -99,32 +105,18 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured villas */}
-      {featured.length > 0 && (
-        <section className="border-b border-line">
-          <div className="mx-auto max-w-[1160px] px-6 py-16 md:py-20">
-            <span className="text-sm font-semibold text-teal-600">
-              {t("featuredEyebrow")}
-            </span>
-            <h2 className="mt-2 font-display text-2xl font-bold text-ink-900 md:text-3xl">
-              {t("featuredHeading")}
-            </h2>
-            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((l) => (
-                <Link key={l.id} href={`/listings/${l.id}`} className="block">
-                  <VillaCard villa={toVilla(l)} />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Ask the AI */}
+      <section className="border-b border-border-subtle">
+        <div className="mx-auto max-w-[1180px] px-6 py-12">
+          <AskAiButton variant="card" label={t("askAiTitle")} sublabel={t("askAiBody")} />
+        </div>
+      </section>
 
       {/* How it works */}
-      <section className="bg-sand-100">
-        <div className="mx-auto max-w-[1160px] px-6 py-16 md:py-20">
+      <section className="bg-surface-50">
+        <div className="mx-auto max-w-[1180px] px-6 py-16">
           <div className="text-center">
-            <span className="text-sm font-semibold text-teal-600">{t("howEyebrow")}</span>
+            <span className="text-sm font-semibold text-trust-700">{t("howEyebrow")}</span>
             <h2 className="mt-2 font-display text-2xl font-bold text-ink-900 md:text-3xl">
               {t("howHeading")}
             </h2>
@@ -135,8 +127,11 @@ export default async function HomePage() {
               { n: 2, title: t("how2Title"), body: t("how2Body") },
               { n: 3, title: t("how3Title"), body: t("how3Body") },
             ].map((s) => (
-              <div key={s.n} className="rounded-card border border-line bg-white p-6">
-                <span className="flex h-11 w-11 items-center justify-center rounded-card bg-aqua-100 font-display text-lg font-bold text-teal-600">
+              <div
+                key={s.n}
+                className="rounded-card border border-border-subtle bg-white p-6"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 font-display text-lg font-bold text-brand-700">
                   {s.n}
                 </span>
                 <h3 className="mt-4 font-display text-lg font-semibold text-ink-900">
