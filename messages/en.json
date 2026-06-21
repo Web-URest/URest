@@ -704,6 +704,7 @@
     "cardGuests": "{count} guests",
     "cardNights": "{count} nights",
     "cardTotal": "Total",
+    "cardAiCannotBook": "น้องเรสต์ can't book for you — you always tap to confirm",
     "cardConfirm": "Confirm & send request",
     "cardConfirming": "Sending…",
     "cardConfirmed": "Confirmed ✓",

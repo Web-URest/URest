@@ -704,6 +704,7 @@
     "cardGuests": "{count} คน",
     "cardNights": "{count} คืน",
     "cardTotal": "ราคารวม",
+    "cardAiCannotBook": "น้องเรสต์จองให้ไม่ได้ — คุณกดยืนยันเองเสมอ",
     "cardConfirm": "ยืนยันส่งคำขอจอง",
     "cardConfirming": "กำลังส่ง…",
     "cardConfirmed": "ยืนยันแล้ว ✓",

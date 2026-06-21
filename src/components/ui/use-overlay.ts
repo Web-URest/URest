@@ -12,18 +12,21 @@ export function useOverlay({
   onClose,
   containerRef,
   trap = true,
+  lockScroll = true,
 }: {
   open: boolean;
   onClose: () => void;
   containerRef: RefObject<HTMLElement | null>;
   trap?: boolean;
+  /** Lock body scroll while open (desktop non-modal panels pass false). */
+  lockScroll?: boolean;
 }) {
   useEffect(() => {
     if (!open) return;
 
     const prevActive = document.activeElement as HTMLElement | null;
     const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (lockScroll) document.body.style.overflow = "hidden";
 
     const el = containerRef.current;
     const focusables = (): HTMLElement[] =>
@@ -65,8 +68,8 @@ export function useOverlay({
     document.addEventListener("keydown", onKey, true);
     return () => {
       document.removeEventListener("keydown", onKey, true);
-      document.body.style.overflow = prevOverflow;
+      if (lockScroll) document.body.style.overflow = prevOverflow;
       prevActive?.focus?.();
     };
-  }, [open, onClose, containerRef, trap]);
+  }, [open, onClose, containerRef, trap, lockScroll]);
 }

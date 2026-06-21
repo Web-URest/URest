@@ -8,6 +8,7 @@ import { Topbar } from "@/components/ui/Topbar";
 import { Footer } from "@/components/ui/Footer";
 import { ToastProvider } from "@/components/ui/Toast";
 import { BottomTabBar } from "@/components/ui/BottomTabBar";
+import { ConciergeLauncher } from "@/app/[locale]/(protected)/concierge/ConciergeLauncher";
 import "../globals.css";
 
 const anuphan = Anuphan({
@@ -63,6 +64,7 @@ export default async function LocaleLayout({
                 profile: nav("profile"),
               }}
             />
+            <ConciergeLauncher />
           </ToastProvider>
         </NextIntlClientProvider>
       </body>
