@@ -52,6 +52,8 @@ jobs:
           DATA_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
           AUTH_SECRET: "ci-build-dummy-secret-at-least-32-characters"
           ADMIN_SESSION_SECRET: "ci-build-dummy-admin-secret-at-least-32-chars"
+          GOOGLE_CLIENT_ID: "ci-dummy"
+          GOOGLE_CLIENT_SECRET: "ci-dummy"
           LINE_CLIENT_ID: "ci-dummy"
           LINE_CLIENT_SECRET: "ci-dummy"
           R2_ACCOUNT_ID: "ci-dummy"

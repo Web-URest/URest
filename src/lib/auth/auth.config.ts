@@ -1,5 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
-import Line from "next-auth/providers/line";
+import Google from "next-auth/providers/google";
 
 import { env } from "@/lib/env";
 
@@ -9,30 +9,17 @@ import { env } from "@/lib/env";
  * runtime. The adapter, database-session strategy, and session callback live
  * in `auth.ts` (Node runtime).
  *
- * `LINE_CLIENT_ID/SECRET` are passed explicitly — Auth.js v5 only auto-infers
- * `AUTH_LINE_ID/AUTH_LINE_SECRET`, and CLAUDE.md rule 4 requires config via
- * `env.ts` anyway.
+ * Google is the active login provider (ADR-007 sanctions email/Google/Facebook/
+ * LINE; LINE is disabled for now). Credentials are passed explicitly from
+ * `env.ts` (CLAUDE.md rule 4). The default Google profile maps sub→id, name,
+ * email, picture→image; no `lineUserId` is set, so the adapter stores it null
+ * (`User.lineUserId` is nullable).
  */
 export const authConfig = {
   providers: [
-    Line({
-      clientId: env.LINE_CLIENT_ID,
-      clientSecret: env.LINE_CLIENT_SECRET,
-      authorization: { params: { scope: "profile openid email" } },
-      profile(profile) {
-        // LINE OIDC id_token claims: sub (LINE userId), name, picture; email
-        // only if the channel has Email-permission approval (usually absent).
-        // Returned via an intermediate object so `lineUserId` rides along to
-        // the adapter's createUser without tripping excess-property checks.
-        const user = {
-          id: profile.sub,
-          name: profile.name ?? "LINE user", // mapped to required displayName
-          email: profile.email ?? null,
-          image: profile.picture ?? null,
-          lineUserId: profile.sub,
-        };
-        return user;
-      },
+    Google({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
   ],
   pages: { signIn: "/sign-in" },

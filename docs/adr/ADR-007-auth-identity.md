@@ -24,3 +24,13 @@ One account serves guest+host modes (PRODUCT_FLOWS §1). Thai users have LINE, G
 - ⚠️ **Apple Sign-In is intentionally excluded** (requires a paid Apple Developer account — outside the pilot's ฿1,000/month budget); revisit only if iOS demand proves it.
 - ⚠️ Google and Meta (Facebook Login) become cross-border processors → privacy-policy disclosure + DPAs before launch (ADR-010 §8, PRD §6).
 - ⚠️ Phone OTP needs an SMS provider (e.g. Thai SMS gateways ~฿0.3–0.5/msg) — tiny at pilot volume but it is the one per-user marginal cost; budget line exists in BUSINESS_PLAN.md.
+
+## Amendment — 2026-06-21: Google is the active login provider (LINE disabled)
+
+The first implemented provider is now **Google**, not LINE. The LINE provider is removed
+from `src/lib/auth/auth.config.ts` and `LINE_CLIENT_ID/SECRET` are now optional in `env.ts`
+— an implementation choice within the already-sanctioned multi-provider set (Decision 1),
+not a new decision. Re-enabling LINE later is just restoring the provider + setting its env
+vars. `User.lineUserId` stays nullable (Google users have it null); the optional
+"เชื่อมต่อ LINE" account-link for push (Consequences above) is unaffected. Google is a
+cross-border processor → the privacy-policy disclosure + DPA note (ADR-010 §8) already applies.

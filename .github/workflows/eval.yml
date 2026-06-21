@@ -41,6 +41,8 @@ jobs:
       DATA_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
       AUTH_SECRET: "eval-ci-dummy-secret-at-least-32-characters"
       ADMIN_SESSION_SECRET: "eval-ci-dummy-admin-secret-at-least-32-chars"
+      GOOGLE_CLIENT_ID: "eval-ci"
+      GOOGLE_CLIENT_SECRET: "eval-ci"
       LINE_CLIENT_ID: "eval-ci"
       LINE_CLIENT_SECRET: "eval-ci"
       R2_ACCOUNT_ID: "eval-ci"

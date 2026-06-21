@@ -14,6 +14,8 @@ const TEST_ENV: Record<string, string> = {
   AUTH_SECRET: "e2e-dummy-secret-at-least-32-characters-long",
   ADMIN_SESSION_SECRET: "e2e-dummy-admin-secret-at-least-32-chars-x",
   DATA_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+  GOOGLE_CLIENT_ID: "e2e",
+  GOOGLE_CLIENT_SECRET: "e2e",
   LINE_CLIENT_ID: "e2e",
   LINE_CLIENT_SECRET: "e2e",
   R2_ACCOUNT_ID: "e2e",

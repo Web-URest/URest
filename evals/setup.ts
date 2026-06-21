@@ -6,6 +6,8 @@ process.env.DATABASE_URL ??= "postgresql://urest:urest@localhost:5432/urest_eval
 process.env.DATA_ENCRYPTION_KEY ??= "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 process.env.AUTH_SECRET ??= "eval-auth-secret-at-least-32-chars-long-xx";
 process.env.ADMIN_SESSION_SECRET ??= "eval-admin-session-secret-32-chars-min-x";
+process.env.GOOGLE_CLIENT_ID ??= "eval-google-client-id";
+process.env.GOOGLE_CLIENT_SECRET ??= "eval-google-client-secret";
 process.env.LINE_CLIENT_ID ??= "eval-line-client-id";
 process.env.LINE_CLIENT_SECRET ??= "eval-line-client-secret";
 process.env.R2_ACCOUNT_ID ??= "eval-account";
