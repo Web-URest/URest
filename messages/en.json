@@ -728,6 +728,7 @@
     "undo": "Undo",
     "emptyTitle": "No saved villas yet",
     "emptyHint": "Tap the heart on any villa to save it for later",
+    "emptyCta": "Find a villa",
     "errorGeneric": "Something went wrong, please try again"
   },
   "Host": {

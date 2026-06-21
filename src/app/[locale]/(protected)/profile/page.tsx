@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db";
 import type { NotifPrefs } from "@/lib/notifications/prefs";
+import { Avatar } from "@/components/ui/Avatar";
 
 import { DangerZone } from "./danger-zone";
 import { NotificationPrefs } from "./notification-prefs";
@@ -22,10 +23,25 @@ export default async function ProfilePage() {
 
   return (
     <main className="mx-auto max-w-[760px] space-y-8 px-4 py-12 md:px-6">
-      <h1 className="font-display text-3xl text-ink-900">{t("title")}</h1>
+      <h1 className="font-display text-3xl font-bold text-ink-900">{t("title")}</h1>
 
-      <section className="rounded-2xl border border-line bg-white p-6 shadow-card">
-        <h2 className="font-display text-xl text-ink-900">{t("accountInfo")}</h2>
+      {/* Account header */}
+      <section className="flex items-center gap-4 rounded-2xl border border-border-subtle bg-white p-6 shadow-card">
+        <Avatar
+          name={user?.displayName ?? session?.user?.name}
+          src={session?.user?.image}
+          size="lg"
+        />
+        <div className="min-w-0">
+          <p className="font-display text-xl font-semibold text-ink-900">
+            {user?.displayName ?? "—"}
+          </p>
+          <p className="truncate text-sm text-ink-500">{user?.email ?? ""}</p>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border-subtle bg-white p-6 shadow-card">
+        <h2 className="font-display text-xl font-semibold text-ink-900">{t("accountInfo")}</h2>
         <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
           <dt className="text-ink-700">{t("name")}</dt>
           <dd className="text-ink-900">{user?.displayName ?? "—"}</dd>
