@@ -670,6 +670,8 @@
   },
   "Concierge": {
     "pageTitle": "น้องเรสต์ (AI Concierge)",
+    "launcherLabel": "Ask น้องเรสต์",
+    "closeLabel": "Close",
     "headerSubtitle": "AI villa finder",
     "inputPlaceholder": "Ask น้องเรสต์… e.g. villa for 10 near Jomtien Beach with karaoke",
     "sendButton": "Send",

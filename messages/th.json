@@ -670,6 +670,8 @@
   },
   "Concierge": {
     "pageTitle": "น้องเรสต์",
+    "launcherLabel": "ถามน้องเรสต์",
+    "closeLabel": "ปิด",
     "headerSubtitle": "AI ผู้ช่วยหาที่พัก",
     "inputPlaceholder": "ถามน้องเรสต์... เช่น วิลล่า 10 คน ใกล้หาดจอมเทียน มีคาราโอเกะ",
     "sendButton": "ส่ง",

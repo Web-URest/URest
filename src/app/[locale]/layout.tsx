@@ -5,6 +5,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { routing } from "@/i18n/routing";
 import { Topbar } from "@/components/ui/Topbar";
 import { Footer } from "@/components/ui/Footer";
+import { ConciergeLauncher } from "./(protected)/concierge/ConciergeLauncher";
 import "../globals.css";
 
 const anuphan = Anuphan({
@@ -46,6 +47,7 @@ export default async function LocaleLayout({
           <Topbar />
           {children}
           <Footer />
+          <ConciergeLauncher />
         </NextIntlClientProvider>
       </body>
     </html>

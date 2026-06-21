@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { Heart, User, Menu, MessageSquare } from "lucide-react";
 
 import { auth } from "@/lib/auth/auth";
-import { isKillSwitchActive } from "@/lib/concierge/cost";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
@@ -18,10 +17,8 @@ export type TopbarUser = {
 
 export async function TopbarShell({
   user,
-  conciergeDisabled = false,
 }: {
   user: TopbarUser | null;
-  conciergeDisabled?: boolean;
 }) {
   const t = await getTranslations("Nav");
 
@@ -47,23 +44,8 @@ export async function TopbarShell({
           >
             {t("search")}
           </Link>
-          {conciergeDisabled ? (
-            <span
-              className="cursor-default text-sm font-semibold text-ink-700/40"
-              title="น้องเรสต์ขอพักก่อนนะคะ 🌙"
-            >
-              {t("concierge")}
-            </span>
-          ) : (
-            <Link
-              href="/concierge"
-              className="text-sm font-semibold text-ink-700 transition duration-150 ease-out hover:text-teal-600"
-            >
-              {t("concierge")}
-            </Link>
-          )}
           <Link
-            href="/host/new"
+            href="/listings/new"
             className="text-sm font-semibold text-ink-700 transition duration-150 ease-out hover:text-teal-600"
           >
             {t("becomeHost")}
@@ -131,16 +113,8 @@ export async function TopbarShell({
   );
 }
 
-/** Async wrapper — fetches live session + kill-switch state. */
+/** Async wrapper — fetches the live session for the avatar / sign-in state. */
 export async function Topbar() {
-  const [session, killSwitch] = await Promise.all([
-    auth(),
-    isKillSwitchActive(),
-  ]);
-  return (
-    <TopbarShell
-      user={session?.user ?? null}
-      conciergeDisabled={killSwitch}
-    />
-  );
+  const session = await auth();
+  return <TopbarShell user={session?.user ?? null} />;
 }

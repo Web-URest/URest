@@ -20,7 +20,7 @@ export default async function ConciergePage({ searchParams }: Props) {
         <p className="text-ink-900/60">{t("restModeSub")}</p>
         <Link
           href="/search"
-          className="mt-2 inline-flex items-center justify-center rounded-full bg-aqua-500 px-6 py-3 font-semibold text-ink-900 transition hover:brightness-95"
+          className="mt-2 inline-flex items-center justify-center rounded-full bg-aqua-500 px-6 py-3 font-semibold text-white transition hover:bg-aqua-600"
         >
           {t("restModeSearch")}
         </Link>

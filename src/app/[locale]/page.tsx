@@ -1,8 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { searchListings } from "@/lib/listing/queries";
+import { searchListings, getActiveRegions } from "@/lib/listing/queries";
 import { VillaCard } from "@/components/ui/VillaCard";
 import { EscrowStrip } from "@/components/ui/EscrowStrip";
+import { HeroSearchForm } from "@/components/ui/HeroSearchForm";
 
 /**
  * Landing page (Identity v2 "Clean & Modern"). Replaces the Phase-1 placeholder.
@@ -11,15 +12,23 @@ import { EscrowStrip } from "@/components/ui/EscrowStrip";
  */
 export default async function HomePage() {
   const t = await getTranslations("Home");
-  const featured = (
-    await searchListings({
+  const [regions, pattaya] = await Promise.all([
+    getActiveRegions(),
+    searchListings({
       regionSlug: "pattaya",
       guests: 1,
       amenities: [],
       instantOnly: false,
       sort: "rating",
-    })
-  ).slice(0, 6);
+    }),
+  ]);
+  // Prefer Pattaya (GTM region); fall back to any region so the homepage never looks empty.
+  let featured = pattaya.slice(0, 6);
+  if (featured.length === 0) {
+    featured = (
+      await searchListings({ guests: 1, amenities: [], instantOnly: false, sort: "rating" })
+    ).slice(0, 6);
+  }
 
   return (
     <main className="bg-sand-50">
@@ -38,31 +47,8 @@ export default async function HomePage() {
               <ShieldIcon className="h-[18px] w-[18px]" /> {t("trustLine")}
             </p>
 
-            {/* Search teaser → /search (the real filters live there) */}
-            <Link
-              href="/search"
-              className="mt-7 flex max-w-[560px] items-center gap-2 rounded-2xl border border-sand-300 bg-white p-2 shadow-card transition hover:shadow-raised"
-            >
-              <span className="flex-1 px-4 py-1.5">
-                <span className="block text-xs font-semibold text-ink-900/50">
-                  {t("searchDestination")}
-                </span>
-                <span className="block text-sm font-medium text-ink-900">
-                  {t("destinationDefault")}
-                </span>
-              </span>
-              <span className="hidden flex-1 border-l border-line px-4 py-1.5 sm:block">
-                <span className="block text-xs font-semibold text-ink-900/50">
-                  {t("searchDates")}
-                </span>
-                <span className="block text-sm font-medium text-ink-900/60">
-                  {t("searchDatesHint")}
-                </span>
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-aqua-500 px-5 py-2.5 text-sm font-semibold text-white">
-                {t("searchCta")}
-              </span>
-            </Link>
+            {/* Interactive search — destination + dates + guests, → /search */}
+            <HeroSearchForm regions={regions} />
           </div>
 
           {/* Hero feature card */}

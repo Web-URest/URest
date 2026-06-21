@@ -245,7 +245,7 @@ export function ConciergeChat({ scopedListingId }: Props) {
             type="button"
             onClick={() => void sendMessage(input)}
             disabled={!input.trim() || isLoading}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-aqua-500 text-ink-900 transition hover:brightness-95 disabled:pointer-events-none disabled:opacity-40"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-aqua-500 text-white transition hover:bg-aqua-600 disabled:pointer-events-none disabled:opacity-40"
             aria-label={t("sendButton")}
           >
             <svg

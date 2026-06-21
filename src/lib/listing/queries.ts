@@ -69,7 +69,9 @@ export async function searchListings(params: SearchParams): Promise<SearchListin
         ? { baseWeekdaySatang: "asc" }
         : sort === "price_desc"
           ? { baseWeekdaySatang: "desc" }
-          : { publishedAt: "desc" },
+          : sort === "rating"
+            ? { avgRating: { sort: "desc", nulls: "last" } }
+            : { publishedAt: "desc" },
   });
 
   return listings.map((l: SearchRow) => ({
@@ -91,6 +93,17 @@ export async function searchListings(params: SearchParams): Promise<SearchListin
     rating: l.avgRating === null ? null : Math.round(l.avgRating * 10) / 10,
     reviewCount: l.reviewCount,
   }));
+}
+
+export type ActiveRegion = { slug: string; nameTh: string; nameEn: string };
+
+/** Active (launch-enabled) regions for destination pickers (search hero, etc.). */
+export async function getActiveRegions(): Promise<ActiveRegion[]> {
+  return prisma.region.findMany({
+    where: { isActive: true },
+    select: { slug: true, nameTh: true, nameEn: true },
+    orderBy: { nameTh: "asc" },
+  });
 }
 
 export type ListingDetail = Awaited<ReturnType<typeof getListingDetail>>;
