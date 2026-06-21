@@ -10,10 +10,14 @@ export default function SignInPage({
   const t = useTranslations("Auth");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
-      <h1 className="font-display text-3xl text-ink-900">{t("signInTitle")}</h1>
-      <p className="max-w-sm text-ink-700">{t("signInSubtitle")}</p>
-      <SignInButtonWrapper searchParams={searchParams} />
+    <main className="flex min-h-[80vh] items-center justify-center bg-surface-50 px-4 py-16">
+      <div className="w-full max-w-[420px] rounded-modal border border-border-subtle bg-white p-8 text-center shadow-card">
+        <h1 className="font-display text-2xl font-bold text-ink-900">{t("signInTitle")}</h1>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-ink-700">{t("signInSubtitle")}</p>
+        <div className="mt-6 flex flex-col items-stretch gap-3">
+          <SignInButtonWrapper searchParams={searchParams} />
+        </div>
+      </div>
     </main>
   );
 }

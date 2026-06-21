@@ -10,7 +10,7 @@ export function SignInButton({ callbackUrl = "/" }: { callbackUrl?: string }) {
     <button
       type="button"
       onClick={() => signIn("google", { redirectTo: callbackUrl })}
-      className="rounded-full bg-teal-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-ink-700"
+      className="flex w-full items-center justify-center gap-2 rounded-pill border border-border bg-white px-6 py-3 font-semibold text-ink-900 transition duration-150 ease-out hover:bg-surface-50"
     >
       {t("signInWithGoogle")}
     </button>

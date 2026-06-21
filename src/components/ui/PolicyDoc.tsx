@@ -20,19 +20,19 @@ export interface LegalDoc {
 
 export function PolicyDoc({ doc }: { doc: LegalDoc }) {
   return (
-    <main className="mx-auto max-w-[800px] px-6 py-12 text-ink-900">
-      <p className="rounded-lg border border-gold-400 bg-gold-100 px-4 py-3 text-sm text-gold-800">
+    <main className="mx-auto max-w-[760px] px-6 py-12 text-ink-900">
+      <p className="rounded-card border border-pending-400 bg-pending-50 px-4 py-3 text-sm text-pending-700">
         ⚠️ เอกสารฉบับร่าง — อยู่ระหว่างการตรวจสอบทางกฎหมาย ยังไม่มีผลผูกพันจนกว่าจะเผยแพร่ฉบับสมบูรณ์
       </p>
 
-      <h1 className="mt-8 font-display text-3xl text-ink-900">{doc.title}</h1>
-      <p className="mt-1 text-sm text-ink-700">{doc.updated}</p>
+      <h1 className="mt-8 font-display text-3xl font-bold text-ink-900">{doc.title}</h1>
+      <p className="mt-1 text-sm text-ink-500">{doc.updated}</p>
       {doc.intro && <p className="mt-4 leading-relaxed text-ink-700">{doc.intro}</p>}
 
       <div className="mt-8 space-y-8">
         {doc.sections.map((s, i) => (
           <section key={i}>
-            <h2 className="font-display text-xl text-ink-900">
+            <h2 className="font-display text-xl font-semibold text-ink-900">
               {i + 1}. {s.heading}
             </h2>
             <div className="mt-2 space-y-3">
