@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { formatSatang } from "@/lib/money";
 import { redirect } from "@/i18n/navigation";
+import { StatusPill } from "@/components/ui/StatusPill";
+import { EscrowStrip } from "@/components/ui/EscrowStrip";
 
 import { PaymentPoller } from "./payment-poller";
 import { PaymentTabs } from "./payment-tabs";
@@ -30,18 +32,28 @@ export default async function PayPage({ params }: { params: Promise<{ locale: st
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-5 bg-sand-50 px-4 py-8 md:px-6">
+    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-5 px-4 py-8 md:px-6">
       <PaymentPoller bookingId={bookingId} payByIso={booking.payBy.toISOString()} />
-      <div className="rounded-card bg-coral-500 px-4 py-3 text-white shadow-card">
-        <p className="font-display text-lg">
-          {t("payTitle")} · {formatSatang(booking.totalSatang)}
-        </p>
+
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-bold text-ink-900">{t("payTitle")}</h1>
+        <StatusPill status="AWAITING_PAYMENT" />
+      </div>
+
+      {/* Urgent payment countdown — red is correct (genuine urgency, not brand) */}
+      <div className="rounded-card bg-error-500 px-4 py-3 text-white shadow-card">
+        <p className="font-display text-xl font-bold">{formatSatang(booking.totalSatang)}</p>
         <p className="text-sm text-white/90">{t("payCountdown")}</p>
       </div>
+
+      {/* Trust: where the money is going (green escrow) */}
+      <EscrowStrip variant="full" step={1} audience="guest" />
+
       <PaymentTabs bookingId={bookingId} publicKey={env.OPN_PUBLIC_KEY} />
-      <div className="rounded-card border border-line bg-white p-4 text-sm text-ink-900/70 shadow-card">
+
+      <div className="rounded-card border border-border-subtle bg-white p-4 text-sm text-ink-700 shadow-card">
         <p>{t("payEscrowNote")}</p>
-        <p className="mt-2 text-ink-900/90">{t("payRefundPromise")}</p>
+        <p className="mt-2 text-ink-900">{t("payRefundPromise")}</p>
       </div>
     </main>
   );

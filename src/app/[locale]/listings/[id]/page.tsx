@@ -5,7 +5,7 @@ import { getListingDetail } from "@/lib/listing/queries";
 import { getSavedVillaIds } from "@/lib/savedVilla";
 import { formatSatang } from "@/lib/money";
 import { ListingGallery } from "@/components/ui/ListingGallery";
-import { BookingCard } from "@/components/ui/BookingCard";
+import { StickyReserveCard } from "@/components/ui/StickyReserveCard";
 import { FaqSection } from "@/components/ui/FaqSection";
 import { HeartButton } from "@/components/ui/HeartButton";
 import { PriceCalendar } from "@/components/ui/PriceCalendar";
@@ -13,6 +13,9 @@ import { EscrowStrip } from "@/components/ui/EscrowStrip";
 import { ReportForm } from "@/components/ui/ReportForm";
 import { submitListingReportAction } from "@/app/[locale]/(protected)/reports/actions";
 import { StarRating } from "@/components/ui/StarRating";
+import { Avatar } from "@/components/ui/Avatar";
+import { TrustBadge } from "@/components/ui/TrustBadge";
+import { AskAiButton } from "@/components/ui/AskAiButton";
 import { Link } from "@/i18n/navigation";
 
 import { FlagReviewButton } from "./flag-review-button";
@@ -87,16 +90,12 @@ export default async function ListingPage({ params }: ListingPageProps) {
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  {listing.legalBadgeAt && (
-                    <span className="rounded-full bg-jade-500/10 px-2.5 py-0.5 text-xs font-semibold text-jade-500">
-                      {t("legalBadge")} ✓
-                    </span>
-                  )}
+                  {listing.legalBadgeAt && <TrustBadge label={`${t("legalBadge")} ✓`} />}
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                       isInstant
-                        ? "bg-aqua-100 text-teal-600"
-                        : "bg-sand-100 text-ink-900/60"
+                        ? "bg-brand-50 text-brand-700"
+                        : "bg-surface-50 text-ink-500"
                     }`}
                   >
                     {isInstant ? t("bookingModeInstant") : t("bookingModeRequest")}
@@ -143,13 +142,11 @@ export default async function ListingPage({ params }: ListingPageProps) {
             </div>
 
             {/* Host snippet */}
-            <div className="flex items-center gap-3 rounded-card border border-line bg-white px-5 py-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-aqua-100 font-display text-xl text-teal-600">
-                {listing.host.displayName?.[0] ?? "H"}
-              </div>
+            <div className="flex items-center gap-3 rounded-card border border-border-subtle bg-white px-5 py-4">
+              <Avatar name={listing.host.displayName} src={listing.host.image} size="lg" />
               <div>
                 <p className="font-semibold text-ink-900">{listing.host.displayName ?? t("hostTitle")}</p>
-                <p className="text-xs text-ink-900/50">{t("hostResponseTime")}</p>
+                <p className="text-xs text-ink-500">{t("hostResponseTime")}</p>
               </div>
             </div>
 
@@ -320,13 +317,13 @@ export default async function ListingPage({ params }: ListingPageProps) {
             {/* FAQ */}
             <FaqSection entries={listing.faqEntries} />
 
-            {/* Concierge chip */}
-            <button
-              type="button"
-              className="self-start rounded-full border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 transition hover:bg-aqua-100"
-            >
-              💬 {t("conciergeChip")}
-            </button>
+            {/* Concierge chip → opens the floating chat scoped to this villa */}
+            <AskAiButton
+              variant="chip"
+              label={t("conciergeChip")}
+              scope={{ listingId: listing.id }}
+              className="self-start"
+            />
 
             {/* Report this listing (§3.8 — any user, incl. logged-out) */}
             <details className="text-xs text-ink-900/40">
@@ -337,39 +334,41 @@ export default async function ListingPage({ params }: ListingPageProps) {
             </details>
           </div>
 
-          {/* Desktop booking card — sticky right column */}
-          <div className="w-full shrink-0 lg:sticky lg:top-6 lg:w-[360px]">
-            <BookingCard
+          {/* Desktop reserve card — sticky right column */}
+          <div id="reserve" className="w-full shrink-0 scroll-mt-20 lg:sticky lg:top-6 lg:w-[360px]">
+            <StickyReserveCard
               listingId={listing.id}
               bookingMode={listing.bookingMode}
               maxGuests={listing.maxGuests}
               pricingConfig={pricingConfig}
               seasons={seasons}
               holidayDates={holidayDates}
+              pricePerNightSatang={listing.baseWeekdaySatang}
+              perNightLabel={tBook("perNight")}
+              avgRating={listing.avgRating ?? undefined}
+              reviewCount={listing.reviewCount > 0 ? listing.reviewCount : undefined}
             />
           </div>
         </div>
       </div>
 
-      {/* Mobile sticky action bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-line bg-white px-4 py-3 lg:hidden">
+      {/* Mobile sticky action bar (CTA scrolls to the in-flow reserve card above) */}
+      <div className="fixed inset-x-0 bottom-[var(--space-bottomtab)] z-30 border-t border-border-subtle bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <span className="font-display text-lg text-ink-900">
+            <span className="font-display text-lg font-bold text-ink-900">
               {formatSatang(listing.baseWeekdaySatang)}
             </span>
-            <span className="text-sm text-ink-900/60"> {tBook("perNight")}</span>
+            <span className="text-sm text-ink-500"> {tBook("perNight")}</span>
           </div>
-          <button
-            type="button"
-            className={`rounded-full px-5 py-2.5 text-sm font-semibold ${
-              isInstant
-                ? "bg-ink-900 text-white"
-                : "bg-aqua-500 text-white"
+          <a
+            href="#reserve"
+            className={`rounded-pill px-5 py-2.5 text-sm font-semibold text-white ${
+              isInstant ? "bg-ink-900" : "bg-brand-500"
             }`}
           >
             {isInstant ? tBook("ctaInstant") : tBook("ctaRequest")}
-          </button>
+          </a>
         </div>
       </div>
 

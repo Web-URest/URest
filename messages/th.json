@@ -512,6 +512,9 @@
   },
   "ListingDetail": {
     "gallery": "ดูรูปทั้งหมด ({count})",
+    "galleryClose": "ปิด",
+    "galleryPrev": "รูปก่อนหน้า",
+    "galleryNext": "รูปถัดไป",
     "verified": "ที่พักผ่านการตรวจสอบ",
     "legalBadge": "ถูกต้องตามกฎหมาย",
     "bookingModeRequest": "ส่งคำขอก่อน",

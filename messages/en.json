@@ -512,6 +512,9 @@
   },
   "ListingDetail": {
     "gallery": "See all photos ({count})",
+    "galleryClose": "Close",
+    "galleryPrev": "Previous photo",
+    "galleryNext": "Next photo",
     "verified": "Verified listing",
     "legalBadge": "Legally registered",
     "bookingModeRequest": "Request first",
