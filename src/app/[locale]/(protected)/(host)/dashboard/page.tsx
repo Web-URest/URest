@@ -57,7 +57,7 @@ export default async function HostDashboardPage() {
             <p className="text-ink-700">{t("listingsEmpty")}</p>
             <Link
               href="/listings/new"
-              className="mt-3 inline-block rounded-full bg-aqua-500 px-5 py-2.5 text-sm font-semibold text-ink-900"
+              className="mt-3 inline-block rounded-full bg-aqua-500 px-5 py-2.5 text-sm font-semibold text-white"
             >
               {t("createListing")}
             </Link>

@@ -69,7 +69,7 @@ export default async function TripPage({ params }: { params: Promise<{ bookingId
         {booking.status === "AWAITING_PAYMENT" && (
           <Link
             href={`/trips/${booking.id}/pay`}
-            className="rounded-card bg-coral-500 px-4 py-2 text-center text-sm font-semibold text-white shadow-card transition hover:brightness-95"
+            className="rounded-card bg-ink-900 px-4 py-2 text-center text-sm font-semibold text-white shadow-card transition hover:bg-ink-700"
           >
             {t("payCta")}
           </Link>

@@ -73,7 +73,7 @@ export function AdminLoginForm() {
       <button
         type="submit"
         disabled={pending || !email || !password || token.length !== 6}
-        className="mt-2 rounded-full bg-aqua-500 px-6 py-3 font-semibold text-ink-900 transition hover:brightness-95 disabled:pointer-events-none disabled:opacity-50"
+        className="mt-2 rounded-full bg-aqua-500 px-6 py-3 font-semibold text-white transition hover:bg-aqua-600 disabled:pointer-events-none disabled:opacity-50"
       >
         {t("submit")}
       </button>

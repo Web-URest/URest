@@ -32,7 +32,7 @@ export default async function PayPage({ params }: { params: Promise<{ locale: st
   return (
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col gap-5 bg-sand-50 px-4 py-8 md:px-6">
       <PaymentPoller bookingId={bookingId} payByIso={booking.payBy.toISOString()} />
-      <div className="rounded-card bg-coral-500 px-4 py-3 text-white shadow-card">
+      <div className="rounded-card bg-ink-900 px-4 py-3 text-white shadow-card">
         <p className="font-display text-lg">
           {t("payTitle")} · {formatSatang(booking.totalSatang)}
         </p>

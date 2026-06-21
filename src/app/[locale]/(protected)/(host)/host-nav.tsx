@@ -30,7 +30,7 @@ export function HostNav() {
           <span className="font-display text-lg">{t("consoleTitle")}</span>
           <Link
             href="/listings/new"
-            className="rounded-full bg-aqua-500 px-4 py-1.5 text-sm font-semibold text-ink-900 transition duration-150 ease-out hover:brightness-95"
+            className="rounded-full bg-aqua-500 px-4 py-1.5 text-sm font-semibold text-white transition duration-150 ease-out hover:bg-aqua-600"
           >
             {t("createListing")}
           </Link>

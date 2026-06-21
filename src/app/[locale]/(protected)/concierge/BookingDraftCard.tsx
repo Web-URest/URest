@@ -77,7 +77,7 @@ export function BookingDraftCard({
         type="button"
         disabled={pending || confirmed}
         onClick={confirm}
-        className="mt-3 w-full rounded-xl bg-coral-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
+        className="mt-3 w-full rounded-xl bg-ink-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-ink-700 disabled:opacity-50"
       >
         {confirmed ? t("cardConfirmed") : pending ? t("cardConfirming") : t("cardConfirm")}
       </button>

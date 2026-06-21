@@ -55,7 +55,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ booking
               <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                 <p
                   className={`max-w-[80%] whitespace-pre-wrap rounded-card px-4 py-2 text-sm shadow-card ${
-                    mine ? "bg-aqua-500 text-ink-900" : "bg-white text-ink-900"
+                    mine ? "bg-aqua-500 text-white" : "bg-white text-ink-900"
                   }`}
                 >
                   {m.bodyMasked}

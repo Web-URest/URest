@@ -1,9 +1,10 @@
 import { getTranslations } from "next-intl/server";
-import { Heart, User, Menu, MessageSquare } from "lucide-react";
+import { Heart, User, MessageSquare } from "lucide-react";
 
 import { auth } from "@/lib/auth/auth";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "./LocaleSwitcher";
+import { MobileNav } from "./MobileNav";
 
 /**
  * TopbarShell — pure rendering (DESIGN_SPEC §4: sand topbar, hairline bottom).
@@ -98,15 +99,8 @@ export async function TopbarShell({
             </Link>
           )}
 
-          {/* Mobile hamburger — drawer not yet implemented; hidden from a11y until wired */}
-          <button
-            type="button"
-            aria-hidden
-            tabIndex={-1}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-700 transition duration-150 ease-out hover:bg-sand-100 md:hidden"
-          >
-            <Menu size={20} />
-          </button>
+          {/* Mobile nav drawer (hidden ≥ md) */}
+          <MobileNav />
         </div>
       </div>
     </header>

@@ -101,7 +101,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             />
             <button
               type="submit"
-              className="rounded-full bg-aqua-500 px-4 py-1.5 text-xs font-semibold text-ink-900"
+              className="rounded-full bg-aqua-500 px-4 py-1.5 text-xs font-semibold text-white"
             >
               {t("searchButton")}
             </button>
@@ -133,7 +133,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <p className="text-sm text-ink-900/60">{t("noResultsHint")}</p>
                 <button
                   type="button"
-                  className="mt-2 rounded-full bg-aqua-500 px-5 py-2.5 text-sm font-semibold text-ink-900"
+                  className="mt-2 rounded-full bg-aqua-500 px-5 py-2.5 text-sm font-semibold text-white"
                 >
                   {t("emptyAiCta")}
                 </button>
