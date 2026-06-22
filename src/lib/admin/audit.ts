@@ -17,7 +17,6 @@ export const AUDIT_TARGET_TYPES = [
   "Review",
   "Message",
   "User",
-  "AdminUser",
 ] as const;
 
 export type AuditTargetType = (typeof AUDIT_TARGET_TYPES)[number];
@@ -44,9 +43,10 @@ export async function loadAuditLog(filter: AuditFilter) {
 
 export const AUDIT_LIMIT = DEFAULT_LIMIT;
 
-/** Admins for the viewer's "filter by admin" dropdown. */
+/** Admins for the viewer's "filter by admin" dropdown (role=ADMIN users only). */
 export async function listAuditAdmins(): Promise<{ id: string; displayName: string }[]> {
-  return prisma.adminUser.findMany({
+  return prisma.user.findMany({
+    where: { role: "ADMIN" },
     select: { id: true, displayName: true },
     orderBy: { displayName: "asc" },
   });

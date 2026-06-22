@@ -70,6 +70,7 @@ async function main() {
         displayName: "โฮสต์ทดสอบ",
         phone: "0800000000",
         phoneVerifiedAt: new Date(),
+        role: "HOST",
       },
     });
 
@@ -81,6 +82,7 @@ async function main() {
         displayName: "บ้านริมหาด",
         phone: "0811111111",
         phoneVerifiedAt: new Date(),
+        role: "HOST",
       },
     });
 
@@ -92,6 +94,7 @@ async function main() {
         displayName: "วิลล่าลักชัวรี่",
         phone: "0822222222",
         phoneVerifiedAt: new Date(),
+        role: "HOST",
       },
     });
 

@@ -13,8 +13,8 @@ const schema = z.object({
     .default("development"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required (see .env.example)"),
   /**
-   * 32 bytes, base64 (44 chars). Field encryption for PayoutAccount /
-   * AdminUser TOTP (ADR-010). Generate per environment — never reuse:
+   * 32 bytes, base64 (44 chars). Field encryption for PayoutAccount account
+   * numbers / admin (role=ADMIN User) TOTP (ADR-010). Generate per environment — never reuse:
    * node -e "console.log(crypto.randomBytes(32).toString('base64'))"
    */
   DATA_ENCRYPTION_KEY: z

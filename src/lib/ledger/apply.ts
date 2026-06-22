@@ -26,7 +26,7 @@ import {
 type Tx = Prisma.TransactionClient;
 
 interface MoveMeta {
-  /** Opn event id, AdminUser id, Dispute id, … — what authorized the move. */
+  /** Opn event id, admin (role=ADMIN User) id, Dispute id, … — what authorized the move. */
   causeRef?: string | null;
   actor?: string | null;
 }

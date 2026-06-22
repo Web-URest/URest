@@ -23,8 +23,8 @@ erDiagram
     Listing ||--o{ SavedVilla : saved_in
     KycSubmission ||--o{ KycDocument : contains
     KycSubmission }o--|| Listing : for
-    AdminUser ||--o{ KycSubmission : reviews
-    AdminUser ||--o{ AuditLog : writes
+    User ||--o{ KycSubmission : reviews
+    User ||--o{ AuditLog : writes
     Listing ||--o{ Booking : booked
     User ||--o{ Booking : books
     Booking ||--o{ Payment : charged_via
@@ -39,7 +39,7 @@ erDiagram
 
 ## Identity domain ✅ (PR #1 — see ADR-007/010)
 
-`User` (nullable PII, soft-delete/anonymize/suspend; **`passwordHash?` argon2id for email+password login, ADR-007**) · `Account`/`Session`/`VerificationToken` (Auth.js, DB sessions; **`Account` holds Google/Facebook/LINE OAuth, accounts linked by verified email**) · `PhoneOtp` (salted hashes) · `AdminUser` (separate table, argon2 + encrypted TOTP) · `KycSubmission` → `KycDocument` (private-R2 keys, `purgeAfter` 90d) · `PayoutAccount` (`accountNumberEnc` AES-GCM) · `Consent` + `AuditLog` (append-only).
+`User` (nullable PII, soft-delete/anonymize/suspend; **`role` GUEST/HOST/ADMIN** — GUEST/HOST is a denormalized label synced with listing ownership in `lib/listing` and NEVER an authz gate, ADMIN is the privilege gate created only by `scripts/admin.ts`; **`passwordHash?` argon2id** [non-null only for ADMIN rows now; consumer email+password login later, ADR-007]; **`totpSecretEnc?` AES-GCM** for ADMIN TOTP) · `Account`/`Session`/`VerificationToken` (Auth.js, DB sessions; **`Account` holds Google/Facebook/LINE OAuth, accounts linked by verified email**) · `PhoneOtp` (salted hashes) · **admin = a `role=ADMIN` `User` row** (was a separate `AdminUser` table; merged 2026-06-21 — the security boundary is now the separate admin cookie + password + TOTP auth path + the `user_admin_requires_credentials` CHECK [constraint №5], ADR-007/010) · `KycSubmission` → `KycDocument` (private-R2 keys, `purgeAfter` 90d) · `PayoutAccount` (`accountNumberEnc` AES-GCM) · `Consent` + `AuditLog` (append-only).
 
 ## Listings domain ✅ (Phase 2 slice — in schema.prisma now)
 
@@ -97,6 +97,7 @@ Prisma can't express these — they are appended by hand to the generated migrat
 | 2 | `Season` ✅ | `EXCLUDE USING gist ("listingId" WITH =, daterange("startDate","endDate",'[]') WITH &&)` | overlapping seasons impossible (§4.1) |
 | 3 | `Report` 🔒 | `CHECK (num_nonnulls("bookingId","listingId","reviewId","reportedUserId") = 1)` | polymorphic target integrity |
 | 4 | `PayoutHold` 🔒 | `CHECK (num_nonnulls("bookingId","hostUserId") = 1)` | hold scope is exactly one of booking / whole host |
+| 5 | `User` ✅ | `CHECK ("role" <> 'ADMIN' OR ("passwordHash" IS NOT NULL AND "totpSecretEnc" IS NOT NULL))` | a `role=ADMIN` row must carry credentials — a bare role-flip stays un-loginable (admin/user merge, ADR-007/010) |
 
 App-level checks still run first in `lib/` for friendly errors; the constraints are the last line of defense.
 

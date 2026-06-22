@@ -7,13 +7,13 @@ import { AdminLogoutButton } from "./logout-button";
 
 /**
  * Gate + v3 light "back-of-house" shell for the admin console (supersedes the ink
- * §5.9 shell — the security boundary is the separate /admin + AdminUser/TOTP surface,
- * not darkness).
+ * §5.9 shell — the security boundary is the separate /admin + admin-cookie + role=ADMIN
+ * + TOTP surface, not darkness).
  *
  * The redirect here is UX convenience, NOT the security boundary — every admin
  * page and server action re-checks via `getAdmin`/`requireAdmin` (server
  * actions never run layouts). `getAdmin` reads only the admin cookie + the
- * `AdminUser` row, so a consumer session can never satisfy it.
+ * `role=ADMIN` `User` row, so a consumer session can never satisfy it.
  */
 export default async function AdminConsoleLayout({
   children,

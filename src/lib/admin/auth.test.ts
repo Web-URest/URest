@@ -4,7 +4,7 @@ const cookieStore = { get: vi.fn(), set: vi.fn(), delete: vi.fn() };
 vi.mock("next/headers", () => ({ cookies: vi.fn(async () => cookieStore) }));
 vi.mock("@/lib/db", () => ({
   prisma: {
-    adminUser: { findUnique: vi.fn() },
+    user: { findUnique: vi.fn() },
     auditLog: { create: vi.fn() },
   },
 }));
@@ -25,7 +25,7 @@ import {
 } from "./auth";
 import { signAdminSession } from "./session";
 
-const findUnique = prisma.adminUser.findUnique as unknown as Mock;
+const findUnique = prisma.user.findUnique as unknown as Mock;
 const auditCreate = prisma.auditLog.create as unknown as Mock;
 const mockVerifyPassword = verifyPassword as unknown as Mock;
 const mockVerifyTotp = verifyTotp as unknown as Mock;
@@ -34,10 +34,11 @@ function admin(over: Record<string, unknown> = {}) {
   return {
     id: "a1",
     email: "admin@urest.local",
+    role: "ADMIN",
     passwordHash: "$argon2id$stored",
     totpSecretEnc: "v1.k1.iv.ct.tag",
     displayName: "ทีมงาน",
-    disabledAt: null,
+    suspendedAt: null,
     ...over,
   };
 }
@@ -75,10 +76,17 @@ describe("loginAdmin", () => {
     expect(auditCreate).not.toHaveBeenCalled();
   });
 
-  it("fails for a disabled admin", async () => {
-    findUnique.mockResolvedValue(admin({ disabledAt: new Date() }));
+  it("fails for a suspended admin", async () => {
+    findUnique.mockResolvedValue(admin({ suspendedAt: new Date() }));
     expect((await loginAdmin("admin@urest.local", "pw", "123456")).ok).toBe(false);
     expect(cookieStore.set).not.toHaveBeenCalled();
+  });
+
+  it("fails for a non-admin user row (role gate) — no cookie, no audit", async () => {
+    findUnique.mockResolvedValue(admin({ role: "GUEST" }));
+    expect((await loginAdmin("admin@urest.local", "pw", "123456")).ok).toBe(false);
+    expect(cookieStore.set).not.toHaveBeenCalled();
+    expect(auditCreate).not.toHaveBeenCalled();
   });
 
   it("fails on a wrong password", async () => {
@@ -111,9 +119,15 @@ describe("getAdmin / requireAdmin", () => {
     expect(await getAdmin()).toMatchObject({ id: "a1", email: "admin@urest.local" });
   });
 
-  it("returns null when the admin was disabled after the token was issued", async () => {
+  it("returns null when the admin was suspended after the token was issued", async () => {
     cookieStore.get.mockReturnValue({ value: signAdminSession("a1") });
-    findUnique.mockResolvedValue(admin({ disabledAt: new Date() }));
+    findUnique.mockResolvedValue(admin({ suspendedAt: new Date() }));
+    expect(await getAdmin()).toBeNull();
+  });
+
+  it("returns null when the row was demoted from ADMIN (consumer session is useless here)", async () => {
+    cookieStore.get.mockReturnValue({ value: signAdminSession("a1") });
+    findUnique.mockResolvedValue(admin({ role: "HOST" }));
     expect(await getAdmin()).toBeNull();
   });
 
