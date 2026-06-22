@@ -31,7 +31,7 @@ export async function Footer() {
         <div className="flex flex-col gap-3">
           <h3 className="text-sm font-semibold text-white/90">{t("col3Title")}</h3>
           <Link href="/search" className={linkCls}>{nav("search")}</Link>
-          <Link href="/host/new" className={linkCls}>{nav("becomeHost")}</Link>
+          <Link href="/listings/new" className={linkCls}>{nav("becomeHost")}</Link>
         </div>
       </div>
       <div className="border-t border-ink-700">

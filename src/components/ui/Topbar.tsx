@@ -46,7 +46,7 @@ export async function TopbarShell({ user }: { user: TopbarUser | null }) {
 
         <div className="flex shrink-0 items-center gap-1.5">
           <Link
-            href="/host/new"
+            href="/listings/new"
             className="hidden rounded-pill px-3 py-2 text-sm font-semibold text-ink-900 transition duration-150 ease-out hover:bg-surface-50 md:inline-block"
           >
             {t("becomeHost")}

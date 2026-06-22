@@ -87,7 +87,7 @@ export function UserMenu({
                 {labels.profile}
               </Link>
               <div className="my-1 border-t border-border-subtle" />
-              <Link href="/host/new" className={itemCls} onClick={() => setOpen(false)}>
+              <Link href="/listings/new" className={itemCls} onClick={() => setOpen(false)}>
                 {labels.becomeHost}
               </Link>
               <button
@@ -111,7 +111,7 @@ export function UserMenu({
                 {labels.signUp}
               </Link>
               <div className="my-1 border-t border-border-subtle" />
-              <Link href="/host/new" className={itemCls} onClick={() => setOpen(false)}>
+              <Link href="/listings/new" className={itemCls} onClick={() => setOpen(false)}>
                 {labels.becomeHost}
               </Link>
             </>
