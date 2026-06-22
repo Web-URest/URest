@@ -83,11 +83,21 @@ async function loadOwnedDraft(listingId: string, hostId: string): Promise<Listin
   return listing;
 }
 
-/** Start a new DRAFT listing for a host in a region (wizard entry). */
+/**
+ * Start a new DRAFT listing for a host in a region (wizard entry). Promotes the
+ * owner GUEST → HOST on their first listing in the same transaction. The role is
+ * a denormalized label (sticky, never auto-reverts) — NOT an authz gate: host
+ * eligibility stays phone-verification (lib/auth/guards), so a still-GUEST user
+ * can reach this and become a HOST here.
+ */
 export async function createDraft(hostId: string, regionId: string): Promise<Listing> {
-  return prisma.listing.create({
-    data: { hostId, regionId, status: ListingStatus.DRAFT, title: "" },
-  });
+  const [listing] = await prisma.$transaction([
+    prisma.listing.create({
+      data: { hostId, regionId, status: ListingStatus.DRAFT, title: "" },
+    }),
+    prisma.user.updateMany({ where: { id: hostId, role: "GUEST" }, data: { role: "HOST" } }),
+  ]);
+  return listing;
 }
 
 /** Apply a step's scalar fields to a DRAFT (autosave). Never changes status. */

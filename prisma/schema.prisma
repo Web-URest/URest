@@ -302,7 +302,20 @@ model NotificationLog {
   @@index([status, createdAt])
 }
 
-// ───────────────────────── Identity (guests + hosts — one account, ADR-007) ─────
+// ───────────────────────── Identity (guests + hosts + admins — one account, ADR-007/010) ─────
+// `role` distinguishes ADMIN (the privilege gate) from consumers. GUEST/HOST is a
+// denormalized label synced with listing ownership (lib/listing) — NEVER an authz
+// gate for consumer actions (a host is still a guest when booking). ADMIN is
+// created ONLY by scripts/admin.ts (manual/seed-only) and is reachable only via
+// the separate admin cookie + password + TOTP (lib/admin) — a consumer session
+// can never satisfy requireAdmin. The `user_admin_requires_credentials` CHECK
+// (DATA_MODEL.md §constraints) makes a bare role-flip un-loginable.
+
+enum UserRole {
+  GUEST
+  HOST
+  ADMIN
+}
 
 model User {
   id                String    @id @default(cuid())
@@ -325,10 +338,20 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Privilege role. GUEST/HOST track listing ownership (synced in lib/listing);
+  /// ADMIN is set ONLY by scripts/admin.ts and gates the admin surface (lib/admin).
+  role          UserRole  @default(GUEST)
+  /// argon2id hash — non-null ONLY for ADMIN rows (CHECK enforced). Consumer
+  /// email+password login (ADR-007) may set it for non-admins in a later phase.
+  passwordHash  String?
+  /// Admin TOTP secret — AES-256-GCM ciphertext via lib/crypto.ts, never plaintext.
+  /// Non-null ONLY for ADMIN rows (ADR-010 §2 — the encrypted-fields list).
+  totpSecretEnc String?
+
   accounts         Account[]
   sessions         Session[]
   phoneOtps        PhoneOtp[]
-  kycSubmissions   KycSubmission[]
+  kycSubmissions   KycSubmission[]   @relation("KycSubmissions")
   payoutAccounts   PayoutAccount[]
   consents         Consent[]
   listings         Listing[]
@@ -338,13 +361,23 @@ model User {
   // Phase 3 (booking/escrow) — guest-side bookings + host accountability
   bookings             Booking[]
   hostStrikes          HostStrike[]
-  payoutHolds          PayoutHold[]
+  payoutHolds          PayoutHold[]  @relation("PayoutHoldHost")
   messagesSent         Message[]
-  reviewsWritten       Review[]
+  reviewsWritten       Review[]      @relation("ReviewAuthor")
   guestRatingsGiven    GuestRating[] @relation("GuestRatingsGiven")
   guestRatingsReceived GuestRating[] @relation("GuestRatingsReceived")
   reportsSubmitted     Report[]      @relation("ReportsSubmitted")
   reportsReceived      Report[]      @relation("ReportsReceived")
+
+  // Admin actions (role=ADMIN rows) — the merged AdminUser surface (ADR-010 §3).
+  // These were AdminUser back-relations before the merge; the FK columns are unchanged.
+  kycReviews          KycSubmission[] @relation("KycReviews")
+  auditLogs           AuditLog[]
+  payoutsPaid         Payout[]
+  payoutHoldsCreated  PayoutHold[]    @relation("PayoutHoldsCreated")
+  payoutHoldsReleased PayoutHold[]    @relation("PayoutHoldsReleased")
+  reviewsRemoved      Review[]        @relation("ReviewRemovedBy")
+  reportsTriaged      Report[]        @relation("ReportTriagedBy")
 
   // Phase 4 (AI concierge)
   conciergesessions ConciergeSession[]
@@ -410,31 +443,11 @@ model PhoneOtp {
   @@index([userId, expiresAt])
 }
 
-// ───────────────────────── Admin (separate auth surface — ADR-007/010) ─────────
-// Deliberately NOT related to User: an authz bug in guest/host code cannot
-// reach admin powers. Created manually (seed script), no self-signup.
-
-model AdminUser {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  /// argon2id hash (set by the admin seed/management script, Phase 2)
-  passwordHash  String
-  /// TOTP secret — AES-256-GCM ciphertext via lib/crypto.ts, never plaintext
-  totpSecretEnc String?
-  displayName   String
-  disabledAt    DateTime?
-  createdAt     DateTime  @default(now())
-
-  kycReviews KycSubmission[]
-  auditLogs  AuditLog[]
-
-  // Phase 3 — admin acts on the money/trust surface
-  payoutsPaid         Payout[]
-  payoutHoldsCreated  PayoutHold[] @relation("PayoutHoldsCreated")
-  payoutHoldsReleased PayoutHold[] @relation("PayoutHoldsReleased")
-  reviewsRemoved      Review[]
-  reportsTriaged      Report[]
-}
+// ───────────────────────── Admin (merged into User as role=ADMIN — ADR-007/010) ─────────
+// The AdminUser table was merged into User (role=ADMIN). The security boundary is
+// no longer the table separation but the separate auth PATH: admin cookie +
+// password + TOTP (lib/admin), plus the `user_admin_requires_credentials` CHECK.
+// ADMIN rows are created ONLY by scripts/admin.ts — no self-signup, no app writer.
 
 // ───────────────────────── KYC & payouts (PRODUCT_FLOWS §4.1 ⑥, §5.1) ──────────
 
@@ -466,9 +479,9 @@ model KycSubmission {
   submittedAt       DateTime  @default(now())
   reviewedAt        DateTime?
 
-  user       User          @relation(fields: [userId], references: [id])
+  user       User          @relation("KycSubmissions", fields: [userId], references: [id])
   listing    Listing?      @relation(fields: [listingId], references: [id])
-  reviewedBy AdminUser?    @relation(fields: [reviewedByAdminId], references: [id])
+  reviewedBy User?         @relation("KycReviews", fields: [reviewedByAdminId], references: [id])
   documents  KycDocument[]
 
   @@index([status, submittedAt]) // approval queue, SLA ordering
@@ -548,7 +561,7 @@ model AuditLog {
   after      Json?
   createdAt  DateTime @default(now())
 
-  admin AdminUser @relation(fields: [adminId], references: [id])
+  admin User @relation(fields: [adminId], references: [id])
 
   @@index([targetType, targetId])
   @@index([adminId, createdAt])
@@ -744,7 +757,7 @@ model LedgerEntry {
   fromState    EscrowState?
   toState      EscrowState
   cause        LedgerCause
-  /// Opn event id, AdminUser id, Dispute id, etc. — who/what authorized it.
+  /// Opn event id, admin (role=ADMIN User) id, Dispute id, etc. — who/what authorized it.
   causeRef     String?
   actor        String?
   createdAt    DateTime     @default(now())
@@ -781,7 +794,7 @@ model Payout {
 
   booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   payoutAccount PayoutAccount @relation(fields: [payoutAccountId], references: [id])
-  paidByAdmin   AdminUser?    @relation(fields: [paidByAdminId], references: [id])
+  paidByAdmin   User?         @relation(fields: [paidByAdminId], references: [id])
 
   @@index([payoutAccountId])
 }
@@ -798,10 +811,10 @@ model PayoutHold {
   releasedAt        DateTime?
   createdAt         DateTime  @default(now())
 
-  booking    Booking?   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  host       User?      @relation(fields: [hostUserId], references: [id], onDelete: Cascade)
-  createdBy  AdminUser  @relation("PayoutHoldsCreated", fields: [createdByAdminId], references: [id])
-  releasedBy AdminUser? @relation("PayoutHoldsReleased", fields: [releasedByAdminId], references: [id])
+  booking    Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  host       User?    @relation("PayoutHoldHost", fields: [hostUserId], references: [id], onDelete: Cascade)
+  createdBy  User     @relation("PayoutHoldsCreated", fields: [createdByAdminId], references: [id])
+  releasedBy User?    @relation("PayoutHoldsReleased", fields: [releasedByAdminId], references: [id])
 
   @@index([bookingId])
   @@index([hostUserId])
@@ -871,9 +884,9 @@ model Review {
   removedReason      String?
   createdAt          DateTime  @default(now())
 
-  booking   Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  author    User       @relation(fields: [authorId], references: [id])
-  removedBy AdminUser? @relation(fields: [removedByAdminId], references: [id])
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  author    User    @relation("ReviewAuthor", fields: [authorId], references: [id])
+  removedBy User?   @relation("ReviewRemovedBy", fields: [removedByAdminId], references: [id])
   reports   Report[]
 }
 
@@ -933,8 +946,8 @@ model Report {
   booking      Booking?   @relation(fields: [bookingId], references: [id], onDelete: SetNull)
   listing      Listing?   @relation(fields: [listingId], references: [id], onDelete: SetNull)
   review       Review?    @relation(fields: [reviewId], references: [id], onDelete: SetNull)
-  reportedUser User?      @relation("ReportsReceived", fields: [reportedUserId], references: [id])
-  triageBy     AdminUser? @relation(fields: [triageByAdminId], references: [id])
+  reportedUser User? @relation("ReportsReceived", fields: [reportedUserId], references: [id])
+  triageBy     User? @relation("ReportTriagedBy", fields: [triageByAdminId], references: [id])
 
   @@index([status, createdAt])
 }

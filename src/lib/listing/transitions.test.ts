@@ -13,6 +13,7 @@ vi.mock("@/lib/db", () => ({
       deleteMany: vi.fn(),
       createMany: vi.fn(),
     },
+    user: { updateMany: vi.fn() },
     $transaction: vi.fn(async (ops: unknown[]) => Promise.all(ops)),
   },
 }));
@@ -31,6 +32,8 @@ const update = prisma.listing.update as unknown as Mock;
 const create = prisma.listing.create as unknown as Mock;
 const photoCount = prisma.listingPhoto.count as unknown as Mock;
 const seasonFindMany = prisma.season.findMany as unknown as Mock;
+const userUpdateMany = prisma.user.updateMany as unknown as Mock;
+const txn = prisma.$transaction as unknown as Mock;
 
 const utc = (s: string) => new Date(`${s}T00:00:00.000Z`);
 
@@ -58,6 +61,17 @@ describe("createDraft", () => {
     expect(create).toHaveBeenCalledWith({
       data: { hostId: "h1", regionId: "r1", status: "DRAFT", title: "" },
     });
+  });
+
+  it("promotes the owner GUEST → HOST in the same transaction", async () => {
+    create.mockResolvedValue(draft());
+    await createDraft("h1", "r1");
+    expect(userUpdateMany).toHaveBeenCalledWith({
+      where: { id: "h1", role: "GUEST" },
+      data: { role: "HOST" },
+    });
+    // both writes commit together via one $transaction (atomic with the listing)
+    expect(txn).toHaveBeenCalledOnce();
   });
 });
 
