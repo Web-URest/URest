@@ -9,8 +9,9 @@ import { env } from "@/lib/env";
  *
  * NOTE — deviation from ADR-010 #4 (which mandates revocable DB sessions for
  * consumers): the admin token is stateless. Immediate account-disable is still
- * guaranteed because `requireAdmin` re-reads the `AdminUser` row on every
- * request and rejects `disabledAt`; the signed expiry bounds a stolen token.
+ * guaranteed because `requireAdmin` re-reads the `User` row on every request and
+ * rejects a suspended or no-longer-ADMIN row; the signed expiry bounds a stolen
+ * token.
  * Per-device/single-session revocation is out of scope at pilot scale (would
  * need a session table — surfaced on the PR, not slipped in).
  *

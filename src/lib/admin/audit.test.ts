@@ -3,7 +3,7 @@ import { describe, expect, it, vi, type Mock } from "vitest";
 vi.mock("@/lib/db", () => ({
   prisma: {
     auditLog: { findMany: vi.fn() },
-    adminUser: { findMany: vi.fn() },
+    user: { findMany: vi.fn() },
   },
 }));
 
@@ -12,7 +12,7 @@ import { prisma } from "@/lib/db";
 import { listAuditAdmins, loadAuditLog } from "./audit";
 
 const findMany = prisma.auditLog.findMany as unknown as Mock;
-const adminFindMany = prisma.adminUser.findMany as unknown as Mock;
+const adminFindMany = prisma.user.findMany as unknown as Mock;
 
 describe("loadAuditLog", () => {
   it("returns the newest rows with the admin joined, bounded by the default limit, no filters", async () => {
@@ -55,10 +55,11 @@ describe("loadAuditLog", () => {
 });
 
 describe("listAuditAdmins", () => {
-  it("lists admins (id + displayName) sorted by name for the filter dropdown", async () => {
+  it("lists role=ADMIN users (id + displayName) sorted by name for the filter dropdown", async () => {
     adminFindMany.mockResolvedValue([{ id: "adm1", displayName: "Aok" }]);
     const admins = await listAuditAdmins();
     expect(adminFindMany).toHaveBeenCalledWith({
+      where: { role: "ADMIN" },
       select: { id: true, displayName: true },
       orderBy: { displayName: "asc" },
     });

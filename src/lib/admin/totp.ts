@@ -2,8 +2,9 @@ import * as OTPAuth from "otpauth";
 
 /**
  * Admin TOTP second factor (ADR-007/010). The secret is stored as
- * `AdminUser.totpSecretEnc` (AES-256-GCM via lib/crypto) and decrypted only in
- * the login path. Standard RFC-6238: SHA-1, 6 digits, 30s period — the values
+ * `User.totpSecretEnc` on the role=ADMIN row (AES-256-GCM via lib/crypto) and
+ * decrypted only in the login path. Standard RFC-6238: SHA-1, 6 digits, 30s
+ * period — the values
  * every authenticator app (Google Authenticator, Authy, 1Password) assumes.
  */
 const ISSUER = "U-Rest";

@@ -130,6 +130,6 @@ AI logic, and Thai-first i18n all stand. Only the skin changes.
 - **Back-of-house goes LIGHT** (supersedes §4/§5.7/§5.9 ink "back-of-house" chrome): host + admin use
   the clean light AirBnB-host look so they reuse the guest component system (no dark variants), and
   trust/paid/frozen states read correctly on light. The "separate surface" boundary is preserved by
-  distinct nav + the separate `/admin` `AdminUser`/TOTP surface — **not** by darkness.
+  distinct nav + the separate `/admin` cookie + `role=ADMIN`/TOTP surface — **not** by darkness.
 - **`@theme` is unfrozen for this one v3 branch**; Aok integrates; it re-freezes after. `/styleguide`
   remains the live catalog and the design gate; the reuse-first contract and design-PR checklist stand.

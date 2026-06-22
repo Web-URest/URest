@@ -1,8 +1,8 @@
 /**
- * Admin management script (ADR-007/010): the ONLY way an AdminUser is created —
- * there is no self-signup surface. Creates the row with an argon2id password
- * hash and an AES-256-GCM-encrypted TOTP secret, then prints an `otpauth://`
- * enrollment URI to add to an authenticator app.
+ * Admin management script (ADR-007/010): the ONLY way an admin (a `User` row with
+ * role=ADMIN) is created — there is no self-signup surface. Creates the row with
+ * role=ADMIN, an argon2id password hash, and an AES-256-GCM-encrypted TOTP secret,
+ * then prints an `otpauth://` enrollment URI to add to an authenticator app.
  *
  * Usage (run in a trusted shell):
  *   ADMIN_INIT_PASSWORD='…' pnpm admin:create --email a@urest.local --name "ชื่อ"
@@ -42,22 +42,25 @@ async function main() {
     throw new Error("Set ADMIN_INIT_PASSWORD (≥12 chars) in the environment.");
   }
 
-  const existing = await prisma.adminUser.findUnique({ where: { email } });
+  // Refuse if ANY user (consumer or admin) already owns this email — never fuse a
+  // staff identity onto an existing consumer account (mirrors the migration guard).
+  const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    throw new Error(`An AdminUser with email ${email} already exists.`);
+    throw new Error(`A User with email ${email} already exists.`);
   }
 
   const totpSecret = generateTotpSecret();
-  const admin = await prisma.adminUser.create({
+  const admin = await prisma.user.create({
     data: {
       email,
       displayName,
+      role: "ADMIN",
       passwordHash: await hashPassword(password),
       totpSecretEnc: encryptField(totpSecret),
     },
   });
 
-  console.log(`\n✅ Created AdminUser ${admin.email} (${admin.id})`);
+  console.log(`\n✅ Created admin User ${admin.email} (${admin.id})`);
   console.log("\nEnroll this in an authenticator app (Google Authenticator / Authy):");
   console.log(`\n  ${totpAuthUri(totpSecret, email)}\n`);
   console.log("⚠️  The URI above contains the TOTP secret — it is shown ONCE.");
