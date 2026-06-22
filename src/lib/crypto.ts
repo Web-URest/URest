@@ -8,8 +8,9 @@ import {
 /**
  * Field-level encryption for sensitive columns (ADR-010).
  *
- * Scope: PayoutAccount.accountNumberEnc, AdminUser.totpSecretEnc — and nothing
- * else without an ADR update. The most secure field is the one never stored;
+ * Scope: PayoutAccount.accountNumberEnc, User.totpSecretEnc (role=ADMIN rows) —
+ * and nothing else without an ADR update. The most secure field is the one never
+ * stored;
  * the second most secure is one of these.
  *
  * Format: `v1.<keyId>.<iv>.<ciphertext>.<tag>` (base64url segments).

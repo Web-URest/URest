@@ -217,7 +217,7 @@ The retired single-file HTML prototype (`design/standalone/urest-standalone.html
 
 **A. Login & admin vs. the artifact** (A1 is now ALIGNED after the 2026-06-14 multi-provider reversal; only A2 remains do-NOT-copy):
 1. Login = email/password + Google/Apple/LINE. **UPDATED 2026-06-14 — ADR-007 reversed to multi-provider: build email/password + Google + Facebook + LINE. Use Facebook in place of Apple (no Apple — a paid Apple Developer account is out of the pilot budget). The multi-button login is now the intended model.**
-2. Admin as a role on the consumer login modal. Build: separate `/admin` surface + `AdminUser` credentials/TOTP (ADR-007/010); guest↔host = context switch in one account, never a login role.
+2. Admin as a role on the consumer login modal. Build: separate `/admin` surface + admin credentials/TOTP on a `role=ADMIN` `User` row (ADR-007/010; `AdminUser` merged into `User` 2026-06-22 — still a separate `/admin` login, never the consumer modal); guest↔host = context switch in one account (a denormalized `role` label synced to listing ownership, never a login-time choice).
 
 **B. Locked features absent from the design — add during build:**
 3. Per-listing FAQ section (listing page + wizard/edit; `ListingFaqEntry`).

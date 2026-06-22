@@ -10,10 +10,12 @@ import { verifyTotp } from "./totp";
 
 /**
  * Admin authentication (ADR-007/010). The admin surface is structurally
- * disconnected from consumer auth: a separate `AdminUser` table, a separate
- * cookie, and password + TOTP. `getAdmin`/`requireAdmin` read ONLY the admin
- * cookie + `AdminUser` — never `auth()`/`User` — so a consumer session is
- * useless on /admin by construction.
+ * disconnected from consumer auth: a separate login route, a separate cookie,
+ * and password + TOTP. Admins are `User` rows with `role = ADMIN` (merged from
+ * the old AdminUser table), but `getAdmin`/`requireAdmin` reach them ONLY via the
+ * admin cookie + a `role = ADMIN` check — never `auth()` / the consumer session —
+ * so a consumer session is useless on /admin by construction. The
+ * `user_admin_requires_credentials` CHECK keeps a bare role-flip un-loginable.
  *
  * `requireAdmin` is the DAL guard: call it inside every admin page AND every
  * admin server action. Layouts are NOT a security boundary (server actions
@@ -47,8 +49,10 @@ export async function loginAdmin(
   password: string,
   token: string,
 ): Promise<LoginResult> {
-  const admin = await prisma.adminUser.findUnique({ where: { email } });
-  if (!admin || admin.disabledAt) return { ok: false };
+  const admin = await prisma.user.findUnique({ where: { email } });
+  // role gate: only role=ADMIN rows can log in here; a consumer row never can.
+  if (!admin || admin.role !== "ADMIN" || admin.suspendedAt) return { ok: false };
+  if (!admin.passwordHash) return { ok: false }; // nullable now; ADMIN rows always set it
   if (!(await verifyPassword(password, admin.passwordHash))) return { ok: false };
   if (!admin.totpSecretEnc) return { ok: false };
   if (!verifyTotp(decryptField(admin.totpSecretEnc), token)) return { ok: false };
@@ -57,7 +61,7 @@ export async function loginAdmin(
     data: {
       adminId: admin.id,
       action: "ADMIN_LOGIN",
-      targetType: "AdminUser",
+      targetType: "User",
       targetId: admin.id,
     },
   });
@@ -73,7 +77,7 @@ export async function loginAdmin(
   return { ok: true };
 }
 
-/** Current admin principal, or null. Re-reads `AdminUser` so disable is immediate. */
+/** Current admin principal, or null. Re-reads the row so suspend is immediate. */
 export async function getAdmin(): Promise<AdminPrincipal | null> {
   const raw = (await cookies()).get(ADMIN_COOKIE)?.value;
   if (!raw) return null;
@@ -81,10 +85,14 @@ export async function getAdmin(): Promise<AdminPrincipal | null> {
   const verified = verifyAdminSession(raw);
   if (!verified) return null;
 
-  const admin = await prisma.adminUser.findUnique({
+  const admin = await prisma.user.findUnique({
     where: { id: verified.adminId },
   });
-  if (!admin || admin.disabledAt) return null;
+  // Re-check role + not-suspended every request: demotion/disable is immediate.
+  // `!admin.email` also narrows email to string (ADMIN rows always carry one).
+  if (!admin || admin.role !== "ADMIN" || admin.suspendedAt || !admin.email) {
+    return null;
+  }
 
   return { id: admin.id, email: admin.email, displayName: admin.displayName };
 }

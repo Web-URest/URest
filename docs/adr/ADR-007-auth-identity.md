@@ -12,6 +12,8 @@ One account serves guest+host modes (PRODUCT_FLOWS §1). Thai users have LINE, G
 2. **Verification ladder enforced server-side** (middleware on action endpoints, not UI hiding): signup → browse/save/AI-chat; **phone OTP** → can send requests & messages; **per-listing KYC review** → listing can go live. Two-tier vetting per the 2026-06-12 decision: identity/right-to-rent required, hotel-license/non-hotel registration optional → ถูกต้องตามกฎหมาย badge.
 3. **KYC files**: uploaded directly to the **private** R2 bucket (presigned PUT), encrypted at rest, served to admin only via short-lived signed URLs, never cached, never in the public bucket (ADR-002). DB stores object keys + review status, never file bytes.
 4. **Admin accounts are separate credentials** (created manually in DB, `/admin` surface, no self-signup, no LINE login) — admin compromise = money movement, so it doesn't share the consumer auth path. TOTP 2FA from day one.
+
+   > _Amended 2026-06-22:_ admins are now `User` rows with `role = ADMIN` (the separate `AdminUser` table was merged) — still created manually (`scripts/admin.ts`, no self-signup), still password + TOTP on the separate `/admin` cookie path, which stays structurally disjoint from the consumer Auth.js session. Full rationale + the credentials CHECK: ADR-010 Amendment 2026-06-22.
 5. **PDPA basics shipped with Phase 1**: privacy policy (also an Opn requirement), purpose-limited consent at KYC upload, data-retention rule (KYC docs of rejected/withdrawn listings deleted after 90 days), and a manual export/delete-on-request runbook.
 
 ## Consequences

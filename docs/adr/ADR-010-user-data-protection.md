@@ -11,12 +11,14 @@ The identity slice of the schema holds the most damaging data in the product: po
 
 1. **Never-store list.** The **Thai national ID number is never stored, in any form** — no column, no encrypted blob, no last-4. Admin verifies identity visually from the R2 document image (name-match: ID ↔ bank account ↔ selfie, PRODUCT_FLOWS §5.1). No v1 feature reads the number; if v2 adds vendor OCR verification, the vendor processes it transiently then. Also never stored: card data (Opn-hosted fields — never touches our servers), plaintext OTP codes (sha256 + per-row salt via `hashOtp`), KYC file bytes (R2 object keys only).
 
-2. **Field-level AES-256-GCM** (`src/lib/crypto.ts`, key in `DATA_ENCRYPTION_KEY`, 32-byte base64, unique per environment): exactly two columns — `PayoutAccount.accountNumberEnc` and `AdminUser.totpSecretEnc`. Ciphertext format `v1.<keyId>.<iv>.<ct>.<tag>` names its key, so rotation = add key v2, re-encrypt lazily on read. Bank numbers decrypt in **exactly one code path**: the admin payout view (§5.2). Expanding the encrypted-fields list requires updating this ADR.
+2. **Field-level AES-256-GCM** (`src/lib/crypto.ts`, key in `DATA_ENCRYPTION_KEY`, 32-byte base64, unique per environment): exactly two columns — `PayoutAccount.accountNumberEnc` and `User.totpSecretEnc` (the role=ADMIN row's TOTP; was `AdminUser.totpSecretEnc` — see Amendment 2026-06-22). Ciphertext format `v1.<keyId>.<iv>.<ct>.<tag>` names its key, so rotation = add key v2, re-encrypt lazily on read. Bank numbers decrypt in **exactly one code path**: the admin payout view (§5.2). Expanding the encrypted-fields list requires updating this ADR.
    - Explicitly NOT encrypted: phone, email, display name — operationally queried (login, notifications, support), lower blast radius; encrypting them buys complexity, not safety, while access control and the never-store list do the heavy lifting.
    - **Passwords are argon2id hashes, never reversible** (`AdminUser.passwordHash` and the consumer `User.passwordHash` for email+password login, ADR-007) — one-way hashes are deliberately **outside** the field-encrypted list.
    - **Key loss = data loss.** The production key is backed up in the founders' password manager; it is not in git, not in logs, not in Railway build args (runtime env only).
 
 3. **`AdminUser` is a separate table from `User`** — separate credentials (argon2id + TOTP), separate login surface, no self-signup, no relation to the consumer auth path. An authz bug in guest/host code structurally cannot grant admin powers.
+
+   > _Superseded 2026-06-22:_ `AdminUser` was merged into `User` as `role = ADMIN`. The structural guarantee (no admin row reachable from consumer code) is replaced by a defense-in-depth boundary — separate admin auth path + a credentials CHECK + manual-only promotion. See the **Amendment 2026-06-22** below.
 
 4. **Auth.js database sessions** (Prisma adapter) — revocable. Suspending or banning a user (§5.4) deletes their sessions and takes effect immediately; JWTs would let a banned fraudster keep working until token expiry.
 
@@ -51,3 +53,15 @@ The identity slice of the schema holds the most damaging data in the product: po
 - ⚠️ `lib/crypto.ts` reads `process.env` lazily — the one documented exception to CLAUDE.md rule 4 (key rotation + test injection); boot validation still lives in `env.ts`.
 - ⚠️ Passwords use argon2id: `AdminUser.passwordHash` (column exists now) and a new consumer `User.passwordHash` added when email+password login is wired (Phase 1 auth, ADR-007). Both are one-way hashes — never in the field-encrypted list; the library is chosen when the first login surface is built.
 - ⚠️ The 90-day purge cron must exist before the first real KYC rejection (Phase 2 listing work) — `purgeAfter` is set from day one so no backfill is needed.
+
+## Amendment — 2026-06-22: AdminUser merged into User (role=ADMIN)
+
+The separate `AdminUser` table (Decision #3) was merged into `User`, distinguished by a `role` enum (`GUEST` / `HOST` / `ADMIN`). This reverses the "separate table" decision but **preserves its security intent** through a different, defense-in-depth boundary:
+
+- **The admin auth PATH stays fully separate** — a dedicated `/admin/login`, the separate `admin_session` HMAC cookie (`src/lib/admin/session.ts`, signed with `ADMIN_SESSION_SECRET`, never `AUTH_SECRET`), and password + TOTP. `requireAdmin`/`getAdmin` read ONLY the admin cookie, then load the `User` row and require `role = ADMIN`; they never call `auth()`. A consumer Auth.js session is therefore still useless on `/admin` by construction.
+- **No app code writes `role = ADMIN`** — promotion stays manual/seed-only via `scripts/admin.ts` (confirmed with the product owner). Consumers self-promote only GUEST → HOST (a denormalized label, not a privilege).
+- **New DB CHECK** `user_admin_requires_credentials` (DATA_MODEL.md constraint №5): every `role = ADMIN` row must carry `passwordHash` + `totpSecretEnc`, so a bare role-flip (e.g. a mass-assignment bug) yields a row that still cannot pass the password+TOTP login.
+- **Encrypted-fields list (Decision #2) updated**: `AdminUser.totpSecretEnc` → `User.totpSecretEnc`; the admin `passwordHash` likewise moves to `User.passwordHash` (still one-way argon2id, still **outside** the encrypted list). Still exactly the same two encrypted columns — only the table changed.
+- **`disabledAt` folded into the existing `User.suspendedAt`** — one off-switch per row; `getAdmin` rejects a suspended or no-longer-ADMIN row every request (revocation stays immediate, preserving the #4 amendment's guarantee).
+
+**Gained:** one identity table, simpler auth code, a single suspend switch. **Lost:** the *structural* impossibility of an admin row existing in consumer-reachable code — mitigated (not fully replaced) by the separate auth path + the CHECK + manual-only promotion. Accepted at pilot scale by the product owner.

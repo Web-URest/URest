@@ -26,7 +26,7 @@ Never contradict a locked decision silently — if a task seems to require it, s
 7. **Thai-first i18n**: user-facing strings live in `messages/th.json` (source) + `messages/en.json` — never hardcoded in components. Use `Link`/`useRouter` from `src/i18n/navigation.ts`, not `next/link`.
 8. **Design tokens only** — colors/radii/shadows come from `globals.css` `@theme` (mapped from DESIGN_SPEC §3). Inventing hex values is palette drift; don't.
 9. **KYC documents and secrets never touch the public bucket, client bundles, or logs.** Private R2 + presigned URLs only (ADR-007).
-10. **The Thai national ID number is never stored, in any form** — and only `PayoutAccount.accountNumberEnc` + `AdminUser.totpSecretEnc` hold field-encrypted data (via `src/lib/crypto.ts`). Adding sensitive columns or expanding the encrypted-fields list requires updating ADR-010 first.
+10. **The Thai national ID number is never stored, in any form** — and only `PayoutAccount.accountNumberEnc` + `User.totpSecretEnc` (role=ADMIN rows) hold field-encrypted data (via `src/lib/crypto.ts`). Adding sensitive columns or expanding the encrypted-fields list requires updating ADR-010 first.
 
 ## Style
 
